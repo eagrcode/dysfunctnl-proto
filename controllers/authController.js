@@ -1,0 +1,91 @@
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const pool = require("../db");
+
+const handleUserRegistration = async (req, res) => {
+  const { email, password, first_name, last_name } = req.body;
+
+  try {
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      "INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING *",
+      [email, password_hash, first_name, last_name]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Registration failed: " + error.message });
+  }
+};
+
+const handleUserLogin = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+    const user = result.rows[0];
+
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    const refreshToken = crypto.randomBytes(64).toString("hex");
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    await pool.query(
+      "INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)",
+      [user.id, tokenHash, null]
+    );
+
+    res.json({ user, accessToken, refreshToken });
+  } catch (error) {
+    res.status(500).json({ error: "Login failed: " + error.message });
+  }
+};
+
+const handleRefreshToken = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken)
+    return res.status(401).json({ error: "Refresh token required" });
+  const tokenHash = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+  try {
+    const result = await pool.query(
+      "SELECT * FROM refresh_tokens WHERE token_hash = $1",
+      [tokenHash]
+    );
+    const stored = result.rows[0];
+    if (!stored) {
+      return res
+        .status(403)
+        .json({ error: "Invalid or expired refresh token" });
+    }
+    const accessToken = jwt.sign(
+      { id: stored.user_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+    res.json({ accessToken });
+  } catch (error) {
+    res.status(500).json({ error: "Refresh failed: " + error.message });
+  }
+};
+
+module.exports = {
+  handleUserRegistration,
+  handleUserLogin,
+  handleRefreshToken,
+};
