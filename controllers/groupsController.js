@@ -156,44 +156,6 @@ const handleUpdateGroup = [
   },
 ];
 
-// ADD USER TO GROUP
-const handleAddUserToGroup = [
-  // Validate groupId and userId format
-  param("groupId").isUUID().withMessage("Invalid group ID format"),
-  body("userIdToAdd").isUUID().withMessage("Invalid user ID format"),
-
-  async (req, res) => {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { groupId } = req.params;
-    const { userIdToAdd } = req.body;
-
-    try {
-      const result = await addUserToGroup(groupId, userIdToAdd);
-      res.status(201).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      console.error("Add user to group failed:", {
-        userIdToAdd: userIdToAdd,
-        groupId: groupId,
-        error: error.message,
-        stack: error.stack,
-        code: error.code,
-      });
-
-      res.status(500).json({
-        error: "An unexpected error occured while adding the user to the group",
-      });
-    }
-  },
-];
-
 // DELETE GROUP
 const handleDeleteGroup = [
   // Validate groupId format
@@ -236,5 +198,4 @@ module.exports = {
   handleGetGroupById,
   handleUpdateGroup,
   handleDeleteGroup,
-  handleAddUserToGroup,
 };

@@ -93,33 +93,6 @@ const updateGroup = async (updates, groupId) => {
   return result.rows[0];
 };
 
-// ADD NEW MEMBER
-const addUserToGroup = async (groupId, userIdToAdd) => {
-  // if (!isAdmin(userContext, groupId)) {
-  //   const error = new Error("You don't have permission to update this group");
-  //   error.code = "PERMISSION_DENIED";
-  //   throw error;
-  // }
-
-  const result = await pool.query(
-    "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
-    [groupId, userIdToAdd]
-  );
-
-  const memberRoleResult = await pool.query(
-    "insert into group_members_roles (user_id, group_id, is_admin) values ($1, $2, $3) returning is_admin",
-    [userIdToAdd, groupId, false]
-  );
-
-  // if (result.rows.length === 0) {
-  //   const error = new Error("You don't have permission to add new members");
-  //   error.code = "PERMISSION_DENIED";
-  //   throw error;
-  // }
-
-  return { member: result.rows[0], role: memberRoleResult.rows[0] };
-};
-
 // DELETE GROUP
 const deleteGroup = async (groupId) => {
   // if (!isCreator(userContext, groupId)) {
@@ -140,6 +113,5 @@ module.exports = {
   createGroup,
   getGroupById,
   updateGroup,
-  addUserToGroup,
   deleteGroup,
 };

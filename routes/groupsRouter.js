@@ -1,5 +1,6 @@
 /* GROUPS ROUTES */
 const { Router } = require("express");
+const membersRouter = require("./membersRouter");
 const textChannelsRouter = require("./textChannelsRouter");
 const listsRouter = require("./listsRouter");
 const authenticate = require("../middleware/auth");
@@ -25,14 +26,6 @@ groupsRouter.get(
   handleGetGroupById
 );
 
-// Add a user to a group
-groupsRouter.post(
-  "/:groupId/add-member",
-  authenticate,
-  permissionRequired("admin"),
-  handleAddUserToGroup
-);
-
 // Update a group
 groupsRouter.patch(
   "/:groupId",
@@ -50,6 +43,7 @@ groupsRouter.delete(
 );
 
 // Mount sibling routers
+groupsRouter.use("/:groupId/members", membersRouter);
 groupsRouter.use("/:groupId/text-channels", textChannelsRouter);
 groupsRouter.use("/:groupId/lists", listsRouter);
 
