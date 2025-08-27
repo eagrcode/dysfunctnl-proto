@@ -1,16 +1,20 @@
 const request = require("supertest");
 const app = require("../../../app");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+const TEST_PASSWORD = process.env.TEST_USER_PASSWORD;
 
 describe("Auth API tests", () => {
   let email;
-  const password = "securetestpassword";
 
   // REGISTER NEW USER
   describe("POST: Test /auth/register", () => {
     test("It should return a newly registered user", async () => {
       const data = {
         email: `test${Date.now()}@register.com`,
-        password: password,
+        password: TEST_PASSWORD,
         first_name: "Test",
         last_name: "User",
       };
@@ -40,7 +44,7 @@ describe("Auth API tests", () => {
     test("It should log in the newly created user", async () => {
       const loginCredentials = {
         email: email,
-        password: password,
+        password: TEST_PASSWORD,
       };
 
       const loginResponse = await request(app)
