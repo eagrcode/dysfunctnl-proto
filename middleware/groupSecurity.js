@@ -51,10 +51,13 @@ const permissionRequired = (level) => {
       console.log(`PERMISSION GRANTED: ${hasPermission}`);
 
       if (!hasPermission) {
+        const errorStatus = 403;
+        const errorCode = "PERMISSION_DENIED";
+
         return res.status(403).json({
           error: "Permission denied",
-          status: 403,
-          code: "PERMISSION_DENIED",
+          status: errorStatus,
+          code: errorCode,
         });
       }
 

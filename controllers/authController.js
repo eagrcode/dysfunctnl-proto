@@ -2,31 +2,39 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("../db");
+const {
+  login,
+  getRefreshToken,
+  updateRefreshToken,
+  addRefreshToken,
+  registration,
+} = require("../models/authModel");
 
+// REGISTRATION
 const handleUserRegistration = async (req, res) => {
   const { email, password, first_name, last_name } = req.body;
 
   try {
     const password_hash = await bcrypt.hash(password, 10);
 
-    const result = await pool.query(
-      "INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING *",
-      [email, password_hash, first_name, last_name]
+    const result = await registration(
+      email,
+      password_hash,
+      first_name,
+      last_name
     );
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ error: "Registration failed: " + error.message });
   }
 };
 
+// LOGIN
 const handleUserLogin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
-    const user = result.rows[0];
+    const user = await login(email + "x");
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -36,24 +44,29 @@ const handleUserLogin = async (req, res) => {
       expiresIn: "15m",
     });
 
-    const refreshToken = crypto.randomBytes(64).toString("hex");
+    const existingToken = await getRefreshToken(user.id);
 
+    const refreshToken = crypto.randomBytes(64).toString("hex");
     const tokenHash = crypto
       .createHash("sha256")
       .update(refreshToken)
       .digest("hex");
 
-    await pool.query(
-      "INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)",
-      [user.id, tokenHash, null]
-    );
+    if (!existingToken) {
+      console.log("No existing refresh token...creating a new one");
+      await addRefreshToken(user.id, tokenHash);
+    } else {
+      console.log("Refresh token exists...updating");
+      await updateRefreshToken(user.id, tokenHash);
+    }
 
-    res.json({ user, accessToken, refreshToken });
+    res.status(200).json({ user, accessToken, refreshToken });
   } catch (error) {
     res.status(500).json({ error: "Login failed: " + error.message });
   }
 };
 
+// REFRESH TOKEN
 const handleRefreshToken = async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken)

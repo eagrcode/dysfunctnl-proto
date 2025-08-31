@@ -10,7 +10,6 @@ const {
   handleGetGroupById,
   handleUpdateGroup,
   handleDeleteGroup,
-  handleAddUserToGroup,
 } = require("../controllers/groupsController");
 
 const groupsRouter = Router();
