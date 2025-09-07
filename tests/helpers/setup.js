@@ -22,24 +22,12 @@ const registerUser = async () => {
 
   if (response.status !== 201) {
     throw new Error(
-      `Failed to register: ${response.body.error} || Unknown error`
+      `Failed to register: ${response.body.error || "Unknown error"}`
     );
   }
 
   console.log("REGISTER MEMBER:", JSON.stringify(response.body, null, 2));
-
   const { id: userId, email } = response.body;
-
-  // expect(response.status).toBe(201);
-  // expect(response.body).toMatchObject({
-  //   id: expect.any(String),
-  //   email: expect.any(String),
-  //   password_hash: expect.any(String),
-  //   first_name: expect.any(String),
-  //   last_name: expect.any(String),
-  //   created_at: expect.any(String),
-  //   updated_at: null,
-  // });
 
   return {
     userId,
@@ -60,8 +48,13 @@ const loginUser = async (email, password = TEST_PASSWORD) => {
       .send(data)
       .set("Content-Type", "application/json");
 
-    console.log("LOGIN:", JSON.stringify(response.body, null, 2));
+    if (response.status !== 200) {
+      throw new Error(
+        `Failed to register: ${response.body.error || "Unknown error"}`
+      );
+    }
 
+    console.log("LOGIN:", JSON.stringify(response.body, null, 2));
     const { user, accessToken, refreshToken } = response.body;
 
     return {
@@ -73,4 +66,56 @@ const loginUser = async (email, password = TEST_PASSWORD) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+// CREATE GROUP
+const createGroup = async (data, accessToken) => {
+  try {
+    const response = await request(app)
+      .post("/groups")
+      .send(data)
+      .set("Content-Type", "application/json")
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    if (response.status !== 201) {
+      throw new Error(
+        `Failed to create group: ${response.body.error || "Unknown error"}`
+      );
+    }
+
+    console.log("CREATE GROUP:", JSON.stringify(response.body, null, 2));
+    groupId = response.body.data.group.id;
+
+    return groupId;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+// ADD MEMBER
+const addMember = async (groupId, memberId, adminAccessToken) => {
+  try {
+    const response = await request(app)
+      .post(`/groups/${groupId}/members/add-member`)
+      .send({ userIdToAdd: memberId })
+      .set("Content-Type", "application/json")
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+
+    console.log("ADD MEMBER:", JSON.stringify(response.body, null, 2));
+
+    if (response.status !== 201) {
+      throw new Error(
+        `Failed to add member to group: ${
+          response.body.error || "Unknown error"
+        }`
+      );
+    }
+
+    const { success } = response.body;
+    const { role } = response.body.data;
+
+    return { success, role };
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+module.exports = { registerUser, loginUser, createGroup, addMember };
