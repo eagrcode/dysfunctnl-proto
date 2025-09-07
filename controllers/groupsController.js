@@ -3,7 +3,6 @@ const {
   createGroup,
   getGroupById,
   updateGroup,
-  addUserToGroup,
   deleteGroup,
 } = require("../models/groupsModel");
 
@@ -60,22 +59,12 @@ const handleCreateGroup = [
 
 // GET GROUP BY ID
 const handleGetGroupById = [
-  // Validate groupId format
-  param("groupId").isUUID().withMessage("Invalid group ID format"),
-
+  // Validation against invalid group requests is handled in /middleware/groupSecurity.js
   async (req, res) => {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     const { groupId } = req.params;
 
     try {
       const result = await getGroupById(groupId);
-
-      console.log(result);
 
       res.status(200).json({
         success: true,
@@ -98,9 +87,6 @@ const handleGetGroupById = [
 
 // UPDATE GROUP
 const handleUpdateGroup = [
-  // Validate groupId format
-  param("groupId").isUUID().withMessage("Invalid group ID format"),
-
   // Validate and sanitise optional fields
   body("name")
     .optional()
@@ -158,16 +144,7 @@ const handleUpdateGroup = [
 
 // DELETE GROUP
 const handleDeleteGroup = [
-  // Validate groupId format
-  param("groupId").isUUID().withMessage("Invalid group ID format"),
-
   async (req, res) => {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     const { groupId } = req.params;
 
     try {
