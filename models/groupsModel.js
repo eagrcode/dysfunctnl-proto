@@ -1,5 +1,4 @@
 const pool = require("../db");
-const { isAdmin, isInGroup, isCreator } = require("../utils/setUserContext");
 
 // CREATE GROUP
 const createGroup = async (name, createdById, description) => {
@@ -28,33 +27,15 @@ const createGroup = async (name, createdById, description) => {
 
 // GET GROUP BY ID
 const getGroupById = async (groupId) => {
-  // if (!isInGroup(userContext, groupId)) {
-  //   const error = new Error("Group not found or access denied");
-  //   error.code = "GROUP_NOT_FOUND";
-  //   throw error;
-  // }
-
   const result = await pool.query("SELECT * FROM groups WHERE id = $1", [
     groupId,
   ]);
-
-  // if (result.rows.length === 0) {
-  //   const error = new Error("Group not found");
-  //   error.code = "GROUP_NOT_FOUND";
-  //   throw error;
-  // }
 
   return result.rows[0];
 };
 
 // UPDATE GROUP
 const updateGroup = async (updates, groupId) => {
-  // if (!isAdmin(userContext, groupId)) {
-  //   const error = new Error("You don't have permission to update this group");
-  //   error.code = "PERMISSION_DENIED";
-  //   throw error;
-  // }
-
   const fields = [];
   const values = [];
   let paramIndex = 1;
@@ -84,23 +65,11 @@ const updateGroup = async (updates, groupId) => {
 
   const result = await pool.query(query, values);
 
-  // if (result.rows.length === 0) {
-  //   const error = new Error("You don't have permission to update this group");
-  //   error.code = "PERMISSION_DENIED";
-  //   throw error;
-  // }
-
   return result.rows[0];
 };
 
 // DELETE GROUP
 const deleteGroup = async (groupId) => {
-  // if (!isCreator(userContext, groupId)) {
-  //   const error = new Error("You don't have permission to update this group");
-  //   error.code = "PERMISSION_DENIED";
-  //   throw error;
-  // }
-
   const result = await pool.query(
     "DELETE FROM groups WHERE id = $1 RETURNING id, name",
     [groupId]
