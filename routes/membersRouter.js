@@ -40,7 +40,7 @@ membersRouter.post(
 
 // UPDATE MEMBER ROLE
 membersRouter.patch(
-  "/:userId/role",
+  "/role",
   authenticate,
   permissionRequired("admin"),
   handleUpdateMemberRole
@@ -48,7 +48,7 @@ membersRouter.patch(
 
 // DELETE MEMBER
 membersRouter.delete(
-  "/:userId",
+  "/remove",
   authenticate,
   permissionRequired("admin"),
   handleRemoveMemberFromGroup
