@@ -34,7 +34,7 @@ const handleUserLogin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await login(email + "x");
+    const user = await login(email);
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -67,38 +67,44 @@ const handleUserLogin = async (req, res) => {
 };
 
 // REFRESH TOKEN
-const handleRefreshToken = async (req, res) => {
-  const { refreshToken } = req.body;
-  if (!refreshToken)
-    return res.status(401).json({ error: "Refresh token required" });
-  const tokenHash = crypto
-    .createHash("sha256")
-    .update(refreshToken)
-    .digest("hex");
-  try {
-    const result = await pool.query(
-      "SELECT * FROM refresh_tokens WHERE token_hash = $1",
-      [tokenHash]
-    );
-    const stored = result.rows[0];
-    if (!stored) {
-      return res
-        .status(403)
-        .json({ error: "Invalid or expired refresh token" });
-    }
-    const accessToken = jwt.sign(
-      { id: stored.user_id },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
-    res.json({ accessToken });
-  } catch (error) {
-    res.status(500).json({ error: "Refresh failed: " + error.message });
-  }
-};
+// const handleRefreshToken = async (req, res) => {
+//   const { refreshToken } = req.body;
+
+//   if (!refreshToken)
+//     return res.status(401).json({ error: "Refresh token required" });
+
+//   const tokenHash = crypto
+//     .createHash("sha256")
+//     .update(refreshToken)
+//     .digest("hex");
+
+//   try {
+//     const result = await pool.query(
+//       "SELECT * FROM refresh_tokens WHERE token_hash = $1",
+//       [tokenHash]
+//     );
+//     const stored = result.rows[0];
+
+//     if (!stored) {
+//       return res
+//         .status(403)
+//         .json({ error: "Invalid or expired refresh token" });
+//     }
+
+//     const accessToken = jwt.sign(
+//       { id: stored.user_id },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "15m" }
+//     );
+
+//     res.json({ accessToken });
+//   } catch (error) {
+//     res.status(500).json({ error: "Refresh failed: " + error.message });
+//   }
+// };
 
 module.exports = {
   handleUserRegistration,
   handleUserLogin,
-  handleRefreshToken,
+  // handleRefreshToken,
 };

@@ -14,6 +14,6 @@ authRouter.post("/register", handleUserRegistration);
 authRouter.post("/login", handleUserLogin);
 
 // Refresh access token
-authRouter.post("/refresh", handleRefreshToken);
+// authRouter.post("/refresh", handleRefreshToken);
 
 module.exports = authRouter;
