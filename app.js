@@ -1,6 +1,7 @@
 const express = require("express");
 const authRouter = require("./routes/authRouter");
 const groupsRouter = require("./routes/groupsRouter");
+const { errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -13,4 +14,6 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Dysfunctnl Server!");
 });
 
-module.exports = app; // Export the app for testing purposes
+app.use(errorHandler);
+
+module.exports = app;

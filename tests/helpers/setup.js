@@ -50,7 +50,7 @@ const loginUser = async (email, password = TEST_PASSWORD) => {
 
     if (response.status !== 200) {
       throw new Error(
-        `Failed to register: ${response.body.error || "Unknown error"}`
+        `Failed to login: ${response.body.error || "Unknown error"}`
       );
     }
 
