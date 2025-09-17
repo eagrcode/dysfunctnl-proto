@@ -1,4 +1,5 @@
 const pool = require("../db");
+const { ForbiddenError } = require("../utils/errors");
 
 const PERMISSION_LEVELS = {
   MEMBER: "member",
@@ -27,8 +28,6 @@ const permissionRequired = (level) => {
   return async (req, res, next) => {
     const { groupId } = req.params;
 
-    // console.log(req);
-
     try {
       const userGroups = await pool.query(
         `
@@ -51,14 +50,7 @@ const permissionRequired = (level) => {
       console.log(`PERMISSION GRANTED: ${hasPermission}`);
 
       if (!hasPermission) {
-        const errorStatus = 403;
-        const errorCode = "PERMISSION_DENIED";
-
-        return res.status(403).json({
-          error: "Permission denied",
-          status: errorStatus,
-          code: errorCode,
-        });
+        return next(new ForbiddenError("Permission denied"));
       }
 
       next();
