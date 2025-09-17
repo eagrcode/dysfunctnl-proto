@@ -13,25 +13,12 @@ const handleGetGroupMembers = [
   async (req, res) => {
     const { groupId } = req.params;
 
-    try {
-      const result = await getGroupMembers(groupId);
+    const result = await getGroupMembers(groupId);
 
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      console.error("Get all group members failed:", {
-        groupId: groupId,
-        error: error.message,
-        stack: error.stack,
-        code: error.code,
-      });
-
-      res.status(500).json({
-        error: "An unexpected error occured while fetching group members",
-      });
-    }
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   },
 ];
 
@@ -107,6 +94,7 @@ const handleRemoveMemberFromGroup = [
     const { userId } = req.body;
 
     const result = await removeMemberFromGroup(groupId, userId);
+
     res.status(200).json({
       success: true,
       data: result,
