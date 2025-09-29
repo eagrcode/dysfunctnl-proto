@@ -14,56 +14,49 @@ const {
 const handleUserRegistration = async (req, res) => {
   const { email, password, first_name, last_name } = req.body;
 
-  try {
-    const password_hash = await bcrypt.hash(password, 10);
+  const password_hash = await bcrypt.hash(password, 10);
 
-    const result = await registration(
-      email,
-      password_hash,
-      first_name,
-      last_name
-    );
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(500).json({ error: "Registration failed: " + error.message });
-  }
+  const result = await registration(
+    email,
+    password_hash,
+    first_name,
+    last_name
+  );
+
+  res.status(201).json(result);
 };
 
 // LOGIN
 const handleUserLogin = async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const user = await login(email);
+  const user = await login(email);
 
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-
-    const existingToken = await getRefreshToken(user.id);
-
-    const refreshToken = crypto.randomBytes(64).toString("hex");
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
-
-    if (!existingToken) {
-      console.log("No existing refresh token...creating a new one");
-      await addRefreshToken(user.id, tokenHash);
-    } else {
-      console.log("Refresh token exists...updating");
-      await updateRefreshToken(user.id, tokenHash);
-    }
-
-    res.status(200).json({ user, accessToken, refreshToken });
-  } catch (error) {
-    res.status(500).json({ error: "Login failed: " + error.message });
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    return res.status(401).json({ error: "Invalid credentials" });
   }
+
+  const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
+
+  const existingToken = await getRefreshToken(user.id);
+
+  const refreshToken = crypto.randomBytes(64).toString("hex");
+  const tokenHash = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+
+  if (!existingToken) {
+    console.log("No existing refresh token...creating a new one");
+    await addRefreshToken(user.id, tokenHash);
+  } else {
+    console.log("Refresh token exists...updating");
+    await updateRefreshToken(user.id, tokenHash);
+  }
+
+  res.status(200).json({ user, accessToken, refreshToken });
 };
 
 // REFRESH TOKEN
