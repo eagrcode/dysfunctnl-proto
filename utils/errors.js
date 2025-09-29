@@ -39,7 +39,7 @@ class UnauthorisedError extends AppError {
 class ForbiddenError extends AppError {
   constructor(message = "Permission denied") {
     super(message, 403);
-    this.code = "FORBIDDEN";
+    this.code = "PERMISSION_DENIED";
   }
 }
 
