@@ -1,44 +1,77 @@
-const getAllTextChannels = async (req, res) => {
-  const { groupId } = req.params;
-  res.send(`Text channels for group with ID: ${groupId}`);
-};
-
-const createTextChannel = async (req, res) => {
-  const { groupId } = req.params;
-  const newChannel = req.body;
-  res.send(
-    `Newly created text channel ID: ${newChannel.id}, Name: ${newChannel.name} in group ID: ${groupId}`
-  );
-};
-
-const getTextChannelById = async (req, res) => {
-  const { groupId, textChannelId } = req.params;
-  res.send(
-    `Details for text channel with ID: ${textChannelId} in group with ID: ${groupId}`
-  );
-};
-
-const updateTextChannel = async (req, res) => {
-  const { groupId, textChannelId } = req.params;
-  const updatedData = req.body;
-  res.send(
-    `Text channel with ID: ${textChannelId} in group with ID: ${groupId} updated, Data: ${JSON.stringify(
-      updatedData
-    )}`
-  );
-};
-
-const deleteTextChannel = async (req, res) => {
-  const { groupId, textChannelId } = req.params;
-  res.send(
-    `Text channel with ID: ${textChannelId} deleted from group with ID: ${groupId}`
-  );
-};
-
-module.exports = {
+const {
   getAllTextChannels,
   createTextChannel,
   getTextChannelById,
   updateTextChannel,
   deleteTextChannel,
+} = require("../models/textChannelsModel");
+
+// GET ALL TEXT CHANNELS
+const handleGetAllTextChannels = async (req, res) => {
+  const { groupId } = req.params;
+
+  const result = await getAllTextChannels(groupId);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
+
+// CREATE NEW TEXT CHANNEL
+const handleCreateTextChannel = async (req, res) => {
+  const { groupId } = req.params;
+  const { channelName } = req.body;
+
+  const result = await createTextChannel(groupId, channelName);
+
+  res.status(201).json({
+    success: true,
+    data: result,
+  });
+};
+
+// GET TEXT CHANNEL BY ID
+const handleGetTextChannelById = async (req, res) => {
+  const { groupId, textChannelId } = req.params;
+
+  const result = await getTextChannelById(groupId, textChannelId);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
+
+// UPDATE TEXT CHANNEL
+const handleUpdateTextChannel = async (req, res) => {
+  const { groupId, textChannelId } = req.params;
+  const { newName } = req.body;
+
+  const result = await updateTextChannel(groupId, textChannelId, newName);
+
+  res.status(201).json({
+    success: true,
+    data: result,
+  });
+};
+
+// DELETE TEXT CHANNEL
+const handleDeleteTextChannel = async (req, res) => {
+  const { groupId, textChannelId } = req.params;
+
+  const result = await deleteTextChannel(groupId, textChannelId);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
+
+module.exports = {
+  handleGetAllTextChannels,
+  handleCreateTextChannel,
+  handleGetTextChannelById,
+  handleUpdateTextChannel,
+  handleDeleteTextChannel,
 };

@@ -1,33 +1,34 @@
-/* TEXT CHANNEL ROUTES */
-
 const { Router } = require("express");
-const textChannelsMessagesRouter = require("./textChannelsMessagesRouter");
 const {
-  getAllTextChannels,
-  createTextChannel,
-  getTextChannelById,
-  updateTextChannel,
-  deleteTextChannel,
+  handleGetAllTextChannels,
+  handleCreateTextChannel,
+  handleGetTextChannelById,
+  handleUpdateTextChannel,
+  handleDeleteTextChannel,
 } = require("../controllers/textChannelsController");
+const {
+  handleGetAllMessages,
+  handleCreateMessage,
+  handleDeleteMessage,
+  handleUpdateMessage,
+} = require("../controllers/textChannelMessagesController");
 
 const textChannelsRouter = Router({ mergeParams: true });
 
-// Get all text channels for a group
-textChannelsRouter.get("/", getAllTextChannels);
+const TEXT_CHANNELS_PREFIX = "/textChannelId";
+const MESSAGES_PREFIX = `${TEXT_CHANNELS_PREFIX}/messages`;
 
-// Get a specific text channel in a group
-textChannelsRouter.get("/:textChannelId", getTextChannelById);
+// Text Channel Routes
+textChannelsRouter.get("/", handleGetAllTextChannels);
+textChannelsRouter.post("/", handleCreateTextChannel);
+textChannelsRouter.get(`${TEXT_CHANNELS_PREFIX}`, handleGetTextChannelById);
+textChannelsRouter.delete(`${TEXT_CHANNELS_PREFIX}`, handleDeleteTextChannel);
+textChannelsRouter.patch(`${TEXT_CHANNELS_PREFIX}`, handleUpdateTextChannel);
 
-// Create a new text channel in a group
-textChannelsRouter.post("/", createTextChannel);
-
-// Delete a text channel from a group
-textChannelsRouter.delete("/:textChannelId", deleteTextChannel);
-
-// Update a text channel in a group
-textChannelsRouter.patch("/:textChannelId", updateTextChannel);
-
-// Mount messages router
-textChannelsRouter.use("/:textChannelId/messages", textChannelsMessagesRouter);
+// Messages Routes
+textChannelsRouter.get(`${MESSAGES_PREFIX}`, handleGetAllMessages);
+textChannelsRouter.post(`${MESSAGES_PREFIX}`, handleCreateMessage);
+textChannelsRouter.delete(`${MESSAGES_PREFIX}/messageId`, handleDeleteMessage);
+textChannelsRouter.patch(`${MESSAGES_PREFIX}/messageId`, handleUpdateMessage);
 
 module.exports = textChannelsRouter;
