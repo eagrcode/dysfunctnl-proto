@@ -33,61 +33,29 @@ const handleCreateGroup = [
     const { name, description } = req.body;
     const { id: userId } = req.user;
 
-    try {
-      const result = await createGroup(name, userId, description);
+    const result = await createGroup(name, userId, description);
 
-      res.status(201).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      console.error("Group creation failed:", {
-        userId,
-        name,
-        description,
-        error: error.message,
-        stack: error.stack,
-        code: error.code,
-      });
-
-      res.status(500).json({
-        error: "An unexpected error occurred while creating the group",
-      });
-    }
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
   },
 ];
 
 // GET GROUP BY ID
-const handleGetGroupById = [
-  // Validation against invalid group requests is handled in /middleware/groupSecurity.js
-  async (req, res) => {
-    const { groupId } = req.params;
+const handleGetGroupById = async (req, res) => {
+  const { groupId } = req.params;
 
-    try {
-      const result = await getGroupById(groupId);
+  const result = await getGroupById(groupId);
 
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      console.error("Get group by ID failed:", {
-        groupId: groupId,
-        error: error.message,
-        stack: error.stack,
-        code: error.code,
-      });
-
-      res.status(500).json({
-        error: "An unexpected error occurred while fetching the group",
-      });
-    }
-  },
-];
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
 
 // UPDATE GROUP
 const handleUpdateGroup = [
-  // Validate and sanitise optional fields
   body("name")
     .optional()
     .trim()
@@ -103,7 +71,6 @@ const handleUpdateGroup = [
     .withMessage("Description must not exceed 500 characters"),
 
   async (req, res) => {
-    // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -112,7 +79,6 @@ const handleUpdateGroup = [
     const { groupId } = req.params;
     const updates = {};
 
-    // Only include fields that were provided
     if (req.body.name !== undefined) {
       updates.name = req.body.name;
     }
@@ -120,55 +86,26 @@ const handleUpdateGroup = [
       updates.description = req.body.description;
     }
 
-    try {
-      const result = await updateGroup(updates, groupId);
+    const result = await updateGroup(updates, groupId);
 
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      console.error("Update group failed:", {
-        groupId: groupId,
-        error: error.message,
-        stack: error.stack,
-        code: error.code,
-      });
-
-      res.status(500).json({
-        error: "An unexpected error occured while updating the group",
-      });
-    }
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   },
 ];
 
 // DELETE GROUP
-const handleDeleteGroup = [
-  async (req, res) => {
-    const { groupId } = req.params;
+const handleDeleteGroup = async (req, res) => {
+  const { groupId } = req.params;
 
-    try {
-      const result = await deleteGroup(groupId);
+  const result = await deleteGroup(groupId);
 
-      res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      console.error("Delete group failed:", {
-        groupId: groupId,
-        error: error.message,
-        stack: error.stack,
-        code: error.code,
-      });
-
-      res.status(500).json({
-        error:
-          "An unexpected error occured while attempting to delete this group",
-      });
-    }
-  },
-];
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
 
 module.exports = {
   handleCreateGroup,
