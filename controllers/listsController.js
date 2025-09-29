@@ -23,7 +23,7 @@ const handleCreateList = async (req, res) => {
   const { groupId } = req.params;
   const { data } = req.body;
 
-  const result = createList(groupId, data);
+  const result = await createList(groupId, data);
 
   res.status(201).json({
     success: true,

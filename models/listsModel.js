@@ -29,10 +29,14 @@ const createList = async (groupId, listData) => {
     [groupId, createdBy, listType, title, assignedTo, dueDate]
   );
 
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Failed to create list");
+  }
+
   return result.rows[0];
 };
 
-// GET A SPECIFIC LIST BY ID
+// GET LIST BY ID
 const getListById = async (groupId, listId) => {
   const result = await pool.query(
     "SELECT * FROM lists WHERE group_id = $1 AND id = $2",
