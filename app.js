@@ -3,6 +3,10 @@ const authRouter = require("./routes/authRouter");
 const groupsRouter = require("./routes/groupsRouter");
 const { errorHandler } = require("./middleware/errorHandler");
 
+process.env.TZ = "UTC";
+console.log("Server timezone:", process.env.TZ);
+console.log("Node timezone:", Intl.DateTimeFormat().resolvedOptions().timeZone);
+
 const app = express();
 
 app.use(express.json());
