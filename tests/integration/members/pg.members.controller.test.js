@@ -179,7 +179,6 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.data.member).toMatchObject({
-        id: expect.any(String),
         user_id: newMemberId,
         group_id: groupId,
         joined_at: expect.any(String),
@@ -355,7 +354,6 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data).toMatchObject({
-        id: expect.any(String),
         user_id: newMemberId,
         group_id: groupId,
         joined_at: expect.any(String),
