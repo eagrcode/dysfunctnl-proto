@@ -8,23 +8,23 @@ const {
 } = require("../models/listItemsModel");
 
 // GET LIST ITEMS
-const handleGetListItems = async (req, res) => {
-  const { listId } = req.params;
+// const handleGetListItems = async (req, res) => {
+//   const { listId } = req.params;
 
-  const result = await getListItems(listId);
+//   const result = await getListItems(listId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
-};
+//   res.status(200).json({
+//     success: true,
+//     data: result,
+//   });
+// };
 
 // CREATE A NEW LIST ITEM
 const handleCreateListItem = async (req, res) => {
   const { listId } = req.params;
-  const { title } = req.body;
+  const { content } = req.body.data;
 
-  const result = await createListItem(listId, title);
+  const result = await createListItem(listId, content);
 
   res.status(201).json({
     success: true,
@@ -47,9 +47,9 @@ const handleGetListItemById = async (req, res) => {
 // UPDATE A LIST ITEM
 const handleUpdateListItem = async (req, res) => {
   const { listId, itemId } = req.params;
-  const { title } = req.body;
+  const { content } = req.body.data;
 
-  const result = await updateListItem(listId, itemId, title);
+  const result = await updateListItem(listId, itemId, content);
 
   res.status(200).json({
     success: true,
@@ -60,7 +60,7 @@ const handleUpdateListItem = async (req, res) => {
 // TOGGLE COMPLETE STATUS OF A LIST ITEM
 const handleToggleComplete = async (req, res) => {
   const { listId, itemId } = req.params;
-  const { completed } = req.body;
+  const { completed } = req.body.data;
 
   const result = await toggleComplete(listId, itemId, completed);
 
@@ -83,7 +83,7 @@ const handleDeleteListItem = async (req, res) => {
 };
 
 module.exports = {
-  handleGetListItems,
+  // handleGetListItems,
   handleCreateListItem,
   handleGetListItemById,
   handleUpdateListItem,

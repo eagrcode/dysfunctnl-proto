@@ -5,6 +5,7 @@ const {
   updateList,
   deleteList,
 } = require("../models/listsModel");
+const { getListItems } = require("../models/listItemsModel");
 
 // GET ALL LISTS
 const handleGetAllLists = async (req, res) => {
@@ -36,6 +37,9 @@ const handleGetListById = async (req, res) => {
   const { groupId, listId } = req.params;
 
   const result = await getListById(groupId, listId);
+  const items = await getListItems(listId);
+
+  result.items = items;
 
   res.status(200).json({
     success: true,

@@ -16,10 +16,10 @@ const getListItems = async (listId) => {
 };
 
 // CREATE NEW LIST ITEM
-const createListItem = async (listId, title) => {
+const createListItem = async (listId, content) => {
   const result = await pool.query(
-    "INSERT INTO list_items (list_id, title) VALUES ($1, $2) RETURNING *",
-    [listId, title]
+    "INSERT INTO list_items (list_id, content) VALUES ($1, $2) RETURNING *",
+    [listId, content]
   );
 
   if (result.rows.length === 0) {
@@ -44,17 +44,23 @@ const getListItemById = async (listId, itemId) => {
 };
 
 // UPDATE A LIST ITEM
-const updateListItem = async (listId, itemId, updatedTitle) => {
+const updateListItem = async (listId, itemId, content) => {
   const result = await pool.query(
-    "UPDATE list_items SET title = $1 WHERE list_id = $2 AND id = $3 RETURNING *",
-    [updatedTitle, listId, itemId]
+    "UPDATE list_items SET content = $1 WHERE list_id = $2 AND id = $3 RETURNING *",
+    [content, listId, itemId]
   );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("List item not found");
+  }
+
+  return result.rows[0];
 };
 
 // TOGGLE COMPLETE STATUS OF A LIST ITEM
 const toggleComplete = async (listId, itemId, bool) => {
   const result = await pool.query(
-    "UPDATE list_items SET completed = $1 WHERE list_id = $2 AND id = $3 RETURNING *",
+    "UPDATE list_items SET completed = $1 WHERE list_id = $2 AND id = $3 RETURNING completed",
     [bool, listId, itemId]
   );
 
@@ -68,7 +74,7 @@ const toggleComplete = async (listId, itemId, bool) => {
 // DELETE A LIST ITEM
 const deleteListItem = async (listId, itemId) => {
   const result = await pool.query(
-    "DELETE FROM list_items WHERE list_id = $1 AND id = $2 RETURNING *",
+    "DELETE FROM list_items WHERE list_id = $1 AND id = $2 RETURNING id",
     [listId, itemId]
   );
 
