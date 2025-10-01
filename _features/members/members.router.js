@@ -1,13 +1,13 @@
 const { Router } = require("express");
-const permissionRequired = require("../middleware/groupSecurity");
-const authenticate = require("../middleware/auth");
+const permissionRequired = require("../../middleware/groupSecurity");
+const authenticate = require("../../middleware/auth");
 const {
   handleGetGroupMembers,
   handleAddUserToGroup,
   handleGetGroupMemberById,
   handleUpdateMemberRole,
   handleRemoveMemberFromGroup,
-} = require("../controllers/membersController");
+} = require("./members.controller");
 
 const membersRouter = Router({ mergeParams: true });
 

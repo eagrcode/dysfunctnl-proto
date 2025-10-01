@@ -2,15 +2,15 @@ const request = require("supertest");
 const app = require("../../../app");
 const dotenv = require("dotenv");
 const {
-  registerUser,
   loginUser,
-  createGroup,
+  registerUser,
   addMember,
-} = require("../../helpers/setup");
+  createGroup,
+} = require("../../../_shared/helpers/testSetup");
 
 dotenv.config();
 
-describe("Group Controller - Unauthorised Actions", () => {
+describe("List Controller - Unauthorised Actions", () => {
   let groupCreatorAccessToken;
   let groupCreatorId;
   let groupId;
@@ -63,27 +63,25 @@ describe("Group Controller - Unauthorised Actions", () => {
     }
   });
 
-  // NON-ADMIN MEMBER ACCESS ATTEMPTS
-  describe("Non-Admin Member Access Attempts", () => {
-    // UPDATE GROUP
-    test("should deny non-admin group update", async () => {
-      const response = await request(app)
-        .patch(`/groups/${groupId}`)
-        .send({ name: "Unauthorized Update" })
-        .set("Content-Type", "application/json")
-        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
-
-      expect(response.status).toBe(403);
-      expect(response.body.error).toBeDefined();
-      expect(response.body.code).toBe("PERMISSION_DENIED");
+  // ADD MEMBER
+  describe("Add Member to Group (as non-admin)", () => {
+    // Register a new user to be added as member
+    beforeAll(async () => {
+      const { userId } = await registerUser();
+      newMemberId = userId;
     });
 
-    // DELETE GROUP
-    test("should deny non-admin group deletion", async () => {
+    test("should deny non-admin member to add a new member to the group", async () => {
       const response = await request(app)
-        .delete(`/groups/${groupId}`)
+        .post(`/groups/${groupId}/members/add-member`)
+        .send({ userIdToAdd: newMemberId })
         .set("Content-Type", "application/json")
-        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
+        .set("Authorization", `Bearer ${nonMemberAccessToken}`);
+
+      console.log(
+        "ADD MEMBER (as non-admin):",
+        JSON.stringify(response.body, null, 2)
+      );
 
       expect(response.status).toBe(403);
       expect(response.body.error).toBeDefined();
@@ -91,39 +89,49 @@ describe("Group Controller - Unauthorised Actions", () => {
     });
   });
 
-  // NON-MEMBER ACCESS ATTEMPTS
-  describe("Non-Member Access Attempts", () => {
-    // READ GROUP
-    test("should deny non-member access to group", async () => {
+  // UPDATE MEMBER ROLE
+  describe("Update Member Role (as non-admin)", () => {
+    test.each([
+      {
+        setIsAdmin: true,
+      },
+      {
+        setIsAdmin: false,
+      },
+    ])(
+      "should deny non-admin to promote and demote a members role (set isAdmin: $setIsAdmin)",
+      async ({ setIsAdmin }) => {
+        const response = await request(app)
+          .patch(`/groups/${groupId}/members/role`)
+          .send({ userId: nonAdminUserId, isAdmin: setIsAdmin })
+          .set("Content-Type", "application/json")
+          .set("Authorization", `Bearer ${nonAdminAccessToken}`);
+
+        console.log(
+          `UPDATE MEMBER ROLE to isAdmin=${setIsAdmin} (as non-admin):`,
+          JSON.stringify(response.body, null, 2)
+        );
+
+        expect(response.status).toBe(403);
+        expect(response.body.error).toBeDefined();
+        expect(response.body.code).toBe("PERMISSION_DENIED");
+      }
+    );
+  });
+
+  // REMOVE MEMBER
+  describe("Remove Member from Group (as non-admin)", () => {
+    test("should deny non-admin to remove a member from the group", async () => {
       const response = await request(app)
-        .get(`/groups/${groupId}`)
+        .delete(`/groups/${groupId}/members/remove`)
+        .send({ userId: newMemberId })
         .set("Content-Type", "application/json")
-        .set("Authorization", `Bearer ${nonMemberAccessToken}`);
+        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
 
-      expect(response.status).toBe(403);
-      expect(response.body.error).toBeDefined();
-      expect(response.body.code).toBe("PERMISSION_DENIED");
-    });
-
-    // UPDATE GROUP
-    test("should deny non-member group update", async () => {
-      const response = await request(app)
-        .patch(`/groups/${groupId}`)
-        .send({ name: "Unauthorized Update" })
-        .set("Content-Type", "application/json")
-        .set("Authorization", `Bearer ${nonMemberAccessToken}`);
-
-      expect(response.status).toBe(403);
-      expect(response.body.error).toBeDefined();
-      expect(response.body.code).toBe("PERMISSION_DENIED");
-    });
-
-    // DELETE GROUP
-    test("should deny non-member group deletion", async () => {
-      const response = await request(app)
-        .delete(`/groups/${groupId}`)
-        .set("Content-Type", "application/json")
-        .set("Authorization", `Bearer ${nonMemberAccessToken}`);
+      console.log(
+        "REMOVE MEMBER (as non-admin):",
+        JSON.stringify(response.body, null, 2)
+      );
 
       expect(response.status).toBe(403);
       expect(response.body.error).toBeDefined();

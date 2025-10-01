@@ -1,5 +1,5 @@
-const pool = require("../db");
-const { NotFoundError, ConflictError } = require("../utils/errors");
+const pool = require("../../_shared/utils/db");
+const { NotFoundError, ConflictError } = require("../../_shared/utils/errors");
 
 // GET GROUP MEMBERS
 const getGroupMembers = async (groupId) => {

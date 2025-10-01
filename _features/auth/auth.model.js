@@ -1,4 +1,4 @@
-const pool = require("../db");
+const pool = require("../../shared/utils/db");
 
 // REGISTRATION
 const registration = async (email, password_hash, first_name, last_name) => {

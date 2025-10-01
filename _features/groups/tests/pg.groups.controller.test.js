@@ -1,7 +1,11 @@
 const request = require("supertest");
 const app = require("../../../app");
 const dotenv = require("dotenv");
-const { loginUser, registerUser, addMember } = require("../../helpers/setup");
+const {
+  loginUser,
+  registerUser,
+  addMember,
+} = require("../../../shared/helpers/setup");
 
 dotenv.config();
 

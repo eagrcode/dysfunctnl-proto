@@ -1,4 +1,4 @@
-const pool = require("../db");
+const pool = require("./db");
 
 const escapeLiteral = (str) => {
   return "'" + (str ? str.toString().replace(/'/g, "''") : "") + "'";

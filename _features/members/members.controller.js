@@ -1,12 +1,12 @@
 const { body, param, validationResult } = require("express-validator");
-const { ValidationError } = require("../utils/errors");
+const { ValidationError } = require("../../_shared/utils/errors");
 const {
   getGroupMembers,
   getGroupMemberById,
   addUserToGroup,
   updateMemberRole,
   removeMemberFromGroup,
-} = require("../models/membersModel");
+} = require("./members.model");
 
 // GET ALL MEMBERS
 const handleGetGroupMembers = [

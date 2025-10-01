@@ -6,7 +6,7 @@ const {
   createGroup,
   addMember,
   registerUser,
-} = require("../../helpers/setup");
+} = require("../../../shared/helpers/setup");
 
 dotenv.config();
 

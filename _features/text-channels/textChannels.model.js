@@ -1,5 +1,5 @@
-const pool = require("../db");
-const { NotFoundError } = require("../utils/errors");
+const pool = require("../../_shared/utils/db");
+const { NotFoundError } = require("../../_shared/utils/errors");
 
 // GET ALL TEXT CHANNELS
 const getAllTextChannels = async (groupId) => {
