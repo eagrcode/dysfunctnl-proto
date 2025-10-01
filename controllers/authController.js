@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("../db");
+const { body, validationResult } = require("express-validator");
 const {
   login,
   getRefreshToken,
@@ -11,53 +12,115 @@ const {
 } = require("../models/authModel");
 
 // REGISTRATION
-const handleUserRegistration = async (req, res) => {
-  const { email, password, first_name, last_name } = req.body;
+const handleUserRegistration = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email address is required")
+    .trim()
+    .escape()
+    .isEmail()
+    .withMessage("Invalid email address"),
 
-  const password_hash = await bcrypt.hash(password, 10);
+  body("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .trim()
+    .escape()
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long"),
 
-  const result = await registration(
-    email,
-    password_hash,
-    first_name,
-    last_name
-  );
+  body("first_name")
+    .notEmpty()
+    .withMessage("First name is required")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 30 })
+    .withMessage("First name must be between 1 and 30 characters"),
 
-  res.status(201).json(result);
-};
+  body("last_name")
+    .notEmpty()
+    .withMessage("Last name is required")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 30 })
+    .withMessage("Last name must be between 1 and 30 characters"),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password, first_name, last_name } = req.body;
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const result = await registration(
+      email,
+      password_hash,
+      first_name,
+      last_name
+    );
+
+    res.status(201).json(result);
+  },
+];
 
 // LOGIN
-const handleUserLogin = async (req, res) => {
-  const { email, password } = req.body;
+const handleUserLogin = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email address is required")
+    .trim()
+    .escape()
+    .isEmail()
+    .withMessage("Invalid email address"),
 
-  const user = await login(email);
+  body("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .trim()
+    .escape()
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long"),
 
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "15m",
-  });
+    const { email, password } = req.body;
 
-  const existingToken = await getRefreshToken(user.id);
+    const user = await login(email);
 
-  const refreshToken = crypto.randomBytes(64).toString("hex");
-  const tokenHash = crypto
-    .createHash("sha256")
-    .update(refreshToken)
-    .digest("hex");
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-  if (!existingToken) {
-    console.log("No existing refresh token...creating a new one");
-    await addRefreshToken(user.id, tokenHash);
-  } else {
-    console.log("Refresh token exists...updating");
-    await updateRefreshToken(user.id, tokenHash);
-  }
+    const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
-  res.status(200).json({ user, accessToken, refreshToken });
-};
+    const existingToken = await getRefreshToken(user.id);
+
+    const refreshToken = crypto.randomBytes(64).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    if (!existingToken) {
+      console.log("No existing refresh token...creating a new one");
+      await addRefreshToken(user.id, tokenHash);
+    } else {
+      console.log("Refresh token exists...updating");
+      await updateRefreshToken(user.id, tokenHash);
+    }
+
+    res.status(200).json({ user, accessToken, refreshToken });
+  },
+];
 
 // REFRESH TOKEN
 // const handleRefreshToken = async (req, res) => {
