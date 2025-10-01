@@ -17,6 +17,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
   let listId;
   let nonAdminAccessToken;
   let nonAdminUserId;
+  let listItemId;
 
   const groupData = {
     name: "Test Group",
@@ -143,6 +144,36 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
     });
   });
 
+  // ADD ITEM TO LIST
+  describe("Add Item to List", () => {
+    test("should add an item to the list", async () => {
+      const itemData = {
+        content: "Test Item",
+      };
+
+      const response = await request(app)
+        .post(`/groups/${groupId}/lists/${listId}/items`)
+        .send({ data: itemData })
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
+
+      console.log(`ADD ITEM TO LIST`, JSON.stringify(response.body, null, 2));
+
+      listItemId = response.body.data.id;
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        id: expect.any(String),
+        list_id: listId,
+        content: itemData.content,
+        completed: false,
+        created_at: expect.any(String),
+        updated_at: null,
+      });
+    });
+  });
+
   // GET LIST BY ID
   describe("Get List by ID", () => {
     test("should retrieve a specific list by its ID", async () => {
@@ -187,6 +218,95 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
       expect(response.body.data.list_type).toBe(updates.listType);
       expect(response.body.data.updated_at).toBeDefined();
       expect(response.body.data.due_date).toBe(dueDate.toISOString());
+    });
+  });
+
+  // UPDATE LIST ITEM
+  describe("Update list item", () => {
+    test("should update the list item", async () => {
+      const newItemData = {
+        content: "New test Item",
+      };
+
+      const response = await request(app)
+        .patch(`/groups/${groupId}/lists/${listId}/items/${listItemId}`)
+        .send({ data: newItemData })
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
+
+      console.log(`UPDATE LIST ITEM`, JSON.stringify(response.body, null, 2));
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        id: listItemId,
+        list_id: listId,
+        content: newItemData.content,
+        completed: false,
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+      });
+    });
+  });
+
+  // TOGGLE COMPLETE STATUS OF LIST ITEM
+  describe("Toggle Complete Status of List Item", () => {
+    test("should toggle the complete status of the list item", async () => {
+      const toggleData = {
+        completed: true,
+      };
+
+      const response = await request(app)
+        .patch(`/groups/${groupId}/lists/${listId}/items/${listItemId}/toggle`)
+        .send({ data: toggleData })
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
+
+      console.log(
+        `TOGGLE COMPLETE STATUS`,
+        JSON.stringify(response.body, null, 2)
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.completed).toBe(true);
+    });
+  });
+
+  // CHECK COMPLETED STATUS OF LIST AFTER COMPLETING ALL ITEMS IN LIST
+  describe("Get List by ID and check competed status", () => {
+    test("should retrieve a specific list by its ID", async () => {
+      const response = await request(app)
+        .get(`/groups/${groupId}/lists/${listId}`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${adminAccessToken}`);
+
+      console.log(
+        `GET LIST BY ID - CHECK COMPLETED STATUS`,
+        JSON.stringify(response.body, null, 2)
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.id).toBe(listId);
+      expect(response.body.data.completed).toBe(true);
+      expect(response.body.data.completed_at).toBeDefined();
+    });
+  });
+
+  // DELETE LIST ITEM
+  describe("Delete List Item", () => {
+    test("should delete the list item by its ID", async () => {
+      const response = await request(app)
+        .delete(`/groups/${groupId}/lists/${listId}/items/${listItemId}`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
+
+      console.log(`DELETE LIST ITEM`, JSON.stringify(response.body, null, 2));
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.id).toBe(listItemId);
     });
   });
 
