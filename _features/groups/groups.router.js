@@ -1,7 +1,7 @@
 /* GROUPS ROUTES */
 const { Router } = require("express");
-const membersRouter = require("../members/membersRouter");
-const textChannelsRouter = require("../../routes/textChannelsRouter");
+const membersRouter = require("../members/members.router");
+const textChannelsRouter = require("../text-channels/textChannels.router");
 const listsRouter = require("../lists/lists.router");
 const authenticate = require("../../middleware/auth");
 const permissionRequired = require("../../middleware/groupSecurity");

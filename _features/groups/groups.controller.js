@@ -4,7 +4,7 @@ const {
   getGroupById,
   updateGroup,
   deleteGroup,
-} = require("../models/groupsModel");
+} = require("../../models/groupsModel");
 
 // CREATE GROUP
 const handleCreateGroup = [
