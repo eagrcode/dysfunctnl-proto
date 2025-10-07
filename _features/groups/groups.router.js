@@ -4,6 +4,7 @@ const membersRouter = require("../members/members.router");
 const textChannelsRouter = require("../text-channels/textChannels.router");
 const listsRouter = require("../lists/lists.router");
 const calendarRouter = require("../calendar/calendar.router");
+const albumsRouter = require("../albums/albums.router");
 const authenticate = require("../../middleware/auth");
 const permissionRequired = require("../../middleware/groupSecurity");
 const {
@@ -25,5 +26,6 @@ groupsRouter.use("/:groupId/members", membersRouter);
 groupsRouter.use("/:groupId/text-channels", textChannelsRouter);
 groupsRouter.use("/:groupId/lists", listsRouter);
 groupsRouter.use("/:groupId/calendar", calendarRouter);
+groupsRouter.use("/:groupId/albums", albumsRouter);
 
 module.exports = groupsRouter;
