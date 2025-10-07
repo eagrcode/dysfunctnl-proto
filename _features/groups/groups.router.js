@@ -16,12 +16,18 @@ const {
 
 const groupsRouter = Router();
 
+// Routes without group context
 groupsRouter.post("/", authenticate, handleCreateGroup);
-groupsRouter.get("/:groupId", authenticate, permissionRequired("member"), handleGetGroupById);
-groupsRouter.patch("/:groupId", authenticate, permissionRequired("admin"), handleUpdateGroup);
-groupsRouter.delete("/:groupId", authenticate, permissionRequired("creator"), handleDeleteGroup);
 
-// Mount sibling routers
+// Apply base middleware to ALL group-context routes
+groupsRouter.use("/:groupId", authenticate, permissionRequired("member"));
+
+// Routes with group context
+groupsRouter.get("/:groupId", handleGetGroupById);
+groupsRouter.patch("/:groupId", permissionRequired("admin"), handleUpdateGroup);
+groupsRouter.delete("/:groupId", permissionRequired("creator"), handleDeleteGroup);
+
+// Mount child routers
 groupsRouter.use("/:groupId/members", membersRouter);
 groupsRouter.use("/:groupId/text-channels", textChannelsRouter);
 groupsRouter.use("/:groupId/lists", listsRouter);
