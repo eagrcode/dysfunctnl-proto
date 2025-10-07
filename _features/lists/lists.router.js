@@ -1,5 +1,4 @@
 const { Router } = require("express");
-const authenticate = require("../../middleware/auth");
 const {
   handleGetAllLists,
   handleCreateList,
@@ -19,11 +18,11 @@ const {
 const listsRouter = Router({ mergeParams: true });
 
 /* LIST ROUTES */
-listsRouter.get("/", authenticate, handleGetAllLists);
-listsRouter.post("/", authenticate, handleCreateList);
-listsRouter.get("/:listId", authenticate, handleGetListById);
-listsRouter.patch("/:listId", authenticate, handleUpdateList);
-listsRouter.delete("/:listId", authenticate, handleDeleteList);
+listsRouter.get("/", handleGetAllLists);
+listsRouter.post("/", handleCreateList);
+listsRouter.get("/:listId", handleGetListById);
+listsRouter.patch("/:listId", handleUpdateList);
+listsRouter.delete("/:listId", handleDeleteList);
 
 /* LIST ITEM ROUTES */
 // listsRouter.get("/:listId/items", handleGetListItems);

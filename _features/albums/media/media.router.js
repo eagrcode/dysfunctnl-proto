@@ -8,9 +8,9 @@ const {
 
 const mediaRouter = Router({ mergeParams: true });
 
-mediaRouter.post("/", authenticate, handleAddMedia);
-mediaRouter.get("/:mediaId", authenticate, handleGetMediaById);
-mediaRouter.patch("/:mediaId", authenticate, handleUpdateMediaById);
-mediaRouter.delete("/:mediaId", authenticate, handleDeleteMediaById);
+mediaRouter.post("/", handleAddMedia);
+mediaRouter.get("/:mediaId", handleGetMediaById);
+mediaRouter.patch("/:mediaId", handleUpdateMediaById);
+mediaRouter.delete("/:mediaId", handleDeleteMediaById);
 
 module.exports = mediaRouter;
