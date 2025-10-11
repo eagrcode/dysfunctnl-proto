@@ -4,7 +4,7 @@ const {
   handleGetMediaById,
   handleDeleteMediaById,
   handleUpdateMediaById,
-} = require("../../controllers/albums/media/media.controller");
+} = require("./media.controller");
 
 const mediaRouter = Router({ mergeParams: true });
 

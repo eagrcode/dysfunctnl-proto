@@ -4,7 +4,7 @@ const {
   getMediaById,
   deleteMediaById,
   updateMediaById,
-} = require("../media.model");
+} = require("./media.model");
 
 // ADD MEDIA
 const handleAddMedia = async (req, res, next) => {

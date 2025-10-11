@@ -9,7 +9,7 @@ const {
   updateRefreshToken,
   addRefreshToken,
   registration,
-} = require("../models/authModel");
+} = require("./auth.model");
 
 // REGISTRATION
 const handleUserRegistration = [
@@ -55,12 +55,7 @@ const handleUserRegistration = [
 
     const password_hash = await bcrypt.hash(password, 10);
 
-    const result = await registration(
-      email,
-      password_hash,
-      first_name,
-      last_name
-    );
+    const result = await registration(email, password_hash, first_name, last_name);
 
     res.status(201).json(result);
   },
@@ -105,10 +100,7 @@ const handleUserLogin = [
     const existingToken = await getRefreshToken(user.id);
 
     const refreshToken = crypto.randomBytes(64).toString("hex");
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
+    const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
     if (!existingToken) {
       console.log("No existing refresh token...creating a new one");

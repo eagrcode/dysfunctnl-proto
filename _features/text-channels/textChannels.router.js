@@ -5,13 +5,13 @@ const {
   handleGetTextChannelById,
   handleUpdateTextChannel,
   handleDeleteTextChannel,
-} = require("../controllers/textChannelsController");
+} = require("./textChannels.controller");
 const {
   handleGetAllMessages,
   handleCreateMessage,
   handleDeleteMessage,
   handleUpdateMessage,
-} = require("../controllers/textChannelMessagesController");
+} = require("./text-channel-messages/textChannelMessages.controller");
 
 const textChannelsRouter = Router({ mergeParams: true });
 

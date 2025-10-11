@@ -4,7 +4,7 @@ const {
   getTextChannelById,
   updateTextChannel,
   deleteTextChannel,
-} = require("../models/textChannelsModel");
+} = require("./textChannels.model");
 
 // GET ALL TEXT CHANNELS
 const handleGetAllTextChannels = async (req, res) => {

@@ -1,11 +1,7 @@
 const request = require("supertest");
 const app = require("../../../app");
 const dotenv = require("dotenv");
-const {
-  loginUser,
-  registerUser,
-  addMember,
-} = require("../../../shared/helpers/setup");
+const { loginUser, registerUser, addMember } = require("../../../_shared/helpers/testSetup");
 
 dotenv.config();
 
@@ -66,10 +62,7 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      console.log(
-        "CREATE GROUP with missing data:",
-        JSON.stringify(response, null, 2)
-      );
+      console.log("CREATE GROUP with missing data:", JSON.stringify(response, null, 2));
 
       expect(response.status).toBe(400);
       expect(response.body.errors).toBeDefined();
@@ -83,10 +76,7 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      console.log(
-        "CREATE GROUP with invalid URL:",
-        JSON.stringify(response, null, 2)
-      );
+      console.log("CREATE GROUP with invalid URL:", JSON.stringify(response, null, 2));
 
       expect(response.status).toBe(404);
     });
@@ -153,11 +143,7 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
       memberAccessToken = accessToken;
 
       // Add user as non-admin member to the group
-      const { success, role } = await addMember(
-        groupId,
-        memberId,
-        adminAccessToken
-      );
+      const { success, role } = await addMember(groupId, memberId, adminAccessToken);
       expect(success).toBe(true);
       expect(role.is_admin).toBe(false);
 

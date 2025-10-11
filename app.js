@@ -1,7 +1,7 @@
 const express = require("express");
-const authRouter = require("./routes/authRouter");
-const groupsRouter = require("./routes/groupsRouter");
-const { errorHandler } = require("./middleware/errorHandler");
+const authRouter = require("./_features/auth/auth.router");
+const groupsRouter = require("./_features/groups/groups.router");
+const { errorHandler } = require("./_shared/middleware/errorHandler");
 
 process.env.TZ = "UTC";
 console.log("Server timezone:", process.env.TZ);

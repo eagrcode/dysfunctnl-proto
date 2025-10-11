@@ -1,4 +1,4 @@
-const pool = require("../db");
+const pool = require("../../_shared/utils/db");
 
 // CREATE GROUP
 const createGroup = async (name, createdById, description) => {
@@ -27,9 +27,7 @@ const createGroup = async (name, createdById, description) => {
 
 // GET GROUP BY ID
 const getGroupById = async (groupId) => {
-  const result = await pool.query("SELECT * FROM groups WHERE id = $1", [
-    groupId,
-  ]);
+  const result = await pool.query("SELECT * FROM groups WHERE id = $1", [groupId]);
 
   return result.rows[0];
 };
@@ -70,10 +68,7 @@ const updateGroup = async (updates, groupId) => {
 
 // DELETE GROUP
 const deleteGroup = async (groupId) => {
-  const result = await pool.query(
-    "DELETE FROM groups WHERE id = $1 RETURNING id, name",
-    [groupId]
-  );
+  const result = await pool.query("DELETE FROM groups WHERE id = $1 RETURNING id, name", [groupId]);
 
   return result.rows[0];
 };

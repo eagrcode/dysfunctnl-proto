@@ -6,7 +6,7 @@ const {
   handleGetAlbumById,
   handleDeleteAlbumById,
   handleUpdateAlbumById,
-} = require("../controllers/albumsController");
+} = require("./albums.controller");
 
 const albumsRouter = Router({ mergeParams: true });
 

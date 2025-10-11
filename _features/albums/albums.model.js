@@ -1,5 +1,5 @@
-const pool = require("../../../_shared/utils/db");
-const { NotFoundError } = require("../../../_shared/utils/errors");
+const pool = require("../../_shared/utils/db");
+const { NotFoundError } = require("../../_shared/utils/errors");
 
 // ADD NEW ALBUM
 const addAlbum = async (groupId, name, description, createdBy) => {

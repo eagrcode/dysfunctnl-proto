@@ -5,7 +5,7 @@ const {
   updateListItem,
   toggleComplete,
   deleteListItem,
-} = require("../models/listItemsModel");
+} = require("./listItems.model");
 
 // GET LIST ITEMS
 // const handleGetListItems = async (req, res) => {

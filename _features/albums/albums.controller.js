@@ -5,7 +5,7 @@ const {
   deleteAlbumById,
   updateAlbumById,
 } = require("./albums.model");
-const { getAllMediaByAlbumId } = require("../media/media.model");
+const { getAllMediaByAlbumId } = require("./media/media.model");
 
 // ADD NEW ALBUM
 const handleAddAlbum = async (req, res) => {

@@ -1,10 +1,5 @@
 const { body, param, validationResult } = require("express-validator");
-const {
-  createGroup,
-  getGroupById,
-  updateGroup,
-  deleteGroup,
-} = require("../../models/groupsModel");
+const { createGroup, getGroupById, updateGroup, deleteGroup } = require("./groups.model");
 
 // CREATE GROUP
 const handleCreateGroup = [

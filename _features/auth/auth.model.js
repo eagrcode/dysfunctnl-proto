@@ -1,4 +1,4 @@
-const pool = require("../../shared/utils/db");
+const pool = require("../../_shared/utils/db");
 
 // REGISTRATION
 const registration = async (email, password_hash, first_name, last_name) => {
@@ -12,19 +12,16 @@ const registration = async (email, password_hash, first_name, last_name) => {
 
 // LOGIN
 const login = async (email) => {
-  const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-    email,
-  ]);
+  const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
 
   return result.rows[0];
 };
 
 // CHECK IF CURRENT REFRESH TOKEN
 const getRefreshToken = async (userId) => {
-  const result = await pool.query(
-    "SELECT token_hash from refresh_tokens WHERE user_id = $1",
-    [userId]
-  );
+  const result = await pool.query("SELECT token_hash from refresh_tokens WHERE user_id = $1", [
+    userId,
+  ]);
 
   return result.rows[0];
 };

@@ -3,7 +3,7 @@ const {
   createMessage,
   deleteMessage,
   updateMessage,
-} = require("../models/textChannelMessagesModel");
+} = require("./textChannelMessages.model");
 
 // GET ALL MESSAGES
 const handleGetAllMessages = async (req, res) => {

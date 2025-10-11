@@ -3,7 +3,7 @@ const {
   handleUserRegistration,
   handleUserLogin,
   handleRefreshToken,
-} = require("../controllers/authController");
+} = require("./auth.controller");
 
 const authRouter = Router();
 

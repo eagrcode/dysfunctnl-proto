@@ -7,5 +7,7 @@ dist
 coverage
 *.log
 *.env
-mvp.md 
+mvp.md
+mvp-feature-checklist
+.vscode
      

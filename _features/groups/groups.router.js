@@ -5,14 +5,14 @@ const textChannelsRouter = require("../text-channels/textChannels.router");
 const listsRouter = require("../lists/lists.router");
 const calendarRouter = require("../calendar/calendar.router");
 const albumsRouter = require("../albums/albums.router");
-const authenticate = require("../../middleware/auth");
-const permissionRequired = require("../../middleware/groupSecurity");
+const authenticate = require("../../_shared/middleware/auth");
+const permissionRequired = require("../../_shared/middleware/groupSecurity");
 const {
   handleCreateGroup,
   handleGetGroupById,
   handleUpdateGroup,
   handleDeleteGroup,
-} = require("../controllers/groupsController");
+} = require("./groups.controller");
 
 const groupsRouter = Router();
 

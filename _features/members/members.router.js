@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const permissionRequired = require("../../middleware/groupSecurity");
+const permissionRequired = require("../../_shared/middleware/groupSecurity");
 const {
   handleGetGroupMembers,
   handleAddUserToGroup,

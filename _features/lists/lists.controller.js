@@ -1,11 +1,5 @@
-const {
-  getAllLists,
-  createList,
-  getListById,
-  updateList,
-  deleteList,
-} = require("../models/listsModel");
-const { getListItems } = require("../models/listItemsModel");
+const { getAllLists, createList, getListById, updateList, deleteList } = require("./lists.model");
+const { getListItems } = require("./list-items/listItems.model");
 
 // GET ALL LISTS
 const handleGetAllLists = async (req, res) => {

@@ -5,7 +5,7 @@ const {
   handleGetListById,
   handleUpdateList,
   handleDeleteList,
-} = require("../controllers/listsController");
+} = require("./lists.controller");
 const {
   handleGetListItems,
   handleCreateListItem,
@@ -13,7 +13,7 @@ const {
   handleUpdateListItem,
   handleToggleComplete,
   handleDeleteListItem,
-} = require("../controllers/listItemsController");
+} = require("./list-items/listItems.controller");
 
 const listsRouter = Router({ mergeParams: true });
 

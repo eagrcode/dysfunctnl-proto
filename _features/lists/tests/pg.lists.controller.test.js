@@ -6,7 +6,7 @@ const {
   createGroup,
   addMember,
   registerUser,
-} = require("../../../shared/helpers/setup");
+} = require("../../../_shared/helpers/testSetup");
 
 dotenv.config();
 
@@ -38,11 +38,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
 
     nonAdminAccessToken = (await loginUser(naEmail)).accessToken;
 
-    const { success, role } = await addMember(
-      groupId,
-      nonAdminUserId,
-      adminAccessToken
-    );
+    const { success, role } = await addMember(groupId, nonAdminUserId, adminAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);
   });
@@ -101,10 +97,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
 
         console.log("Received due_date:", response.body.data.due_date);
 
-        console.log(
-          `CREATE LIST OF TYPE: ${listType}`,
-          JSON.stringify(response.body, null, 2)
-        );
+        console.log(`CREATE LIST OF TYPE: ${listType}`, JSON.stringify(response.body, null, 2));
 
         listId = response.body.data.id;
 
@@ -262,10 +255,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${nonAdminAccessToken}`);
 
-      console.log(
-        `TOGGLE COMPLETE STATUS`,
-        JSON.stringify(response.body, null, 2)
-      );
+      console.log(`TOGGLE COMPLETE STATUS`, JSON.stringify(response.body, null, 2));
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);

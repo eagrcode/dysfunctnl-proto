@@ -6,7 +6,7 @@ const {
   registerUser,
   addMember,
   createGroup,
-} = require("../../../shared/helpers/setup");
+} = require("../../../_shared/helpers/testSetup");
 
 dotenv.config();
 
@@ -40,11 +40,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
 
     nonAdminAccessToken = (await loginUser(naEmail)).accessToken;
 
-    const { success, role } = await addMember(
-      groupId,
-      nonAdminUserId,
-      groupCreatorAccessToken
-    );
+    const { success, role } = await addMember(groupId, nonAdminUserId, groupCreatorAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);
   });
@@ -70,10 +66,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token()}`);
 
-      console.log(
-        `GET GROUP MEMBERS (as ${role}):`,
-        JSON.stringify(response.body, null, 2)
-      );
+      console.log(`GET GROUP MEMBERS (as ${role}):`, JSON.stringify(response.body, null, 2));
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -107,34 +100,31 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
         userId: () => groupCreatorId,
         token: () => nonAdminAccessToken,
       },
-    ])(
-      "should allow $role to fetch group member by ID",
-      async ({ role, userId, token }) => {
-        const response = await request(app)
-          .get(`/groups/${groupId}/members/${userId()}`)
-          .set("Content-Type", "application/json")
-          .set("Authorization", `Bearer ${token()}`);
+    ])("should allow $role to fetch group member by ID", async ({ role, userId, token }) => {
+      const response = await request(app)
+        .get(`/groups/${groupId}/members/${userId()}`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${token()}`);
 
-        console.log(
-          `GET GROUP MEMBER ${userId()} (as ${role}):`,
-          JSON.stringify(response.body, null, 2)
-        );
+      console.log(
+        `GET GROUP MEMBER ${userId()} (as ${role}):`,
+        JSON.stringify(response.body, null, 2)
+      );
 
-        expect(response.status).toBe(200);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toMatchObject({
-          user_id: expect.any(String),
-          group_id: groupId,
-          first_name: expect.any(String),
-          last_name: expect.any(String),
-          email: expect.any(String),
-          is_admin: expect.any(Boolean),
-          joined_at: expect.any(String),
-        });
-        expect(response.body.data.user_id).toBe(userId());
-        expect(response.body.data.group_id).toBe(groupId);
-      }
-    );
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        user_id: expect.any(String),
+        group_id: groupId,
+        first_name: expect.any(String),
+        last_name: expect.any(String),
+        email: expect.any(String),
+        is_admin: expect.any(Boolean),
+        joined_at: expect.any(String),
+      });
+      expect(response.body.data.user_id).toBe(userId());
+      expect(response.body.data.group_id).toBe(groupId);
+    });
 
     // Member not found test
     test("should return 404 for non-existent user", async () => {
@@ -171,10 +161,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${groupCreatorAccessToken}`);
 
-      console.log(
-        "ADD MEMBER (as admin):",
-        JSON.stringify(response.body, null, 2)
-      );
+      console.log("ADD MEMBER (as admin):", JSON.stringify(response.body, null, 2));
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
@@ -198,11 +185,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
 
       console.log(
         "ADD MEMBER with invalid userId format (as admin):",
-        JSON.stringify(
-          { status: response.status, errors: response.body.errors },
-          null,
-          2
-        )
+        JSON.stringify({ status: response.status, errors: response.body.errors }, null, 2)
       );
 
       expect(response.status).toBe(400);
@@ -305,11 +288,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
 
         console.log(
           `UPDATE MEMBER ROLE with condition: ${condition} (as admin):`,
-          JSON.stringify(
-            { status: response.status, errors: response.body.errors },
-            null,
-            2
-          )
+          JSON.stringify({ status: response.status, errors: response.body.errors }, null, 2)
         );
 
         expect(response.status).toBe(400);
@@ -346,10 +325,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${groupCreatorAccessToken}`);
 
-      console.log(
-        "REMOVE MEMBER (as admin):",
-        JSON.stringify(response.body, null, 2)
-      );
+      console.log("REMOVE MEMBER (as admin):", JSON.stringify(response.body, null, 2));
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
