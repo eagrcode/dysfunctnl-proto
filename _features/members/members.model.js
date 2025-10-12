@@ -1,4 +1,5 @@
 const pool = require("../../_shared/utils/db");
+const withTransaction = require("../../_shared/utils/queryTransaction");
 const { NotFoundError, ConflictError } = require("../../_shared/utils/errors");
 
 // GET GROUP MEMBERS
@@ -40,28 +41,19 @@ const getGroupMemberById = async (groupId, userId) => {
 
 // ADD NEW MEMBER
 const addUserToGroup = async (groupId, userIdToAdd) => {
-  try {
-    const result = await pool.query(
+  return withTransaction(async (client) => {
+    const result = await client.query(
       "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
       [groupId, userIdToAdd]
     );
 
-    const memberRoleResult = await pool.query(
+    const memberRoleResult = await client.query(
       "INSERT INTO group_members_roles (user_id, group_id, is_admin) VALUES ($1, $2, $3) RETURNING is_admin",
       [userIdToAdd, groupId, false]
     );
 
     return { member: result.rows[0], role: memberRoleResult.rows[0] };
-  } catch (error) {
-    // Transform Postgres constraint errors
-    if (error.code === "23505") {
-      throw new ConflictError("User is already a member of this group");
-    }
-    if (error.code === "23503") {
-      throw new NotFoundError("User not found");
-    }
-    throw error;
-  }
+  });
 };
 
 // UPDATE MEMBER ROLE

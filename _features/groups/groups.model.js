@@ -1,28 +1,31 @@
 const pool = require("../../_shared/utils/db");
+const withTransaction = require("../../_shared/utils/queryTransaction");
 
 // CREATE GROUP
 const createGroup = async (name, createdById, description) => {
-  const groupResult = await pool.query(
-    "INSERT INTO groups (name, created_by, description) VALUES ($1, $2, $3) RETURNING *",
-    [name, createdById, description]
-  );
-  const groupResultId = groupResult.rows[0].id;
+  return withTransaction(async (client) => {
+    const groupResult = await client.query(
+      "INSERT INTO groups (name, created_by, description) VALUES ($1, $2, $3) RETURNING *",
+      [name, createdById, description]
+    );
+    const groupResultId = groupResult.rows[0].id;
 
-  const memberResult = await pool.query(
-    "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
-    [groupResultId, createdById]
-  );
+    const memberResult = await client.query(
+      "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
+      [groupResultId, createdById]
+    );
 
-  const memberRoleResult = await pool.query(
-    "insert into group_members_roles (user_id, group_id, is_admin) values ($1, $2, $3) returning is_admin",
-    [createdById, groupResultId, true]
-  );
+    const memberRoleResult = await client.query(
+      "insert into group_members_roles (user_id, group_id, is_admin) values ($1, $2, $3) returning is_admin",
+      [createdById, groupResultId, true]
+    );
 
-  return {
-    group: groupResult.rows[0],
-    member: memberResult.rows[0],
-    role: memberRoleResult.rows[0],
-  };
+    return {
+      group: groupResult.rows[0],
+      member: memberResult.rows[0],
+      role: memberRoleResult.rows[0],
+    };
+  });
 };
 
 // GET GROUP BY ID
