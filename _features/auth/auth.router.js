@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const { authLimiter, registrationLimiter } = require("../../_shared/middleware/rateLimiters");
 const {
   handleUserRegistration,
   handleUserLogin,
@@ -7,13 +8,8 @@ const {
 
 const authRouter = Router();
 
-// Register a new user
-authRouter.post("/register", handleUserRegistration);
-
-// Login to get JWT and refresh token
-authRouter.post("/login", handleUserLogin);
-
-// Refresh access token
+authRouter.post("/register", registrationLimiter, handleUserRegistration);
+authRouter.post("/login", authLimiter, handleUserLogin);
 authRouter.post("/refresh", handleRefreshAccessToken);
 
 module.exports = authRouter;
