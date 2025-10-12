@@ -94,7 +94,7 @@ const handleUserLogin = [
     }
 
     const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "2s",
+      expiresIn: "15m",
     });
 
     const existingToken = await getRefreshToken(user.id);

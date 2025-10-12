@@ -3,8 +3,8 @@ const { NotFoundError } = require("../../../_shared/utils/errors");
 
 // ADD NEW MEDIA
 const addMedia = async (
-  albumId,
   groupId,
+  albumId,
   uploadedBy,
   type,
   mimeType,

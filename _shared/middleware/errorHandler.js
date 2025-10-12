@@ -24,10 +24,7 @@ const errorHandler = (err, req, res, next) => {
   // Generic error
   res.status(500).json({
     success: false,
-    error:
-      process.env.NODE_ENV === "production"
-        ? "Internal server error"
-        : err.message,
+    error: process.env.NODE_ENV === "production" ? "An unexpected error occurred" : err.message,
   });
 };
 

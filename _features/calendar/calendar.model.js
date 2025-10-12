@@ -42,7 +42,7 @@ const getEventById = async (eventId, groupId) => {
 };
 
 // GET EVENTS BY RANGE
-const getEventsByRange = async (groupId, endTime, startTime) => {
+const getEventsByRange = async (groupId, startTime, endTime) => {
   const result = await pool.query(
     `SELECT * FROM calendar
      WHERE group_id = $1

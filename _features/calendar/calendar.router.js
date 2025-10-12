@@ -10,10 +10,10 @@ const { Router } = require("express");
 const calendarRouter = Router({ mergeParams: true });
 
 /* CALENDAR ROUTES */
+calendarRouter.get("/range", handleGetEventsByRange);
 calendarRouter.post("/", handleCreateEvent);
 calendarRouter.get("/:eventId", handleGetEventById);
 calendarRouter.patch("/:eventId", handleUpdateEvent);
 calendarRouter.delete("/:eventId", handleDeleteEvent);
-calendarRouter.get("/range", handleGetEventsByRange);
 
 module.exports = calendarRouter;
