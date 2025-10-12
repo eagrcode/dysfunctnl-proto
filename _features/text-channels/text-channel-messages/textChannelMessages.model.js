@@ -4,8 +4,8 @@ const { NotFoundError } = require("../../../_shared/utils/errors");
 // GET ALL MESSAGES
 const getAllMessages = async (textChannelId) => {
   const result = await pool.query(
-    `SELECT * FROM messages
-     WHERE text_channel_id = $1
+    `SELECT * FROM text_channel_messages
+     WHERE channel_id = $1
      ORDER BY created_at DESC`,
     [textChannelId]
   );
@@ -20,7 +20,7 @@ const getAllMessages = async (textChannelId) => {
 // CREATE NEW MESSAGE
 const createMessage = async (textChannelId, content, authorId) => {
   const result = await pool.query(
-    `INSERT INTO messages
+    `INSERT INTO text_channel_messages
      (channel_id, content, author_id)
      VALUES ($1, $2, $3)
      RETURNING *`,
@@ -37,9 +37,9 @@ const createMessage = async (textChannelId, content, authorId) => {
 // UPDATE MESSAGE
 const updateMessage = async (textChannelId, messageId, newContent) => {
   const result = await pool.query(
-    `UPDATE messages
+    `UPDATE text_channel_messages
      SET content = $1
-     WHERE text_channel_id = $2
+     WHERE channel_id = $2
      AND id = $3
      RETURNING *`,
     [newContent, textChannelId, messageId]
@@ -55,8 +55,8 @@ const updateMessage = async (textChannelId, messageId, newContent) => {
 // DELETE MESSAGE
 const deleteMessage = async (textChannelId, messageId) => {
   const result = await pool.query(
-    `DELETE FROM messages
-     WHERE text_channel_id = $1
+    `DELETE FROM text_channel_messages
+     WHERE channel_id = $1
      AND id = $2
      RETURNING *`,
     [textChannelId, messageId]

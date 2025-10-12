@@ -2,7 +2,7 @@ const { Router } = require("express");
 const {
   handleUserRegistration,
   handleUserLogin,
-  handleRefreshToken,
+  handleRefreshAccessToken,
 } = require("./auth.controller");
 
 const authRouter = Router();
@@ -14,6 +14,6 @@ authRouter.post("/register", handleUserRegistration);
 authRouter.post("/login", handleUserLogin);
 
 // Refresh access token
-// authRouter.post("/refresh", handleRefreshToken);
+authRouter.post("/refresh", handleRefreshAccessToken);
 
 module.exports = authRouter;

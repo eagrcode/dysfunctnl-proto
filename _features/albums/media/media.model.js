@@ -2,7 +2,7 @@ const pool = require("../../../_shared/utils/db");
 const { NotFoundError } = require("../../../_shared/utils/errors");
 
 // ADD NEW MEDIA
-const addMedia = async ({
+const addMedia = async (
   albumId,
   groupId,
   uploadedBy,
@@ -11,8 +11,8 @@ const addMedia = async ({
   url,
   bucketKey,
   sizeBytes,
-  filename,
-}) => {
+  filename
+) => {
   const { rows } = await pool.query(
     `
     INSERT INTO media (

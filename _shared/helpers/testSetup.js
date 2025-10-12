@@ -21,9 +21,7 @@ const registerUser = async () => {
     .set("Content-Type", "application/json");
 
   if (response.status !== 201) {
-    throw new Error(
-      `Failed to register: ${response.body.error || "Unknown error"}`
-    );
+    throw new Error(`Failed to register: ${response.body.error || "Unknown error"}`);
   }
 
   console.log("REGISTER MEMBER:", JSON.stringify(response.body, null, 2));
@@ -49,9 +47,7 @@ const loginUser = async (email, password = TEST_PASSWORD) => {
       .set("Content-Type", "application/json");
 
     if (response.status !== 200) {
-      throw new Error(
-        `Failed to login: ${response.body.error || "Unknown error"}`
-      );
+      throw new Error(`Failed to login: ${response.body.error || "Unknown error"}`);
     }
 
     console.log("LOGIN:", JSON.stringify(response.body, null, 2));
@@ -60,6 +56,7 @@ const loginUser = async (email, password = TEST_PASSWORD) => {
     return {
       user,
       accessToken,
+      refreshToken,
     };
   } catch (error) {
     throw new Error(error);
@@ -76,9 +73,7 @@ const createGroup = async (data, accessToken) => {
       .set("Authorization", `Bearer ${accessToken}`);
 
     if (response.status !== 201) {
-      throw new Error(
-        `Failed to create group: ${response.body.error || "Unknown error"}`
-      );
+      throw new Error(`Failed to create group: ${response.body.error || "Unknown error"}`);
     }
 
     console.log("CREATE GROUP:", JSON.stringify(response.body, null, 2));
@@ -102,11 +97,7 @@ const addMember = async (groupId, memberId, adminAccessToken) => {
     console.log("ADD MEMBER:", JSON.stringify(response.body, null, 2));
 
     if (response.status !== 201) {
-      throw new Error(
-        `Failed to add member to group: ${
-          response.body.error || "Unknown error"
-        }`
-      );
+      throw new Error(`Failed to add member to group: ${response.body.error || "Unknown error"}`);
     }
 
     const { success } = response.body;
