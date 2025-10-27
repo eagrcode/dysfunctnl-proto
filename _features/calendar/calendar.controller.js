@@ -1,4 +1,5 @@
 const { body, validationResult, query } = require("express-validator");
+const { ForbiddenError } = require("../../_shared/utils/errors");
 const {
   createEvent,
   getEventById,
@@ -7,7 +8,7 @@ const {
   getEventsByRange,
 } = require("./calendar.model");
 
-const createAndUpdateValidationFields = [
+const createValidationFields = [
   body("title")
     .notEmpty()
     .withMessage("Event title is required")
@@ -31,7 +32,48 @@ const createAndUpdateValidationFields = [
     .withMessage("End time is required")
     .isISO8601()
     .withMessage("End time must be a valid ISO 8601 date"),
-  body("allDay").optional().isBoolean().withMessage("All day must be a boolean value").toBoolean(),
+  body("allDay")
+    .optional()
+    .isBoolean()
+    .withMessage("All day must be a boolean value")
+    .toBoolean(),
+  body("participants")
+    .optional()
+    .isArray()
+    .withMessage("Participants must be an array of user IDs"),
+  body("location")
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ max: 200 })
+    .withMessage("Location must not exceed 200 characters"),
+];
+const updateValidationFields = [
+  body("title")
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Title must be between 1 and 100 characters"),
+  body("description")
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ max: 500 })
+    .withMessage("Description must not exceed 500 characters"),
+  body("startTime")
+    .optional()
+    .isISO8601()
+    .withMessage("Start time must be a valid ISO 8601 date"),
+  body("endTime")
+    .optional()
+    .isISO8601()
+    .withMessage("End time must be a valid ISO 8601 date"),
+  body("allDay")
+    .optional()
+    .isBoolean()
+    .withMessage("All day must be a boolean value")
+    .toBoolean(),
   body("participants")
     .optional()
     .isArray()
@@ -44,12 +86,12 @@ const createAndUpdateValidationFields = [
     .withMessage("Location must not exceed 200 characters"),
 ];
 const eventsByRangeValidationFields = [
-  query("startTime")
+  query("start")
     .notEmpty()
     .withMessage("startTime query parameter is required")
     .isISO8601()
     .withMessage("startTime must be a valid ISO 8601 date"),
-  query("endTime")
+  query("end")
     .notEmpty()
     .withMessage("endTime query parameter is required")
     .isISO8601()
@@ -58,7 +100,7 @@ const eventsByRangeValidationFields = [
 
 // CREATE EVENT
 const handleCreateEvent = [
-  ...createAndUpdateValidationFields,
+  ...createValidationFields,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -68,6 +110,7 @@ const handleCreateEvent = [
 
     const { groupId } = req.params;
     const {
+      createdBy,
       title,
       description = null,
       startTime,
@@ -79,6 +122,7 @@ const handleCreateEvent = [
 
     const result = await createEvent(
       groupId,
+      createdBy,
       title,
       description,
       startTime,
@@ -109,7 +153,7 @@ const handleGetEventById = async (req, res) => {
 
 // UPDATE EVENT
 const handleUpdateEvent = [
-  ...createAndUpdateValidationFields,
+  ...updateValidationFields,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -146,17 +190,27 @@ const handleGetEventsByRange = [
   ...eventsByRangeValidationFields,
 
   async (req, res) => {
-    const { groupId } = req.params;
-    const { startTime, endTime } = req.query;
-
-    if (!startTime || !endTime) {
-      return res.status(400).json({
-        success: false,
-        message: "Both startTime and endTime query parameters are required",
-      });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    const result = await getEventsByRange(groupId, startTime, endTime);
+    const { groupId } = req.params;
+    const { start, end } = req.query;
+
+    console.log("QUERY PARAMETERS", req.query);
+
+    console.log("START TIME", start);
+    console.log("END TIME", end);
+
+    // if (!start || !end) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Both startTime and endTime query parameters are required",
+    //   });
+    // }
+
+    const result = await getEventsByRange(groupId, start, end);
 
     res.status(200).json({
       success: true,
