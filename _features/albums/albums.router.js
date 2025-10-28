@@ -1,5 +1,7 @@
 const { Router } = require("express");
 const mediaRouter = require("./media/media.router");
+const checkAlbumOwnership = require("../../_shared/middleware/albumSecurity");
+const permissionRequired = require("../../_shared/middleware/groupSecurity");
 const {
   handleAddAlbum,
   handleGetAllAlbumsByGroupId,
@@ -14,8 +16,8 @@ const albumsRouter = Router({ mergeParams: true });
 albumsRouter.get("/", handleGetAllAlbumsByGroupId);
 albumsRouter.post("/", handleAddAlbum);
 albumsRouter.get("/:albumId", handleGetAlbumById);
-albumsRouter.patch("/:albumId", handleUpdateAlbumById);
-albumsRouter.delete("/:albumId", handleDeleteAlbumById);
+albumsRouter.patch("/:albumId", checkAlbumOwnership, handleUpdateAlbumById);
+albumsRouter.delete("/:albumId", checkAlbumOwnership, handleDeleteAlbumById);
 
 // NESTED MEDIA ROUTES
 albumsRouter.use("/:albumId/media", mediaRouter);

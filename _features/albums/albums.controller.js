@@ -10,7 +10,7 @@ const { getAllMediaByAlbumId } = require("./media/media.model");
 // ADD NEW ALBUM
 const handleAddAlbum = async (req, res) => {
   const { groupId } = req.params;
-  const { name, description, createdBy } = req.body.data;
+  const { name, description, createdBy } = req.body;
 
   const result = await addAlbum(groupId, name, description, createdBy);
 
@@ -37,9 +37,6 @@ const handleGetAlbumById = async (req, res) => {
   const { groupId, albumId } = req.params;
 
   const album = await getAlbumById(groupId, albumId);
-  const media = await getAllMediaByAlbumId(groupId, albumId);
-
-  album.media = media;
 
   res.status(200).json({
     success: true,
@@ -62,9 +59,9 @@ const handleDeleteAlbumById = async (req, res) => {
 // UPDATE ALBUM BY ID
 const handleUpdateAlbumById = async (req, res) => {
   const { groupId, albumId } = req.params;
-  const { data } = req.body;
+  const { name, description } = req.body;
 
-  const result = await updateAlbumById(groupId, albumId, data);
+  const result = await updateAlbumById(groupId, albumId, name, description);
 
   res.status(201).json({
     success: true,
