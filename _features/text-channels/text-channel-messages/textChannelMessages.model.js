@@ -21,7 +21,7 @@ const getAllMessages = async (textChannelId) => {
 const createMessage = async (textChannelId, content, authorId) => {
   const result = await pool.query(
     `INSERT INTO text_channel_messages
-     (channel_id, content, author_id)
+     (channel_id, content, sender_id)
      VALUES ($1, $2, $3)
      RETURNING *`,
     [textChannelId, content, authorId]
@@ -55,10 +55,11 @@ const updateMessage = async (textChannelId, messageId, newContent) => {
 // DELETE MESSAGE
 const deleteMessage = async (textChannelId, messageId) => {
   const result = await pool.query(
-    `DELETE FROM text_channel_messages
+    `UPDATE text_channel_messages
+     SET deleted_at = NOW()
      WHERE channel_id = $1
      AND id = $2
-     RETURNING *`,
+     RETURNING id, deleted_at`,
     [textChannelId, messageId]
   );
 

@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const permissionRequired = require("../../_shared/middleware/groupSecurity");
 const {
   handleGetAllTextChannels,
   handleCreateTextChannel,
@@ -17,15 +18,35 @@ const textChannelsRouter = Router({ mergeParams: true });
 
 // Text Channel Routes
 textChannelsRouter.get("/", handleGetAllTextChannels);
-textChannelsRouter.post("/", handleCreateTextChannel);
+textChannelsRouter.post(
+  "/",
+  permissionRequired("admin"),
+  handleCreateTextChannel
+);
 textChannelsRouter.get("/:textChannelId", handleGetTextChannelById);
-textChannelsRouter.delete("/:textChannelId", handleDeleteTextChannel);
-textChannelsRouter.patch("/:textChannelId", handleUpdateTextChannel);
+textChannelsRouter.delete(
+  "/:textChannelId",
+  permissionRequired("admin"),
+  handleDeleteTextChannel
+);
+textChannelsRouter.patch(
+  "/:textChannelId",
+  permissionRequired("admin"),
+  handleUpdateTextChannel
+);
 
 // Messages Routes
-textChannelsRouter.get("/messages", handleGetAllMessages);
-textChannelsRouter.post("/messages", handleCreateMessage);
-textChannelsRouter.delete("/messages/:messageId", handleDeleteMessage);
-textChannelsRouter.patch("/messages/:messageId", handleUpdateMessage);
+textChannelsRouter.get("/:textChannelId/messages", handleGetAllMessages);
+textChannelsRouter.post("/:textChannelId/messages", handleCreateMessage);
+textChannelsRouter.patch(
+  "/:textChannelId/messages/:messageId/delete",
+  permissionRequired("admin"),
+  handleDeleteMessage
+);
+textChannelsRouter.patch(
+  "/:textChannelId/messages/:messageId/update",
+  permissionRequired("admin"),
+  handleUpdateMessage
+);
 
 module.exports = textChannelsRouter;

@@ -19,9 +19,9 @@ const handleGetAllMessages = async (req, res) => {
 
 // CREATE NEW MESSAGE
 const handleCreateMessage = async (req, res) => {
+  const authorId = req.user.id;
   const { textChannelId } = req.params;
-
-  const { content, authorId } = req.body;
+  const { content } = req.body;
 
   const result = await createMessage(textChannelId, content, authorId);
 

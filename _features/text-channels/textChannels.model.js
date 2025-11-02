@@ -56,7 +56,8 @@ const updateTextChannel = async (groupId, textChannelId, newName) => {
     `UPDATE text_channels 
      SET name = $1
      WHERE group_id = $2 
-     AND id = $3`,
+     AND id = $3
+     RETURNING *`,
     [newName, groupId, textChannelId]
   );
 

@@ -46,9 +46,9 @@ const handleGetTextChannelById = async (req, res) => {
 // UPDATE TEXT CHANNEL
 const handleUpdateTextChannel = async (req, res) => {
   const { groupId, textChannelId } = req.params;
-  const { newName } = req.body;
+  const { channelName } = req.body;
 
-  const result = await updateTextChannel(groupId, textChannelId, newName);
+  const result = await updateTextChannel(groupId, textChannelId, channelName);
 
   res.status(201).json({
     success: true,
