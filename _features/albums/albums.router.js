@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const mediaRouter = require("./media/media.router");
-const checkAlbumOwnership = require("../../_shared/middleware/albumSecurity");
+const checkAlbumOwnership = require("../../_shared/middleware/resouce-management/checkAlbumOwnership");
 const permissionRequired = require("../../_shared/middleware/groupSecurity");
 const {
   handleAddAlbum,
