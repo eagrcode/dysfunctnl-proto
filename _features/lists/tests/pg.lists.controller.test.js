@@ -214,6 +214,22 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
     });
   });
 
+  // GET LIST ITEM BY ID
+  describe("Get List Item by ID", () => {
+    test("should retrieve a specific list item by its ID", async () => {
+      const response = await request(app)
+        .get(`/groups/${groupId}/lists/${listId}/items/${listItemId}`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${nonAdminAccessToken}`);
+
+      console.log(`GET LIST ITEM BY ID`, JSON.stringify(response.body, null, 2));
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.id).toBe(listItemId);
+    });
+  });
+
   // UPDATE LIST ITEM
   describe("Update list item", () => {
     test("should update the list item", async () => {
