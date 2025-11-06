@@ -11,3 +11,18 @@ mvp.md
 mvp-feature-checklist
 .vscode
      
+
+uploads/
+!uploads/.gitkeep
+
+uploads/*
+!uploads/thumbs/
+!uploads/display/
+!uploads/original/
+!uploads/videos/
+!uploads/video-thumbs/
+uploads/thumbs/*
+uploads/display/*
+uploads/original/*
+uploads/videos/*
+uploads/video-thumbs/*
