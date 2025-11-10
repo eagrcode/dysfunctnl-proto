@@ -21,6 +21,34 @@ const errorHandler = (err, req, res, next) => {
     return res.status(err.statusCode).json(response);
   }
 
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({
+      success: false,
+      error: "File too large",
+      code: "FILE_TOO_LARGE",
+    });
+  }
+
+  if (err.code === "LIMIT_UNEXPECTED_FILE") {
+    return res.status(400).json({
+      success: false,
+      error: "Unexpected file field name",
+      code: "INVALID_FIELD",
+    });
+  }
+
+  if (
+    err.message?.includes("Input file") ||
+    err.message?.includes("VipsJpeg") ||
+    err.message?.includes("unsupported image format")
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid or corrupted image file",
+      code: "INVALID_IMAGE",
+    });
+  }
+
   // Generic error
   res.status(500).json({
     success: false,

@@ -2,6 +2,7 @@ const express = require("express");
 const { generalLimiter } = require("./_shared/middleware/rateLimiters");
 const authRouter = require("./_features/auth/auth.router");
 const groupsRouter = require("./_features/groups/groups.router");
+const imageUploadCleanup = require("./_shared/middleware/imageUploadCleanup");
 const { errorHandler } = require("./_shared/middleware/errorHandler");
 
 process.env.TZ = "UTC";
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Dysfunctnl Server!");
 });
 
+app.use(imageUploadCleanup);
 app.use(errorHandler);
 
 module.exports = app;

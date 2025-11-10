@@ -43,6 +43,29 @@ class ForbiddenError extends AppError {
   }
 }
 
+class UploadError extends AppError {
+  constructor(message, statusCode = 400, tempFilePath = null) {
+    super(message);
+    this.name = "UploadError";
+    this.statusCode = statusCode;
+    this.tempFilePath = tempFilePath;
+  }
+}
+
+class FileTooLargeError extends UploadError {
+  constructor(message = "File size too large", tempFilePath) {
+    super(message, 413, tempFilePath);
+    this.name = "FileTooLargeError";
+  }
+}
+
+class InvalidFileTypeError extends UploadError {
+  constructor(message = "Invalid file type") {
+    super(message, 415);
+    this.code = "INVALID_FILE_TYPE";
+  }
+}
+
 module.exports = {
   AppError,
   NotFoundError,
@@ -50,4 +73,7 @@ module.exports = {
   ValidationError,
   UnauthorisedError,
   ForbiddenError,
+  UploadError,
+  FileTooLargeError,
+  InvalidFileTypeError,
 };

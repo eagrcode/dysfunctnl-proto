@@ -9,11 +9,21 @@ const addMedia = async (
   uploadedBy,
   type,
   mimeType,
-  url,
-  bucketKey,
+  // url,
+  // bucketKey,
   sizeBytes,
   filename
 ) => {
+  console.log("ADDING MEDIA:", {
+    groupId,
+    albumId,
+    uploadedBy,
+    type,
+    mimeType,
+    sizeBytes,
+    filename,
+  });
+
   const { rows } = await pool.query(
     `
     INSERT INTO media (
@@ -22,14 +32,12 @@ const addMedia = async (
       uploaded_by,
       type,
       mime_type,  
-      url,
-      bucket_key,
       size_bytes,
       filename
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *;
   `,
-    [albumId, groupId, uploadedBy, type, mimeType, url, bucketKey, sizeBytes, filename]
+    [albumId, groupId, uploadedBy, type, mimeType, sizeBytes, filename]
   );
 
   if (rows.length === 0) {
