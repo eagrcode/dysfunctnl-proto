@@ -4,6 +4,7 @@ const authRouter = require("./_features/auth/auth.router");
 const groupsRouter = require("./_features/groups/groups.router");
 const imageUploadCleanup = require("./_shared/middleware/imageUploadCleanup");
 const { errorHandler } = require("./_shared/middleware/errorHandler");
+const staticFileServeConfig = require("./_shared/utils/staticFileServeConfig");
 
 process.env.TZ = "UTC";
 console.log("Server timezone:", process.env.TZ);
@@ -13,7 +14,7 @@ const app = express();
 
 app.use(express.json());
 app.use(generalLimiter);
-
+app.use("/media", staticFileServeConfig);
 app.use("/auth", authRouter);
 app.use("/groups", groupsRouter);
 
