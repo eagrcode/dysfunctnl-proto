@@ -100,7 +100,7 @@ const initSocketServer = (httpServer) => {
         const userId = socket.user.id;
 
         try {
-          const result = await updateMessage(channelId, messageId, newContent);
+          const result = await updateMessage(channelId, messageId, newContent, userId);
           const updatedAt = result.updated_at;
           const updatedMessage = result.content;
 
@@ -130,7 +130,7 @@ const initSocketServer = (httpServer) => {
         const { channelId, messageId } = data;
         const userId = socket.user.id;
 
-        const result = await deleteMessage(channelId, messageId);
+        const result = await deleteMessage(channelId, messageId, userId);
         const deletedAt = result.deleted_at;
 
         // Broadcast to room
