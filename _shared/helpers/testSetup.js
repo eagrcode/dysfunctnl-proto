@@ -109,4 +109,29 @@ const addMember = async (groupId, memberId, adminAccessToken) => {
   }
 };
 
-module.exports = { registerUser, loginUser, createGroup, addMember };
+// CREATE TEXT CHANNEL
+const createTextChannel = async (groupId, channelData, accessToken) => {
+  try {
+    const response = await request(app)
+      .post(`/groups/${groupId}/text-channels`)
+      .set("Content-Type", "application/json")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        channelName: channelData,
+      });
+
+    if (response.status !== 201) {
+      throw new Error(`Failed to create text channel: ${response.body.error || "Unknown error"}`);
+    }
+
+    console.log("CREATE TEXT CHANNEL:", JSON.stringify(response.body, null, 2));
+
+    const channelId = response.body.data.id;
+
+    return channelId;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+module.exports = { registerUser, loginUser, createGroup, addMember, createTextChannel };

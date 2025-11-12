@@ -1,4 +1,7 @@
 const dotenv = require("dotenv");
+const { createServer } = require("http");
+const initSocketServer = require("./_shared/utils/initSocketServer");
+
 dotenv.config();
 
 const requiredEnvVars = ["HOST", "APPUSER", "DATABASE", "APP_USER_PASSWORD", "PORT", "JWT_SECRET"];
@@ -12,7 +15,11 @@ if (missingVars.length > 0) {
 const app = require("./app");
 const port = process.env.APP_PORT || 3000;
 
-app.listen(port, () => {
+const server = createServer(app);
+initSocketServer(server);
+
+server.listen(port, () => {
   console.log(`✅ Server running on http://localhost:${port}`);
   console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`Socket.IO server initialised`);
 });

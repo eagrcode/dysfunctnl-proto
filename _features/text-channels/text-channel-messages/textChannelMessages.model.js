@@ -23,7 +23,7 @@ const createMessage = async (textChannelId, content, authorId) => {
     `INSERT INTO text_channel_messages
      (channel_id, content, sender_id)
      VALUES ($1, $2, $3)
-     RETURNING *`,
+     RETURNING id, created_at`,
     [textChannelId, content, authorId]
   );
 
@@ -41,7 +41,7 @@ const updateMessage = async (textChannelId, messageId, newContent) => {
      SET content = $1
      WHERE channel_id = $2
      AND id = $3
-     RETURNING *`,
+     RETURNING content, updated_at`,
     [newContent, textChannelId, messageId]
   );
 
