@@ -48,20 +48,20 @@ const addMedia = async (
 };
 
 // GET ALL MEDIA BY ALBUM ID
-const getAllMediaByAlbumId = async (groupId, albumId) => {
-  const { rows } = await pool.query(
-    `
-    SELECT *
-    FROM media
-    WHERE group_id = $1
-    AND album_id = $2
-    ORDER BY created_at DESC;
-  `,
-    [groupId, albumId]
-  );
+// const getAllMediaByAlbumId = async (groupId, albumId) => {
+//   const { rows } = await pool.query(
+//     `
+//     SELECT *
+//     FROM media
+//     WHERE group_id = $1
+//     AND album_id = $2
+//     ORDER BY created_at DESC;
+//   `,
+//     [groupId, albumId]
+//   );
 
-  return rows;
-};
+//   return rows;
+// };
 
 // GET MEDIA BY ID
 const getMediaById = async (groupId, albumId, mediaId) => {
@@ -91,7 +91,7 @@ const deleteMediaById = async (groupId, albumId, mediaId) => {
     WHERE group_id = $1
     AND album_id = $2
     AND id = $3
-    RETURNING *;
+    RETURNING id, album_id, group_id, filename;
   `,
     [groupId, albumId, mediaId]
   );
@@ -101,6 +101,26 @@ const deleteMediaById = async (groupId, albumId, mediaId) => {
   }
 
   return rows[0];
+};
+
+// GET FILENAME BY ID
+const getFilenameById = async (groupId, albumId, mediaId) => {
+  const { rows } = await pool.query(
+    `
+    SELECT filename
+    FROM media
+    WHERE group_id = $1
+    AND album_id = $2
+    AND id = $3;
+  `,
+    [groupId, albumId, mediaId]
+  );
+
+  if (rows.length === 0) {
+    throw new NotFoundError(`No media found for ID: ${mediaId}`);
+  }
+
+  return rows[0].filename;
 };
 
 // UPDATE MEDIA BY ID
@@ -174,8 +194,9 @@ const updateMediaById = async (groupId, albumId, mediaId, updates) => {
 
 module.exports = {
   addMedia,
-  getAllMediaByAlbumId,
+  // getAllMediaByAlbumId,
   getMediaById,
   deleteMediaById,
   updateMediaById,
+  getFilenameById,
 };

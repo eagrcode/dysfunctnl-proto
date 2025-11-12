@@ -1,50 +1,57 @@
+const fs = require("fs").promises;
+const path = require("path");
+const uploadConfig = require("../../../_shared/utils/uploadConfig");
 const {
   addMedia,
-  getAllMediaByAlbumId,
+  // getAllMediaByAlbumId,
   getMediaById,
   deleteMediaById,
   updateMediaById,
+  getFilenameById,
 } = require("./media.model");
-
-// ADD MEDIA
-const handleAddMedia = async (req, res, next) => {
-  const { groupId, albumId } = req.params;
-
-  const { uploadedBy, type, mimeType, url, bucketKey, sizeBytes, filename } = req.body.data;
-
-  const result = await addMedia(
-    groupId,
-    albumId,
-    uploadedBy,
-    type,
-    mimeType,
-    url,
-    bucketKey,
-    sizeBytes,
-    filename
-  );
-
-  res.status(201).json({
-    success: true,
-    data: result,
-  });
-};
 
 // GET MEDIA BY ID
 const handleGetMediaById = async (req, res) => {
   const { groupId, albumId, mediaId } = req.params;
 
-  const result = await getMediaById(groupId, albumId, mediaId);
+  const media = await getMediaById(groupId, albumId, mediaId);
 
   res.status(200).json({
     success: true,
-    data: result,
+    data: {
+      ...media,
+      urls: {
+        thumb: uploadConfig.getUrl("thumbs", `${media.filename}.jpg`),
+        display: uploadConfig.getUrl("display", `${media.filename}.jpg`),
+        original: uploadConfig.getUrl("original", `${media.filename}.jpg`),
+      },
+    },
   });
 };
 
 // DELETE MEDIA BY ID
 const handleDeleteMediaById = async (req, res) => {
   const { groupId, albumId, mediaId } = req.params;
+
+  const filename = await getFilenameById(groupId, albumId, mediaId);
+
+  const filePaths = [
+    path.join(uploadConfig.getPath("thumbs"), `${filename}.jpg`),
+    path.join(uploadConfig.getPath("display"), `${filename}.jpg`),
+    path.join(uploadConfig.getPath("original"), `${filename}.jpg`),
+  ];
+
+  const deleteFiles = filePaths.map((filePath) =>
+    fs.unlink(filePath).catch((error) => {
+      if (error.code !== "ENOENT") {
+        console.error(`Error deleting file at ${filePath}:`, error);
+      }
+
+      console.log(`Successfully deleted file at ${filePath}, or file did not exist.`);
+    })
+  );
+
+  await Promise.all(deleteFiles);
 
   const result = await deleteMediaById(groupId, albumId, mediaId);
 
@@ -68,7 +75,6 @@ const handleUpdateMediaById = async (req, res) => {
 };
 
 module.exports = {
-  handleAddMedia,
   handleGetMediaById,
   handleDeleteMediaById,
   handleUpdateMediaById,
