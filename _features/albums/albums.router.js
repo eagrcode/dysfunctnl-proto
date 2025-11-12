@@ -16,8 +16,8 @@ const albumsRouter = Router({ mergeParams: true });
 albumsRouter.get("/", handleGetAllAlbumsByGroupId);
 albumsRouter.post("/", handleAddAlbum);
 albumsRouter.get("/:albumId", handleGetAlbumById);
-albumsRouter.patch("/:albumId", checkAlbumOwnership, handleUpdateAlbumById);
-albumsRouter.delete("/:albumId", checkAlbumOwnership, handleDeleteAlbumById);
+albumsRouter.patch("/:albumId", handleUpdateAlbumById);
+albumsRouter.delete("/:albumId", handleDeleteAlbumById);
 
 // NESTED MEDIA ROUTES
 albumsRouter.use("/:albumId/media", mediaRouter);

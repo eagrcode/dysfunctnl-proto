@@ -47,8 +47,10 @@ const handleGetAlbumById = async (req, res) => {
 // DELETE ALBUM BY ID
 const handleDeleteAlbumById = async (req, res) => {
   const { groupId, albumId } = req.params;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await deleteAlbumById(groupId, albumId);
+  const result = await deleteAlbumById(groupId, albumId, is_admin, userId);
 
   res.status(200).json({
     success: true,
@@ -60,8 +62,10 @@ const handleDeleteAlbumById = async (req, res) => {
 const handleUpdateAlbumById = async (req, res) => {
   const { groupId, albumId } = req.params;
   const { name, description } = req.body;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await updateAlbumById(groupId, albumId, name, description);
+  const result = await updateAlbumById(groupId, albumId, name, description, is_admin, userId);
 
   res.status(201).json({
     success: true,

@@ -92,26 +92,30 @@ const getAlbumById = async (groupId, albumId) => {
 };
 
 // DELETE ALBUM BY ID
-const deleteAlbumById = async (groupId, albumId) => {
+const deleteAlbumById = async (groupId, albumId, is_admin, userId) => {
   const { rows } = await pool.query(
     `
     DELETE FROM media_albums    
     WHERE group_id = $1
-    AND id = $2 
+    AND id = $2
+    AND (created_by = $3 OR $4 = true)
     RETURNING *;
   `,
-    [groupId, albumId]
+    [groupId, albumId, userId, is_admin]
   );
 
   if (rows.length === 0) {
-    throw new NotFoundError(`Album with ID ${albumId} not found`);
+    throw new NotFoundError(`Failed to delete album with ID ${albumId}`, {
+      consition1: "Album not found",
+      condition2: "Permission denied",
+    });
   }
 
   return rows[0];
 };
 
 // UPDATE ALBUM BY ID
-const updateAlbumById = async (groupId, albumId, name, description) => {
+const updateAlbumById = async (groupId, albumId, name, description, is_admin, userId) => {
   const fields = [];
   const values = [];
   let paramIndex = 1;
@@ -128,15 +132,20 @@ const updateAlbumById = async (groupId, albumId, name, description) => {
     paramIndex++;
   }
 
-  // Add groupId and albumId as the final parameters
-  values.push(groupId, albumId);
+  // Add final parameters for WHERE clause
+  values.push(groupId, albumId, userId, is_admin);
 
   const query = `
     UPDATE media_albums
     SET ${fields.join(", ")}
-    WHERE group_id = $${paramIndex++} AND id = $${paramIndex}
+    WHERE group_id = $${paramIndex++} 
+    AND id = $${paramIndex++}
+    AND (created_by = $${paramIndex++} OR $${paramIndex} = true) 
     RETURNING *;
   `;
+
+  console.log("Update Album Query:", query);
+  console.log("With Values:", values);
 
   const { rows } = await pool.query(query, values);
 
