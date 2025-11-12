@@ -35,36 +35,38 @@ const createMessage = async (textChannelId, content, authorId) => {
 };
 
 // UPDATE MESSAGE
-const updateMessage = async (textChannelId, messageId, newContent) => {
+const updateMessage = async (textChannelId, messageId, newContent, userId) => {
   const result = await pool.query(
     `UPDATE text_channel_messages
      SET content = $1
      WHERE channel_id = $2
      AND id = $3
+     AND sender_id = $4
      RETURNING content, updated_at`,
-    [newContent, textChannelId, messageId]
+    [newContent, textChannelId, messageId, userId]
   );
 
   if (result.rows.length === 0) {
-    throw new NotFoundError("Message not found or failed to update");
+    throw new NotFoundError(`Failed to update message: Message not found or user unauthorised`);
   }
 
   return result.rows[0];
 };
 
 // DELETE MESSAGE
-const deleteMessage = async (textChannelId, messageId) => {
+const deleteMessage = async (textChannelId, messageId, userId) => {
   const result = await pool.query(
     `UPDATE text_channel_messages
      SET deleted_at = NOW()
      WHERE channel_id = $1
      AND id = $2
+     AND sender_id = $3
      RETURNING id, deleted_at`,
-    [textChannelId, messageId]
+    [textChannelId, messageId, userId]
   );
 
   if (result.rows.length === 0) {
-    throw new NotFoundError("Message not found or failed to delete");
+    throw new NotFoundError(`Failed to delete message: Message not found or user unauthorised`);
   }
 
   return result.rows[0];
