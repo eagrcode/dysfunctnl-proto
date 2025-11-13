@@ -47,10 +47,8 @@ const handleGetTextChannelById = async (req, res) => {
 const handleUpdateTextChannel = async (req, res) => {
   const { groupId, textChannelId } = req.params;
   const { channelName } = req.body;
-  const { is_admin } = req.groupMembership;
-  const userId = req.user.id;
 
-  const result = await updateTextChannel(groupId, textChannelId, channelName, is_admin, userId);
+  const result = await updateTextChannel(groupId, textChannelId, channelName);
 
   res.status(201).json({
     success: true,
@@ -61,10 +59,8 @@ const handleUpdateTextChannel = async (req, res) => {
 // DELETE TEXT CHANNEL
 const handleDeleteTextChannel = async (req, res) => {
   const { groupId, textChannelId } = req.params;
-  const { is_admin } = req.groupMembership;
-  const userId = req.user.id;
 
-  const result = await deleteTextChannel(groupId, textChannelId, is_admin, userId);
+  const result = await deleteTextChannel(groupId, textChannelId);
 
   res.status(200).json({
     success: true,

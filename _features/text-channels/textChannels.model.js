@@ -51,15 +51,14 @@ const getTextChannelById = async (groupId, textChannelId) => {
 };
 
 // UPDATE A TEXT CHANNEL
-const updateTextChannel = async (groupId, textChannelId, newName, is_admin, userId) => {
+const updateTextChannel = async (groupId, textChannelId, newName) => {
   const result = await pool.query(
     `UPDATE text_channels 
      SET name = $1
      WHERE group_id = $2 
      AND id = $3
-     and (created_by = $4 or $5 = true)
      RETURNING *`,
-    [newName, groupId, textChannelId, userId, is_admin]
+    [newName, groupId, textChannelId]
   );
 
   if (result.rows.length === 0) {
@@ -70,14 +69,13 @@ const updateTextChannel = async (groupId, textChannelId, newName, is_admin, user
 };
 
 // DELETE A TEXT CHANNEL
-const deleteTextChannel = async (groupId, textChannelId, is_admin, userId) => {
+const deleteTextChannel = async (groupId, textChannelId) => {
   const result = await pool.query(
     `DELETE FROM text_channels 
      WHERE group_id = $1 
      AND id = $2
-     AND (created_by = $3 OR $4 = true)
      RETURNING *`,
-    [groupId, textChannelId, userId, is_admin]
+    [groupId, textChannelId]
   );
 
   if (result.rows.length === 0) {
