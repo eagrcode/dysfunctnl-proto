@@ -99,7 +99,7 @@ const deleteAlbumById = async (groupId, albumId, is_admin, userId) => {
     WHERE group_id = $1
     AND id = $2
     AND (created_by = $3 OR $4 = true)
-    RETURNING *;
+    RETURNING id, created_by;
   `,
     [groupId, albumId, userId, is_admin]
   );

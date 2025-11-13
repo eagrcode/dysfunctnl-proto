@@ -12,13 +12,14 @@ dotenv.config();
 
 const TEST_EMAIL = process.env.TEST_USER_1;
 
-describe("Calendar API Integration Tests - Authorised Actions", () => {
+describe("ALbums API Integration Tests - Authorised Actions", () => {
   let adminAccessToken;
   let adminUserId;
   let groupId;
   let memberId;
   let memberAccessToken;
   let memberCreatedAlbumId;
+  let memberCreatedAlbumId2;
   let adminCreatedAlbumId;
 
   const groupData = {
@@ -39,13 +40,12 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
 
     memberAccessToken = (await loginUser(naEmail)).accessToken;
 
-    const { success, role } = await addMember(
-      groupId,
-      memberId,
-      adminAccessToken
-    );
+    const { success, role } = await addMember(groupId, memberId, adminAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);
+
+    console.log("Admin User ID:", adminUserId);
+    console.log("Member User ID:", memberId);
   });
 
   // Cleanup: Delete the created group
@@ -72,48 +72,53 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
         role: "Member",
         userId: () => memberId,
         accessToken: () => memberAccessToken,
+        group: 1,
       },
-    ])(
-      "Should allow $role to create an album",
-      async ({ role, userId, accessToken }) => {
-        const albumData = {
-          name: `Test Album by ${role}`,
-          description: "This is a test album",
-          createdBy: userId(),
-        };
+      {
+        role: "Member",
+        userId: () => memberId,
+        accessToken: () => memberAccessToken,
+        group: 2,
+      },
+    ])("Should allow $role to create an album", async ({ role, userId, accessToken, group }) => {
+      const albumData = {
+        name: `Test Album by ${role}`,
+        description: "This is a test album",
+        createdBy: userId(),
+      };
 
-        const response = await request(app)
-          .post(`/groups/${groupId}/albums`)
-          .send(albumData)
-          .set("Content-Type", "application/json")
-          .set("Authorization", `Bearer ${accessToken()}`);
+      const response = await request(app)
+        .post(`/groups/${groupId}/albums`)
+        .send(albumData)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${accessToken()}`);
 
-        console.log(
-          `CREATE ALBUM RESPONSE: ${role}`,
-          JSON.stringify(response.body, null, 2)
-        );
+      console.log(`CREATE ALBUM RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 
-        if (role === "Member") {
-          memberCreatedAlbumId = response.body.data.id;
-        }
-
-        if (role === "Admin") {
-          adminCreatedAlbumId = response.body.data.id;
-        }
-
-        expect(response.statusCode).toBe(201);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toMatchObject({
-          id: expect.any(String),
-          group_id: groupId,
-          name: albumData.name,
-          description: albumData.description,
-          created_by: albumData.createdBy,
-          created_at: expect.any(String),
-          updated_at: null,
-        });
+      if (role === "Member" && group === 1) {
+        memberCreatedAlbumId = response.body.data.id;
       }
-    );
+
+      if (role === "Member" && group === 2) {
+        memberCreatedAlbumId2 = response.body.data.id;
+      }
+
+      if (role === "Admin") {
+        adminCreatedAlbumId = response.body.data.id;
+      }
+
+      expect(response.statusCode).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        id: expect.any(String),
+        group_id: groupId,
+        name: albumData.name,
+        description: albumData.description,
+        created_by: albumData.createdBy,
+        created_at: expect.any(String),
+        updated_at: null,
+      });
+    });
   });
 
   // GET ALL ALBUMS
@@ -127,37 +132,31 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
         role: "Member",
         accessToken: () => memberAccessToken,
       },
-    ])(
-      "Should allow $role to get all albums",
-      async ({ role, accessToken }) => {
-        const response = await request(app)
-          .get(`/groups/${groupId}/albums`)
-          .set("Content-Type", "application/json")
-          .set("Authorization", `Bearer ${accessToken()}`);
+    ])("Should allow $role to get all albums", async ({ role, accessToken }) => {
+      const response = await request(app)
+        .get(`/groups/${groupId}/albums`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${accessToken()}`);
 
-        console.log(
-          `GET ALL ALBUMS RESPONSE: ${role}`,
-          JSON.stringify(response.body, null, 2)
-        );
+      console.log(`GET ALL ALBUMS RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 
-        expect(response.statusCode).toBe(200);
-        expect(response.body.success).toBe(true);
-        expect(Array.isArray(response.body.data)).toBe(true);
-        expect(response.body.data).toEqual(
-          expect.arrayOf(
-            expect.objectContaining({
-              id: expect.any(String),
-              group_id: groupId,
-              name: expect.any(String),
-              description: expect.any(String),
-              created_by: expect.any(String),
-              created_at: expect.any(String),
-              updated_at: null,
-            })
-          )
-        );
-      }
-    );
+      expect(response.statusCode).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data).toEqual(
+        expect.arrayOf(
+          expect.objectContaining({
+            id: expect.any(String),
+            group_id: groupId,
+            name: expect.any(String),
+            description: expect.any(String),
+            created_by: expect.any(String),
+            created_at: expect.any(String),
+            updated_at: null,
+          })
+        )
+      );
+    });
   });
 
   // GET ALBUM BY ID
@@ -173,32 +172,26 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
         accessToken: () => memberAccessToken,
         albumId: () => memberCreatedAlbumId,
       },
-    ])(
-      "Should allow $role to get album by ID",
-      async ({ role, accessToken, albumId }) => {
-        const response = await request(app)
-          .get(`/groups/${groupId}/albums/${albumId()}`)
-          .set("Content-Type", "application/json")
-          .set("Authorization", `Bearer ${accessToken()}`);
+    ])("Should allow $role to get album by ID", async ({ role, accessToken, albumId }) => {
+      const response = await request(app)
+        .get(`/groups/${groupId}/albums/${albumId()}`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${accessToken()}`);
 
-        console.log(
-          `GET ALBUM BY ID RESPONSE: ${role}`,
-          JSON.stringify(response.body, null, 2)
-        );
+      console.log(`GET ALBUM BY ID RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 
-        expect(response.statusCode).toBe(200);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toMatchObject({
-          id: albumId(),
-          group_id: groupId,
-          name: expect.any(String),
-          description: expect.any(String),
-          created_by: expect.any(String),
-          created_at: expect.any(String),
-          updated_at: null,
-        });
-      }
-    );
+      expect(response.statusCode).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        id: albumId(),
+        group_id: groupId,
+        name: expect.any(String),
+        description: expect.any(String),
+        created_by: expect.any(String),
+        created_at: expect.any(String),
+        updated_at: null,
+      });
+    });
   });
 
   // UPDATE ALBUM BY ID
@@ -207,44 +200,60 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
       {
         role: "Admin",
         accessToken: () => adminAccessToken,
+        albumId: () => adminCreatedAlbumId,
+        description: "Should allow admin to update own created album",
       },
       {
         role: "Member",
         accessToken: () => memberAccessToken,
+        albumId: () => memberCreatedAlbumId,
+        description: "Should allow member to update own created album",
       },
-    ])(
-      "Should allow $role to update album by ID",
-      async ({ role, accessToken }) => {
-        const updatedData = {
-          name: `Updated Album Name by ${role}`,
-          description: `Updated description by ${role}`,
-        };
+      {
+        role: "Admin",
+        accessToken: () => adminAccessToken,
+        albumId: () => memberCreatedAlbumId,
+        description: "Should allow admin to update member created album",
+      },
+    ])("Current role = $role: $description", async ({ role, accessToken, albumId }) => {
+      const updatedData = {
+        name: `Updated Album Name by ${role}`,
+        description: `Updated description by ${role}`,
+      };
 
-        const response = await request(app)
-          .patch(`/groups/${groupId}/albums/${memberCreatedAlbumId}`)
-          .send(updatedData)
-          .set("Content-Type", "application/json")
-          .set("Authorization", `Bearer ${accessToken()}`);
+      const response = await request(app)
+        .patch(`/groups/${groupId}/albums/${albumId()}`)
+        .send(updatedData)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${accessToken()}`);
 
-        console.log(
-          `UPDATE ALBUM BY ID RESPONSE: ${role}`,
-          JSON.stringify(response.body, null, 2)
-        );
+      console.log(`UPDATE ALBUM BY ID RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 
-        expect(response.statusCode).toBe(201);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data.updated_at).toBeDefined();
-        expect(response.body.data).toMatchObject({
-          id: memberCreatedAlbumId,
-          group_id: groupId,
-          name: updatedData.name,
-          description: updatedData.description,
-          created_by: expect.any(String),
-          created_at: expect.any(String),
-          updated_at: expect.any(String),
-        });
+      expect(response.statusCode).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.updated_at).toBeDefined();
+      expect(response.body.data).toMatchObject({
+        id: albumId(),
+        group_id: groupId,
+        name: updatedData.name,
+        description: updatedData.description,
+        created_by: expect.any(String),
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+      });
+
+      if (role === "Member") {
+        expect(response.body.data.created_by).toBe(memberId);
       }
-    );
+
+      if (role === "Admin" && albumId() === memberCreatedAlbumId) {
+        expect(response.body.data.created_by).toBe(memberId);
+      }
+
+      if (role === "Admin" && albumId() === adminCreatedAlbumId) {
+        expect(response.body.data.created_by).toBe(adminUserId);
+      }
+    });
   });
 
   // DELETE ALBUM BY ID
@@ -254,29 +263,43 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
         role: "Admin",
         accessToken: () => adminAccessToken,
         albumId: () => adminCreatedAlbumId,
+        description: "Should allow admin to delete own created album",
       },
       {
         role: "Member",
         accessToken: () => memberAccessToken,
         albumId: () => memberCreatedAlbumId,
+        description: "Should allow member to delete own created album",
       },
-    ])(
-      "Should allow $role to delete album by ID",
-      async ({ role, accessToken, albumId }) => {
-        const response = await request(app)
-          .delete(`/groups/${groupId}/albums/${albumId()}`)
-          .set("Content-Type", "application/json")
-          .set("Authorization", `Bearer ${accessToken()}`);
+      {
+        role: "Admin",
+        accessToken: () => adminAccessToken,
+        albumId: () => memberCreatedAlbumId2,
+        description: "Should allow admin to delete member created album",
+      },
+    ])("Current role = $role: $description", async ({ role, accessToken, albumId }) => {
+      const response = await request(app)
+        .delete(`/groups/${groupId}/albums/${albumId()}`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${accessToken()}`);
 
-        console.log(
-          `DELETE ALBUM BY ID RESPONSE: ${role}`,
-          JSON.stringify(response.body, null, 2)
-        );
+      console.log(`DELETE ALBUM BY ID RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 
-        expect(response.statusCode).toBe(200);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data.id).toBe(albumId());
+      expect(response.statusCode).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.id).toBe(albumId());
+
+      if (role === "Member") {
+        expect(response.body.data.created_by).toBe(memberId);
       }
-    );
+
+      if (role === "Admin" && albumId() === memberCreatedAlbumId2) {
+        expect(response.body.data.created_by).toBe(memberId);
+      }
+
+      if (role === "Admin" && albumId() === adminCreatedAlbumId) {
+        expect(response.body.data.created_by).toBe(adminUserId);
+      }
+    });
   });
 });
