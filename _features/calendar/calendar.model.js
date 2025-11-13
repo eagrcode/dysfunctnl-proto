@@ -56,7 +56,7 @@ const getEventsByRange = async (groupId, startTime, endTime) => {
 };
 
 // UPDATE EVENT
-const updateEvent = async (eventId, groupId, updates) => {
+const updateEvent = async (eventId, groupId, updates, is_admin, userId) => {
   const fields = [];
   const values = [];
   let paramIndex = 1;
@@ -92,15 +92,13 @@ const updateEvent = async (eventId, groupId, updates) => {
   }
 
   // Add eventId and groupId as the final parameters
-  values.push(eventId);
-  values.push(groupId);
-  const eventIdParamIndex = paramIndex++;
-  const groupIdParamIndex = paramIndex++;
+  values.push(eventId, groupId, userId, is_admin);
 
   const query = `
       UPDATE calendar 
       SET ${fields.join(", ")}
-      WHERE id = $${eventIdParamIndex} AND group_id = $${groupIdParamIndex}
+      WHERE id = $${paramIndex++} AND group_id = $${paramIndex++}
+      AND (created_by = $${paramIndex++} OR $${paramIndex} = true)
       RETURNING *
     `;
 
@@ -114,10 +112,14 @@ const updateEvent = async (eventId, groupId, updates) => {
 };
 
 // DELETE EVENT
-const deleteEvent = async (eventId, groupId) => {
+const deleteEvent = async (eventId, groupId, is_admin, userId) => {
   const result = await pool.query(
-    "DELETE FROM calendar WHERE id = $1 AND group_id = $2 RETURNING id, title",
-    [eventId, groupId]
+    `DELETE FROM calendar 
+     WHERE id = $1 
+     AND group_id = $2
+     AND (created_by = $3 OR $4 = true) 
+     RETURNING id, title`,
+    [eventId, groupId, userId, is_admin]
   );
 
   if (result.rows.length === 0) {

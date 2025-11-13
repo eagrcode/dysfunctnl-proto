@@ -32,11 +32,7 @@ const createValidationFields = [
     .withMessage("End time is required")
     .isISO8601()
     .withMessage("End time must be a valid ISO 8601 date"),
-  body("allDay")
-    .optional()
-    .isBoolean()
-    .withMessage("All day must be a boolean value")
-    .toBoolean(),
+  body("allDay").optional().isBoolean().withMessage("All day must be a boolean value").toBoolean(),
   body("participants")
     .optional()
     .isArray()
@@ -61,19 +57,9 @@ const updateValidationFields = [
     .escape()
     .isLength({ max: 500 })
     .withMessage("Description must not exceed 500 characters"),
-  body("startTime")
-    .optional()
-    .isISO8601()
-    .withMessage("Start time must be a valid ISO 8601 date"),
-  body("endTime")
-    .optional()
-    .isISO8601()
-    .withMessage("End time must be a valid ISO 8601 date"),
-  body("allDay")
-    .optional()
-    .isBoolean()
-    .withMessage("All day must be a boolean value")
-    .toBoolean(),
+  body("startTime").optional().isISO8601().withMessage("Start time must be a valid ISO 8601 date"),
+  body("endTime").optional().isISO8601().withMessage("End time must be a valid ISO 8601 date"),
+  body("allDay").optional().isBoolean().withMessage("All day must be a boolean value").toBoolean(),
   body("participants")
     .optional()
     .isArray()
@@ -163,8 +149,10 @@ const handleUpdateEvent = [
 
     const { groupId, eventId } = req.params;
     const updates = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
 
-    const result = await updateEvent(eventId, groupId, updates);
+    const result = await updateEvent(eventId, groupId, updates, is_admin, userId);
 
     res.status(200).json({
       success: true,
@@ -176,8 +164,10 @@ const handleUpdateEvent = [
 // DELETE EVENT
 const handleDeleteEvent = async (req, res) => {
   const { groupId, eventId } = req.params;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await deleteEvent(eventId, groupId);
+  const result = await deleteEvent(eventId, groupId, is_admin, userId);
 
   res.status(200).json({
     success: true,
