@@ -1,6 +1,5 @@
 const { Router } = require("express");
 const permissionRequired = require("../../_shared/middleware/groupSecurity");
-const checkMessageOwnership = require("../../_shared/middleware/resouce-management/checkMessageOwnership");
 const {
   handleGetAllTextChannels,
   handleCreateTextChannel,
