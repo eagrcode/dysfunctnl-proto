@@ -23,8 +23,10 @@ const {
 const handleCreateListItem = async (req, res) => {
   const { listId } = req.params;
   const { content } = req.body.data;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await createListItem(listId, content);
+  const result = await createListItem(listId, content, is_admin, userId);
 
   res.status(201).json({
     success: true,
@@ -48,8 +50,10 @@ const handleGetListItemById = async (req, res) => {
 const handleUpdateListItem = async (req, res) => {
   const { listId, itemId } = req.params;
   const { content } = req.body.data;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await updateListItem(listId, itemId, content);
+  const result = await updateListItem(listId, itemId, content, is_admin, userId);
 
   res.status(200).json({
     success: true,
@@ -61,8 +65,10 @@ const handleUpdateListItem = async (req, res) => {
 const handleToggleComplete = async (req, res) => {
   const { listId, itemId } = req.params;
   const { completed } = req.body.data;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await toggleComplete(listId, itemId, completed);
+  const result = await toggleComplete(listId, itemId, completed, is_admin, userId);
 
   res.status(200).json({
     success: true,
@@ -73,8 +79,10 @@ const handleToggleComplete = async (req, res) => {
 // DELETE A LIST ITEM
 const handleDeleteListItem = async (req, res) => {
   const { listId, itemId } = req.params;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await deleteListItem(listId, itemId);
+  const result = await deleteListItem(listId, itemId, is_admin, userId);
 
   res.status(200).json({
     success: true,

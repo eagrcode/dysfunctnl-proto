@@ -1,5 +1,5 @@
 const pool = require("../../_shared/utils/db");
-const { NotFoundError } = require("../../_shared/utils/errors");
+const { NotFoundError, ForbiddenError } = require("../../_shared/utils/errors");
 
 // GET ALL LISTS
 const getAllLists = async (groupId) => {
@@ -12,21 +12,13 @@ const getAllLists = async (groupId) => {
 };
 
 // CREATE NEW LIST
-const createList = async (groupId, listData) => {
-  const {
-    createdBy,
-    listType,
-    title,
-    assignedTo = null,
-    dueDate = null,
-  } = listData;
-
+const createList = async (userId, groupId, listType, title, assignedTo) => {
   const result = await pool.query(
     `INSERT INTO lists 
-     (group_id, created_by, list_type, title, assigned_to, due_date) 
-     VALUES ($1, $2, $3, $4, $5, $6) 
+     (created_by, group_id, list_type, title, assigned_to) 
+     VALUES ($1, $2, $3, $4, $5) 
      RETURNING *`,
-    [groupId, createdBy, listType, title, assignedTo, dueDate]
+    [userId, groupId, listType, title, assignedTo]
   );
 
   if (result.rows.length === 0) {
@@ -38,10 +30,10 @@ const createList = async (groupId, listData) => {
 
 // GET LIST BY ID
 const getListById = async (groupId, listId) => {
-  const result = await pool.query(
-    "SELECT * FROM lists WHERE group_id = $1 AND id = $2",
-    [groupId, listId]
-  );
+  const result = await pool.query("SELECT * FROM lists WHERE group_id = $1 AND id = $2", [
+    groupId,
+    listId,
+  ]);
 
   if (result.rows.length === 0) {
     throw new NotFoundError("List not found");
@@ -51,7 +43,7 @@ const getListById = async (groupId, listId) => {
 };
 
 // UPDATE A LIST
-const updateList = async (groupId, listId, updates) => {
+const updateList = async (groupId, listId, updates, is_admin, userId) => {
   const fields = [];
   const values = [];
   let paramIndex = 1;
@@ -78,33 +70,47 @@ const updateList = async (groupId, listId, updates) => {
   fields.push(`updated_at = NOW()`);
 
   // Add groupId and listId as the final parameters
-  values.push(groupId, listId);
+  values.push(groupId, listId, userId, is_admin);
 
   const query = `
       UPDATE lists
       SET ${fields.join(", ")}
-      WHERE group_id = $${paramIndex++} AND id = $${paramIndex}
+      WHERE group_id = $${paramIndex++} 
+      AND id = $${paramIndex++}
+      AND (created_by = $${paramIndex} OR assigned_to = $${paramIndex++} OR $${paramIndex} = true)
       RETURNING *
     `;
 
   const result = await pool.query(query, values);
 
   if (result.rows.length === 0) {
-    throw new NotFoundError("List not found");
+    throw new ForbiddenError({
+      reason1: "List does not exist",
+      reason2: "Permission denied",
+    });
   }
 
   return result.rows[0];
 };
 
 // DELETE A LIST
-const deleteList = async (groupId, listId) => {
+const deleteList = async (groupId, listId, is_admin, userId) => {
   const result = await pool.query(
-    "DELETE FROM lists WHERE group_id = $1 AND id = $2 RETURNING *",
-    [groupId, listId]
+    `
+      DELETE FROM lists 
+      WHERE group_id = $1 
+      AND id = $2
+      AND (created_by = $3 OR $4 = true) 
+      RETURNING *
+    `,
+    [groupId, listId, userId, is_admin]
   );
 
   if (result.rows.length === 0) {
-    throw new NotFoundError("List not found");
+    throw new ForbiddenError({
+      reason1: "List does not exist",
+      reason2: "Permission denied",
+    });
   }
 
   return result.rows[0];
