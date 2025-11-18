@@ -34,8 +34,10 @@ const handleCreateMessage = async (req, res) => {
 // DELETE MESSAGE
 const handleDeleteMessage = async (req, res) => {
   const { textChannelId, messageId } = req.params;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await deleteMessage(textChannelId, messageId);
+  const result = await deleteMessage(textChannelId, messageId, userId, is_admin);
 
   res.status(200).json({
     success: true,

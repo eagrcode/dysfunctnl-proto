@@ -1,5 +1,5 @@
 const pool = require("../../../_shared/utils/db");
-const { NotFoundError } = require("../../../_shared/utils/errors");
+const { NotFoundError, FailedActionError } = require("../../../_shared/utils/errors");
 
 // GET ALL MESSAGES
 const getAllMessages = async (textChannelId) => {
@@ -35,38 +35,44 @@ const createMessage = async (textChannelId, content, authorId) => {
 };
 
 // UPDATE MESSAGE
-const updateMessage = async (textChannelId, messageId, newContent, userId) => {
+const updateMessage = async (textChannelId, messageId, newContent, userId, is_admin) => {
   const result = await pool.query(
     `UPDATE text_channel_messages
      SET content = $1
      WHERE channel_id = $2
      AND id = $3
-     AND sender_id = $4
+     AND (sender_id = $4 OR $5 = TRUE)
      RETURNING content, updated_at`,
-    [newContent, textChannelId, messageId, userId]
+    [newContent, textChannelId, messageId, userId, is_admin]
   );
 
   if (result.rows.length === 0) {
-    throw new NotFoundError(`Failed to update message: Message not found or user unauthorised`);
+    throw new FailedActionError("Failed to update message", {
+      condition1: "Message not found",
+      condition2: "Permission denied",
+    });
   }
 
   return result.rows[0];
 };
 
 // DELETE MESSAGE
-const deleteMessage = async (textChannelId, messageId, userId) => {
+const deleteMessage = async (textChannelId, messageId, userId, is_admin) => {
   const result = await pool.query(
     `UPDATE text_channel_messages
      SET deleted_at = NOW()
      WHERE channel_id = $1
      AND id = $2
-     AND sender_id = $3
+     AND (sender_id = $3 OR $4 = TRUE)
      RETURNING id, deleted_at`,
-    [textChannelId, messageId, userId]
+    [textChannelId, messageId, userId, is_admin]
   );
 
   if (result.rows.length === 0) {
-    throw new NotFoundError(`Failed to delete message: Message not found or user unauthorised`);
+    throw new FailedActionError("Failed to delete message", {
+      condition1: "Message not found",
+      condition2: "Permission denied",
+    });
   }
 
   return result.rows[0];
