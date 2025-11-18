@@ -2,6 +2,7 @@
 const errorHandler = (err, req, res, next) => {
   console.error("Error:", {
     message: err.message,
+    conditions: err.conditions,
     statusCode: err.statusCode,
     stack: err.stack,
     validationError: err.errors,

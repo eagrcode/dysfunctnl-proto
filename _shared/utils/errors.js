@@ -1,8 +1,9 @@
 class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, conditions, statusCode) {
     super(message);
     this.statusCode = statusCode;
-    this.isOperational = true; // Distinguishes from programming errors
+    this.conditions = conditions;
+    this.isOperational = true;
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -43,6 +44,13 @@ class ForbiddenError extends AppError {
   }
 }
 
+class FailedActionError extends AppError {
+  constructor(message = "", conditions = {}) {
+    super(message, conditions, 403);
+    this.code = "ACTION_FAILED";
+  }
+}
+
 class UploadError extends AppError {
   constructor(message, statusCode = 400, tempFilePath = null) {
     super(message);
@@ -76,4 +84,5 @@ module.exports = {
   UploadError,
   FileTooLargeError,
   InvalidFileTypeError,
+  FailedActionError,
 };
