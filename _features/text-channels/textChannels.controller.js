@@ -22,8 +22,9 @@ const handleGetAllTextChannels = async (req, res) => {
 const handleCreateTextChannel = async (req, res) => {
   const { groupId } = req.params;
   const { channelName } = req.body;
+  const userId = req.user.id;
 
-  const result = await createTextChannel(groupId, channelName);
+  const result = await createTextChannel(groupId, channelName, userId);
 
   res.status(201).json({
     success: true,

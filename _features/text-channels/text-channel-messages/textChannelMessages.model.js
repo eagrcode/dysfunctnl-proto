@@ -1,5 +1,8 @@
 const pool = require("../../../_shared/utils/db");
-const { NotFoundError, FailedActionError } = require("../../../_shared/utils/errors");
+const {
+  NotFoundError,
+  FailedActionError,
+} = require("../../../_shared/utils/errors");
 
 // GET ALL MESSAGES
 const getAllMessages = async (textChannelId) => {
@@ -35,7 +38,13 @@ const createMessage = async (textChannelId, content, authorId) => {
 };
 
 // UPDATE MESSAGE
-const updateMessage = async (textChannelId, messageId, newContent, userId, is_admin) => {
+const updateMessage = async (
+  textChannelId,
+  messageId,
+  newContent,
+  userId,
+  is_admin
+) => {
   const result = await pool.query(
     `UPDATE text_channel_messages
      SET content = $1

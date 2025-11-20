@@ -18,13 +18,13 @@ const getAllTextChannels = async (groupId) => {
 };
 
 // CREATE NEW TEXT CHANNEL
-const createTextChannel = async (groupId, channelName) => {
+const createTextChannel = async (groupId, channelName, createdBy) => {
   const result = await pool.query(
     `INSERT INTO text_channels 
-     (group_id, name) 
-     VALUES ($1, $2) 
+     (group_id, name, created_by) 
+     VALUES ($1, $2, $3) 
      RETURNING *`,
-    [groupId, channelName]
+    [groupId, channelName, createdBy]
   );
 
   if (result.rows.length === 0) {
