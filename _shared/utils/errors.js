@@ -1,10 +1,10 @@
 class AppError extends Error {
   constructor(message, conditions, statusCode) {
     super(message);
+    this.conditions = conditions ?? null;
     this.statusCode = statusCode;
-    this.conditions = conditions;
     this.isOperational = true;
-    Error.captureStackTrace(this, this.constructor);
+    Error.captureStackTrace?.(this, this.constructor);
   }
 }
 
@@ -38,8 +38,8 @@ class UnauthorisedError extends AppError {
 }
 
 class ForbiddenError extends AppError {
-  constructor(message = "Permission denied") {
-    super(message, 403);
+  constructor(message = "Permission denied", conditions = {}) {
+    super(message, conditions, 403);
     this.code = "PERMISSION_DENIED";
   }
 }
