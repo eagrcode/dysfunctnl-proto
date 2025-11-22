@@ -49,8 +49,10 @@ const handleDeleteMessage = async (req, res) => {
 const handleUpdateMessage = async (req, res) => {
   const { textChannelId, messageId } = req.params;
   const { newContent } = req.body;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
 
-  const result = await updateMessage(textChannelId, messageId, newContent);
+  const result = await updateMessage(textChannelId, messageId, newContent, userId, is_admin);
 
   res.status(201).json({
     success: true,
