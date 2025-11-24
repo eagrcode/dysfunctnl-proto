@@ -4,6 +4,11 @@ const {
   deleteMessage,
   updateMessage,
 } = require("./textChannelMessages.model");
+const {
+  broadcastNewMessage,
+  broadcastMessageUpdated,
+  broadcastMessageDeleted,
+} = require("../../../_shared/utils/socketService");
 
 // GET ALL MESSAGES
 const handleGetAllMessages = async (req, res) => {
@@ -20,43 +25,95 @@ const handleGetAllMessages = async (req, res) => {
 // CREATE NEW MESSAGE
 const handleCreateMessage = async (req, res) => {
   const authorId = req.user.id;
-  const { textChannelId } = req.params;
+  const { textChannelId, groupId } = req.params;
   const { content } = req.body;
 
-  const result = await createMessage(textChannelId, content, authorId);
+  const message = await createMessage(textChannelId, content, authorId);
+
+  const payload = {
+    id: message.id,
+    authorId: authorId,
+    textChannelId: textChannelId,
+    content: content,
+    createdAt: message.created_at,
+  };
+
+  console.log("Broadcasted new message:", payload);
+
+  // WebSocket broadcast
+  broadcastNewMessage({
+    groupId: groupId,
+    textChannelId: textChannelId,
+    payload: payload,
+  });
 
   res.status(201).json({
     success: true,
-    data: result,
+    data: payload,
   });
 };
 
 // DELETE MESSAGE
 const handleDeleteMessage = async (req, res) => {
-  const { textChannelId, messageId } = req.params;
+  const { textChannelId, messageId, groupId } = req.params;
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
 
-  const result = await deleteMessage(textChannelId, messageId, userId, is_admin);
+  const deletedMessage = await deleteMessage(textChannelId, messageId, userId, is_admin);
+
+  const payload = {
+    id: messageId,
+    authorId: userId,
+    textChannelId: textChannelId,
+    deletedAt: deletedMessage.deleted_at,
+  };
+
+  // WebSocket broadcast
+  broadcastMessageDeleted({
+    groupId: groupId,
+    textChannelId: textChannelId,
+    payload: payload,
+  });
 
   res.status(200).json({
     success: true,
-    data: result,
+    data: payload,
   });
 };
 
 // UPDATE MESSAGE
 const handleUpdateMessage = async (req, res) => {
-  const { textChannelId, messageId } = req.params;
+  const { textChannelId, messageId, groupId } = req.params;
   const { newContent } = req.body;
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
 
-  const result = await updateMessage(textChannelId, messageId, newContent, userId, is_admin);
+  const updatedMessage = await updateMessage(
+    textChannelId,
+    messageId,
+    newContent,
+    userId,
+    is_admin
+  );
+
+  const payload = {
+    id: messageId,
+    authorId: userId,
+    textChannelId: textChannelId,
+    content: newContent,
+    updatedAt: updatedMessage.updated_at,
+  };
+
+  // WebSocket broadcast
+  broadcastMessageUpdated({
+    groupId: groupId,
+    textChannelId: textChannelId,
+    payload: payload,
+  });
 
   res.status(201).json({
     success: true,
-    data: result,
+    data: payload,
   });
 };
 
