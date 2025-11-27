@@ -10,6 +10,8 @@ const {
   broadcastMessageDeleted,
 } = require("../../../_shared/utils/socketService");
 
+const path = require("path");
+
 // GET ALL MESSAGES
 const handleGetAllMessages = async (req, res) => {
   const { textChannelId } = req.params;
@@ -28,6 +30,15 @@ const handleCreateMessage = async (req, res) => {
   const { textChannelId, groupId } = req.params;
   const { content } = req.body;
 
+  console.log(
+    `/${path.basename(__filename)} - Attempting to create message with the following data:`,
+    {
+      authorId,
+      textChannelId,
+      content,
+    }
+  );
+
   const message = await createMessage(textChannelId, content, authorId);
 
   const payload = {
@@ -37,8 +48,6 @@ const handleCreateMessage = async (req, res) => {
     content: content,
     createdAt: message.created_at,
   };
-
-  console.log("Broadcasted new message:", payload);
 
   // WebSocket broadcast
   broadcastNewMessage({
@@ -59,11 +68,20 @@ const handleDeleteMessage = async (req, res) => {
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
 
+  console.log(
+    `/${path.basename(__filename)} - Attempting to delte message with the following data:`,
+    {
+      userId,
+      textChannelId,
+      messageId,
+    }
+  );
+
   const deletedMessage = await deleteMessage(textChannelId, messageId, userId, is_admin);
 
   const payload = {
     id: messageId,
-    authorId: userId,
+    authorId: deletedMessage.sender_id,
     textChannelId: textChannelId,
     deletedAt: deletedMessage.deleted_at,
   };
@@ -88,6 +106,16 @@ const handleUpdateMessage = async (req, res) => {
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
 
+  console.log(
+    `/${path.basename(__filename)} - Attempting to update message with the following data:`,
+    {
+      userId,
+      textChannelId,
+      messageId,
+      newContent,
+    }
+  );
+
   const updatedMessage = await updateMessage(
     textChannelId,
     messageId,
@@ -98,7 +126,7 @@ const handleUpdateMessage = async (req, res) => {
 
   const payload = {
     id: messageId,
-    authorId: userId,
+    authorId: updatedMessage.sender_id,
     textChannelId: textChannelId,
     content: newContent,
     updatedAt: updatedMessage.updated_at,

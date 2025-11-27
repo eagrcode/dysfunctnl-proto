@@ -1,6 +1,8 @@
 const pool = require("../../../_shared/utils/db");
 const { NotFoundError, FailedActionError } = require("../../../_shared/utils/errors");
 
+const path = require("path");
+
 // GET ALL MESSAGES
 const getAllMessages = async (textChannelId) => {
   const result = await pool.query(
@@ -19,6 +21,15 @@ const getAllMessages = async (textChannelId) => {
 
 // CREATE NEW MESSAGE
 const createMessage = async (textChannelId, content, authorId) => {
+  console.log(
+    `${path.basename(__filename)}: Attempting to create message with the following data:`,
+    {
+      authorId,
+      textChannelId,
+      content,
+    }
+  );
+
   const result = await pool.query(
     `INSERT INTO text_channel_messages
      (channel_id, content, sender_id)
@@ -42,7 +53,7 @@ const updateMessage = async (textChannelId, messageId, newContent, userId, is_ad
      WHERE channel_id = $2
      AND id = $3
      AND (sender_id = $4 OR $5 = TRUE)
-     RETURNING content, updated_at`,
+     RETURNING content, updated_at, sender_id`,
     [newContent, textChannelId, messageId, userId, is_admin]
   );
 
@@ -64,7 +75,7 @@ const deleteMessage = async (textChannelId, messageId, userId, is_admin) => {
      WHERE channel_id = $1
      AND id = $2
      AND (sender_id = $3 OR $4 = TRUE)
-     RETURNING id, deleted_at`,
+     RETURNING id, deleted_at, sender_id`,
     [textChannelId, messageId, userId, is_admin]
   );
 

@@ -4,7 +4,14 @@ const { initSocketServer } = require("./_shared/utils/socketService");
 
 dotenv.config();
 
-const requiredEnvVars = ["HOST", "APPUSER", "DATABASE", "APP_USER_PASSWORD", "PORT", "JWT_SECRET"];
+const requiredEnvVars = [
+  "HOST",
+  "APPUSER",
+  "DATABASE",
+  "APP_USER_PASSWORD",
+  "PORT",
+  "JWT_SECRET",
+];
 
 const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
 if (missingVars.length > 0) {
@@ -19,7 +26,6 @@ const server = createServer(app);
 initSocketServer(server);
 
 server.listen(port, () => {
-  console.log(`✅ Server running on http://localhost:${port}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`Socket.IO server initialised`);
+  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 });

@@ -1,6 +1,9 @@
 const request = require("supertest");
 const app = require("../../../app");
 const dotenv = require("dotenv");
+const io = require("socket.io-client");
+const { createServer } = require("http");
+const { initSocketServer } = require("../../../_shared/utils/socketService");
 const {
   createGroup,
   loginUser,
@@ -22,6 +25,10 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
   let memberCreatedChannelId;
   let memberCreatedMessageId;
   let adminCreatedMessageId;
+  let httpServer;
+  let serverPort;
+  let adminSocket;
+  let memberSocket;
 
   const groupData = {
     name: "Test Group",
@@ -44,17 +51,50 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
     const { success, role } = await addMember(groupId, memberId, adminAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);
+
+    httpServer = createServer(app);
+    initSocketServer(httpServer);
+
+    await new Promise((resolve) => {
+      console.log("Starting test server...");
+      httpServer.listen(0, () => {
+        serverPort = httpServer.address().port;
+        console.log(`Test server listening on port ${serverPort}`);
+        resolve();
+      });
+    });
+
+    // Create sockets
+    adminSocket = io(`http://localhost:${serverPort}`, {
+      auth: { token: adminAccessToken },
+      autoConnect: false,
+    });
+
+    memberSocket = io(`http://localhost:${serverPort}`, {
+      auth: { token: memberAccessToken },
+      autoConnect: false,
+    });
   });
 
-  // Cleanup: Delete the created group
+  // Cleanup
   afterAll(async () => {
     if (groupId) {
       console.log("CLEANUP: Deleting test group with ID:", groupId);
-
       await request(app)
         .delete(`/groups/${groupId}`)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
+    }
+
+    // Close sockets and server
+    if (httpServer.listening) {
+      console.log("Disconnecting user sockets and closing test server...");
+      await new Promise((resolve) => {
+        if (adminSocket.connected) adminSocket.disconnect();
+        if (memberSocket.connected) memberSocket.disconnect();
+        httpServer.close(resolve);
+        console.log("Test server closed");
+      });
     }
   });
 
@@ -196,6 +236,70 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
     });
   });
 
+  describe("SocketServer Connection tests", () => {
+    test.each([
+      {
+        role: "Admin",
+        socket: () => adminSocket,
+      },
+      {
+        role: "Member",
+        socket: () => memberSocket,
+      },
+    ])("Connect as $role", ({ role, socket }, done) => {
+      const currentSocket = socket();
+
+      currentSocket.connect();
+
+      currentSocket.on("connect", () => {
+        console.log(`${role} connected to server with socket ID:`, currentSocket.id);
+        expect(currentSocket.connected).toBe(true);
+        done();
+      });
+    });
+  });
+
+  describe("Join SocketServer Channel", () => {
+    test.each([
+      {
+        role: "Admin",
+        socket: () => adminSocket,
+        channelId: () => adminCreatedChannelId,
+      },
+      {
+        role: "Member",
+        socket: () => memberSocket,
+        channelId: () => adminCreatedChannelId,
+      },
+    ])("$role joins channel", ({ role, socket, channelId }, done) => {
+      const currentSocket = socket();
+
+      console.log(`${role} attempting to join channel:`, {
+        type: "text_channel",
+        ids: {
+          textChannelId: channelId(),
+          groupId: groupId,
+        },
+      });
+
+      currentSocket.emit("join_channel", "text_channel", {
+        textChannelId: channelId(),
+        groupId: groupId,
+      });
+
+      currentSocket.on("joined_channel", (data) => {
+        console.log(`${role} joined channel:`, data);
+
+        expect(data.type).toBe("text_channel");
+        expect(data.ids.textChannelId).toBe(channelId());
+        expect(data.ids.groupId).toBe(groupId);
+        expect(data.roomName).toBeDefined();
+
+        done();
+      });
+    });
+  });
+
   describe("Text Channel Messages Controller - Admin and Member Actions", () => {
     // SEND MESSAGE
     describe("SEND Message - POST /groups/:groupId/text-channels/:textChannelId/messages", () => {
@@ -203,15 +307,32 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
         {
           role: "Admin",
           accessToken: () => adminAccessToken,
+          socket: () => adminSocket,
         },
         {
           role: "Member",
           accessToken: () => memberAccessToken,
+          socket: () => memberSocket,
         },
       ])(
         "should allow a $role to send a message in a text channel",
-        async ({ accessToken, role }) => {
+        async ({ accessToken, role, socket }) => {
+          let socketEventFired = false;
           const messageContent = `Hello from ${role}`;
+
+          socket().once("new_message", (data) => {
+            console.log(`Received new_message event for ${role}`);
+            socketEventFired = true;
+            console.log(`Socket event fired = ${socketEventFired}`);
+            console.log(`${role} - Socket event received with data:`, data);
+            expect(data).toMatchObject({
+              id: expect.any(String),
+              textChannelId: adminCreatedChannelId,
+              authorId: expect.any(String),
+              content: messageContent,
+              createdAt: expect.any(String),
+            });
+          });
 
           const response = await request(app)
             .post(`/groups/${groupId}/text-channels/${adminCreatedChannelId}/messages`)
@@ -231,8 +352,10 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           expect(response.body.success).toBe(true);
           expect(response.body.data).toMatchObject({
             id: expect.any(String),
-            created_at: expect.any(String),
+            createdAt: expect.any(String),
           });
+
+          expect(socketEventFired).toBe(true);
         }
       );
     });
@@ -289,6 +412,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           messageId: () => adminCreatedMessageId,
           testDescription: "should allow an admin to update their own message",
           senderId: () => adminUserId,
+          socket: () => adminSocket,
         },
         {
           role: "Member",
@@ -296,6 +420,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           messageId: () => memberCreatedMessageId,
           testDescription: "should allow a member to update their own message",
           senderId: () => memberId,
+          socket: () => memberSocket,
         },
         {
           role: "Admin",
@@ -303,9 +428,26 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           messageId: () => memberCreatedMessageId,
           testDescription: "should allow an admin to update a member's message",
           senderId: () => memberId,
+          socket: () => adminSocket,
         },
-      ])("$testDescription", async ({ accessToken, role, messageId, senderId }) => {
+      ])("$testDescription", async ({ accessToken, role, messageId, senderId, socket }) => {
+        let socketEventFired = false;
         const newContent = `Updated content by ${role}`;
+
+        socket().once("message_updated", (data) => {
+          console.log(`Received message_updated event for ${role}`);
+          socketEventFired = true;
+          console.log(`Socket event fired = ${socketEventFired}`);
+          console.log(`${role} - Socket event received with data:`, data);
+          expect(data).toMatchObject({
+            id: messageId(),
+            textChannelId: adminCreatedChannelId,
+            authorId: role === "Admin" && senderId() === adminUserId ? adminUserId : memberId,
+            content: newContent,
+            updatedAt: expect.any(String),
+          });
+        });
+
         const response = await request(app)
           .patch(
             `/groups/${groupId}/text-channels/${adminCreatedChannelId}/messages/${messageId()}/update`
@@ -321,9 +463,14 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
         expect(response.status).toBe(201);
         expect(response.body.success).toBe(true);
         expect(response.body.data).toMatchObject({
+          id: messageId(),
+          textChannelId: adminCreatedChannelId,
+          authorId: role === "Admin" && senderId() === adminUserId ? adminUserId : memberId,
           content: newContent,
-          updated_at: expect.any(String),
+          updatedAt: expect.any(String),
         });
+
+        expect(socketEventFired).toBe(true);
       });
     });
 
@@ -334,21 +481,42 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           role: "Admin",
           accessToken: () => adminAccessToken,
           messageId: () => adminCreatedMessageId,
+          authorId: () => adminUserId,
           testDescription: "should allow an admin to delete their own message",
+          socket: () => adminSocket,
         },
         {
           role: "Member",
           accessToken: () => memberAccessToken,
           messageId: () => memberCreatedMessageId,
+          authorId: () => memberId,
           testDescription: "should allow a member to delete their own message",
+          socket: () => memberSocket,
         },
         {
           role: "Admin",
           accessToken: () => adminAccessToken,
           messageId: () => memberCreatedMessageId,
+          authorId: () => memberId,
           testDescription: "should allow an admin to delete a member's message",
+          socket: () => adminSocket,
         },
-      ])("$testDescription", async ({ accessToken, role, messageId }) => {
+      ])("$testDescription", async ({ accessToken, role, messageId, socket, authorId }) => {
+        let socketEventFired = false;
+
+        socket().once("message_deleted", (data) => {
+          console.log(`Received message_deleted event for ${role}`);
+          socketEventFired = true;
+          console.log(`Socket event fired = ${socketEventFired}`);
+          console.log(`${role} - Socket event received with data:`, data);
+          expect(data).toMatchObject({
+            id: messageId(),
+            authorId: role === "Admin" && authorId() === adminUserId ? adminUserId : memberId,
+            textChannelId: adminCreatedChannelId,
+            deletedAt: expect.any(String),
+          });
+        });
+
         const response = await request(app)
           .patch(
             `/groups/${groupId}/text-channels/${adminCreatedChannelId}/messages/${messageId()}/delete`
@@ -362,7 +530,9 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
         expect(response.body.success).toBe(true);
         expect(response.body.data).toMatchObject({
           id: messageId(),
-          deleted_at: expect.any(String),
+          authorId: role === "Admin" && authorId() === adminUserId ? adminUserId : memberId,
+          textChannelId: adminCreatedChannelId,
+          deletedAt: expect.any(String),
         });
       });
     });

@@ -1,68 +1,15 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
-const {
-  createMessage,
-  updateMessage,
-  deleteMessage,
-} = require("../../_features/text-channels/text-channel-messages/textChannelMessages.model");
 
-let ioInstance = null;
-
-const getRoom = (type, ids) => {
-  if (type === "text_channel") {
-    return `group_${ids.groupId}_channel_${ids.textChannelId}`;
-  }
-  if (type === "image") {
-    return `group_${ids.groupId}_image_${ids.imageId}`;
-  }
-  throw new Error("Invalid room type");
-};
-
-const emitToRoom = (roomName, type, payload) => {
-  console.log("ioInstance:", ioInstance);
-  console.log(`Emitting to room:`, { roomName, type, payload });
-  if (!ioInstance) {
-    throw new Error("SocketService instance not initialised");
-  }
-
-  ioInstance.to(roomName).emit(type, payload);
-};
-
-const broadcastNewMessage = ({ groupId, textChannelId, payload }) => {
-  const roomName = `group_${groupId}_channel_${textChannelId}`;
-  console.log("Broadcasting new message:", { roomName, payload });
-  emitToRoom(roomName, "new_message", payload);
-};
-
-const broadcastMessageUpdated = ({ groupId, textChannelId, payload }) => {
-  const roomName = getRoom("text_channel", { groupId, textChannelId });
-  console.log("Broadcasting message updated:", { roomName, payload });
-  emitToRoom(roomName, "message_updated", payload);
-};
-
-const broadcastMessageDeleted = ({ groupId, textChannelId, payload }) => {
-  const roomName = getRoom("text_channel", { groupId, textChannelId });
-  console.log("Broadcasting message deleted:", { roomName, payload });
-  emitToRoom(roomName, "message_deleted", payload);
-};
-
-// const asyncHandler = (fn) => {
-//   return async (...args) => {
-//     try {
-//       await fn(...args);
-//     } catch (error) {
-//       console.error("Socket error:", error);
-//     }
-//   };
-// };
+let io = null;
 
 const initSocketServer = (httpServer) => {
-  if (ioInstance) {
-    console.log("Socket.IO already initialised, returning existing instance");
-    return ioInstance;
+  if (io) {
+    console.log("Socket.IO already initialised");
+    return io;
   }
 
-  const io = new Server(httpServer, {
+  io = new Server(httpServer, {
     cors: {
       origin: "*",
       credentials: true,
@@ -89,7 +36,6 @@ const initSocketServer = (httpServer) => {
     // Join channel
     socket.on("join_channel", (type, ids) => {
       const roomName = getRoom(type, ids);
-      console.log(`User ${socket.user.id} attempting to join channel:`, roomName);
       socket.join(roomName);
       socket.emit("joined_channel", { type, ids, roomName });
       console.log(`User ${socket.user.id} joined room: ${roomName}`);
@@ -98,96 +44,10 @@ const initSocketServer = (httpServer) => {
     // Leave channel
     socket.on("leave_channel", (type, ids) => {
       const roomName = getRoom(type, ids);
-      console.log(`User ${socket.user.id} attempting to leave channel:`, roomName);
       socket.leave(roomName);
       socket.emit("left_channel", { type, ids, roomName });
       console.log(`User ${socket.user.id} left room: ${roomName}`);
     });
-
-    // Send message
-    // socket.on(
-    //   "send_message",
-    //   asyncHandler(async (data) => {
-    //     const { groupId, channelId, message } = data;
-    //     const userId = socket.user.id;
-
-    //     try {
-    //       const result = await createMessage(channelId, message, userId);
-    //       const messageId = result.id;
-    //       const createdAt = result.created_at;
-
-    //       // Broadcast to room
-    //       io.to(roomName).emit("new_message", {
-    //         channelId,
-    //         groupId,
-    //         roomName,
-    //         message: {
-    //           id: messageId,
-    //           userId,
-    //           content: message,
-    //           timestamp: createdAt,
-    //         },
-    //       });
-    //     } catch (error) {
-    //       console.error("Error saving message:", error);
-    //       socket.emit("error", { message: "Failed to save message" });
-    //     }
-    //   })
-    // );
-
-    // Update message
-    // socket.on(
-    //   "update_message",
-    //   asyncHandler(async (data) => {
-    //     const { groupId, channelId, messageId, newContent } = data;
-    //     const userId = socket.user.id;
-
-    //     try {
-    //       const result = await updateMessage(channelId, messageId, newContent, userId);
-    //       const updatedAt = result.updated_at;
-    //       const updatedMessage = result.content;
-
-    //       // Broadcast to room
-    //       io.to(roomName).emit("message_updated", {
-    //         channelId,
-    //         groupId,
-    //         roomName,
-    //         message: {
-    //           id: messageId,
-    //           userId,
-    //           content: updatedMessage,
-    //           timestamp: updatedAt,
-    //         },
-    //       });
-    //     } catch (error) {
-    //       console.error("Error updating message:", error);
-    //       socket.emit("error", { message: "Failed to update message" });
-    //     }
-    //   })
-    // );
-
-    // Delete message
-    // socket.on(
-    //   "delete_message",
-    //   asyncHandler(async (data) => {
-    //     const { channelId, messageId } = data;
-    //     const userId = socket.user.id;
-
-    //     const result = await deleteMessage(channelId, messageId, userId);
-    //     const deletedAt = result.deleted_at;
-
-    //     // Broadcast to room
-    //     io.to(roomName).emit("message_deleted", {
-    //       channelId,
-    //       roomName,
-    //       message: {
-    //         userId,
-    //         id: messageId,
-    //         deletedAt,
-    //       },
-    //     });
-    //   })
-    // );
 
     // Disconnection handler
     socket.on("disconnect", (reason) => {
@@ -200,10 +60,41 @@ const initSocketServer = (httpServer) => {
     });
   });
 
-  ioInstance = io;
   console.log("Socket.io server initialised");
   return io;
 };
+
+const getRoom = (type, ids) => {
+  if (type === "text_channel") {
+    return `group_${ids.groupId}_channel_${ids.textChannelId}`;
+  }
+  if (type === "image") {
+    return `group_${ids.groupId}_image_${ids.imageId}`;
+  }
+  throw new Error("Invalid room type");
+};
+
+const broadcast = (eventType, channelType, ids, payload) => {
+  if (!io) {
+    throw new Error("SocketService not initialised");
+  }
+  const roomName = getRoom(channelType, ids);
+  console.log(`Broadcasting...`, {
+    eventType,
+    roomName,
+    payload,
+  });
+  io.to(roomName).emit(eventType, payload);
+};
+
+const broadcastNewMessage = ({ groupId, textChannelId, payload }) =>
+  broadcast("new_message", "text_channel", { groupId, textChannelId }, payload);
+
+const broadcastMessageUpdated = ({ groupId, textChannelId, payload }) =>
+  broadcast("message_updated", "text_channel", { groupId, textChannelId }, payload);
+
+const broadcastMessageDeleted = ({ groupId, textChannelId, payload }) =>
+  broadcast("message_deleted", "text_channel", { groupId, textChannelId }, payload);
 
 module.exports = {
   initSocketServer,
