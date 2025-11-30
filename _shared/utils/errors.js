@@ -9,8 +9,8 @@ class AppError extends Error {
 }
 
 class NotFoundError extends AppError {
-  constructor(message = "Resource not found") {
-    super(message, 404);
+  constructor(message = "Resource not found", conditions = {}) {
+    super(message, conditions, 404);
     this.code = "NOT_FOUND";
   }
 }
@@ -23,8 +23,8 @@ class ConflictError extends AppError {
 }
 
 class ValidationError extends AppError {
-  constructor(message = "Validation failed", errors = []) {
-    super(message, 400);
+  constructor(message = "Validation failed", conditions = {}, errors = []) {
+    super(message, conditions, 400);
     this.code = "VALIDATION_ERROR";
     this.errors = errors;
   }

@@ -4,13 +4,11 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const TEST_PASSWORD = process.env.TEST_USER_PASSWORD;
-
 // REGISTER
 const registerUser = async () => {
   const userData = {
     email: `test${Date.now()}@register.com`,
-    password: TEST_PASSWORD,
+    password: process.env.TEST_USER_PASSWORD,
     first_name: "Test",
     last_name: "User",
   };
@@ -34,10 +32,10 @@ const registerUser = async () => {
 };
 
 // LOGIN
-const loginUser = async (email, password = TEST_PASSWORD) => {
+const loginUser = async (email) => {
   const data = {
     email: email,
-    password: password,
+    password: process.env.TEST_USER_PASSWORD,
   };
 
   try {

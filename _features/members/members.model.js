@@ -26,7 +26,7 @@ const getGroupMemberById = async (groupId, userId) => {
     `SELECT gm.user_id, gm.group_id, gm.joined_at, u.first_name, u.last_name, u.email, gmr.is_admin
     FROM group_members gm 
     INNER JOIN users u on gm.user_id = u.id
-    INNER JOIN group_members_roles gmr on gm.user_id = gmr.user_id AND gm.group_id = gmr.group_id
+    INNER JOIN group_members_roles gmr on u.id = gmr.user_id AND gm.group_id = gmr.group_id
     WHERE gm.group_id = $1
     AND gm.user_id = $2`,
     [groupId, userId]
