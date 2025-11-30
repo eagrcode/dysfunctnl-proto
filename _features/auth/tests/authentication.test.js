@@ -26,10 +26,7 @@ describe("Auth API tests", () => {
 
       email = response.body.email;
 
-      console.log(
-        "REGISTER USER RESPONSE:",
-        JSON.stringify(response.body, null, 2)
-      );
+      console.log("REGISTER USER RESPONSE:", JSON.stringify(response.body, null, 2));
 
       expect(response.status).toBe(201);
       expect(response.body.id).toBeDefined();
@@ -52,10 +49,7 @@ describe("Auth API tests", () => {
         .send(loginCredentials)
         .set("Content-Type", "application/json");
 
-      console.log(
-        "LOGIN RESPONSE:",
-        JSON.stringify(loginResponse.body, null, 2)
-      );
+      console.log("LOGIN RESPONSE:", JSON.stringify(loginResponse.body, null, 2));
 
       expect(loginResponse.status).toBe(200);
       expect(loginResponse.body.user).toBeDefined();
@@ -64,8 +58,6 @@ describe("Auth API tests", () => {
       expect(loginResponse.body.accessToken).toBeDefined();
       expect(loginResponse.body.refreshToken).toBeDefined();
     });
-
-    // Missing refresh token
 
     // Invalid login attempt
     test("It should reject invalid login credentials", async () => {

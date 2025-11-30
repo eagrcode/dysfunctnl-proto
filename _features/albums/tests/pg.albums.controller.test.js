@@ -1,16 +1,11 @@
 const request = require("supertest");
 const app = require("../../../app");
-const dotenv = require("dotenv");
 const {
   createGroup,
   loginUser,
   registerUser,
   addMember,
 } = require("../../../_shared/helpers/testSetup");
-
-dotenv.config();
-
-const TEST_EMAIL = process.env.TEST_USER_1;
 
 describe("ALbums API Integration Tests - Authorised Actions", () => {
   let adminAccessToken;
@@ -29,23 +24,24 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
 
   // Initial setup
   beforeAll(async () => {
-    const { user, accessToken } = await loginUser(TEST_EMAIL);
-    adminUserId = user.id;
+    // Register and login admin user
+    const { userId, email } = await registerUser();
+    adminUserId = userId;
+    const { accessToken } = await loginUser(email);
     adminAccessToken = accessToken;
 
+    // Create group as admin
     groupId = await createGroup(groupData, adminAccessToken);
 
+    // Register and login member user
     const { email: naEmail, userId: naUserId } = await registerUser();
     memberId = naUserId;
-
     memberAccessToken = (await loginUser(naEmail)).accessToken;
 
+    // Add member to group
     const { success, role } = await addMember(groupId, memberId, adminAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);
-
-    console.log("Admin User ID:", adminUserId);
-    console.log("Member User ID:", memberId);
   });
 
   // Cleanup: Delete the created group

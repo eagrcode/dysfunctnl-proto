@@ -13,8 +13,6 @@ const {
 
 dotenv.config();
 
-const TEST_EMAIL = process.env.TEST_USER_1;
-
 describe("Text Channels/Messages Integration Tests - Authorised Actions", () => {
   let adminAccessToken;
   let adminUserId;
@@ -37,21 +35,26 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
 
   // Initial setup
   beforeAll(async () => {
-    const { user, accessToken } = await loginUser(TEST_EMAIL);
-    adminUserId = user.id;
+    // Register admin user and login
+    const { userId, email } = await registerUser();
+    adminUserId = userId;
+    const { user, accessToken } = await loginUser(email);
     adminAccessToken = accessToken;
 
+    // Create group as admin
     groupId = await createGroup(groupData, adminAccessToken);
 
+    // Register member user and login
     const { email: naEmail, userId: naUserId } = await registerUser();
     memberId = naUserId;
-
     memberAccessToken = (await loginUser(naEmail)).accessToken;
 
+    // Add member to group
     const { success, role } = await addMember(groupId, memberId, adminAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);
 
+    // Setup HTTP and Socket servers
     httpServer = createServer(app);
     initSocketServer(httpServer);
 
@@ -64,7 +67,6 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
       });
     });
 
-    // Create sockets
     adminSocket = io(`http://localhost:${serverPort}`, {
       auth: { token: adminAccessToken },
       autoConnect: false,

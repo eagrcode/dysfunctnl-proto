@@ -28,20 +28,23 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
     description: "Test description",
   };
 
-  // Initial setup: Login as admin and create a group
+  // Initial setup
   beforeAll(async () => {
-    const { user, accessToken } = await loginUser(process.env.TEST_USER_1);
-    adminUserId = user.id;
+    // Register admin/creator user
+    const { userId, email } = await registerUser();
+    adminUserId = userId;
+    const { accessToken } = await loginUser(email);
     adminAccessToken = accessToken;
 
+    // Create group as admin
     groupId = await createGroup(groupData, adminAccessToken);
 
-    // Register, login, and add non-admin member to group
+    // Register member user
     const { email: naEmail, userId: naUserId } = await registerUser();
     nonAdminUserId = naUserId;
-
     nonAdminAccessToken = (await loginUser(naEmail)).accessToken;
 
+    // Add member to group
     const { success, role } = await addMember(groupId, nonAdminUserId, adminAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);

@@ -5,8 +5,6 @@ const { loginUser, registerUser, addMember } = require("../../../_shared/helpers
 
 dotenv.config();
 
-const TEST_EMAIL = process.env.TEST_USER_1;
-
 describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)", () => {
   let adminAccessToken;
   let adminUserId;
@@ -24,10 +22,12 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
     description: "Updated group description",
   };
 
-  // Initial setup: Login as admin
+  // Initial setup: Register and login admin user
   beforeAll(async () => {
-    const { user, accessToken } = await loginUser(TEST_EMAIL);
-    adminUserId = user.id;
+    const { userId, email } = await registerUser();
+    adminUserId = userId;
+
+    const { accessToken } = await loginUser(email);
     adminAccessToken = accessToken;
   });
 

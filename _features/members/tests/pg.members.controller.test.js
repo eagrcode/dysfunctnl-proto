@@ -27,19 +27,21 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
 
   // Initial setup: Login as group creator, create group, add non-admin member, register non-member
   beforeAll(async () => {
-    // Login as group creator and create a group
-    const { user, accessToken } = await loginUser(process.env.TEST_USER_1);
-    groupCreatorId = user.id;
+    // Register admin/creator user
+    const { userId, email } = await registerUser();
+    groupCreatorId = userId;
+    const { accessToken } = await loginUser(email);
     groupCreatorAccessToken = accessToken;
 
+    // Create group as admin
     groupId = await createGroup(groupData, groupCreatorAccessToken);
 
-    // Register, login, and add non-admin member to group
+    // Register member user
     const { email: naEmail, userId: naUserId } = await registerUser();
     nonAdminUserId = naUserId;
-
     nonAdminAccessToken = (await loginUser(naEmail)).accessToken;
 
+    // Add member to group
     const { success, role } = await addMember(groupId, nonAdminUserId, groupCreatorAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);

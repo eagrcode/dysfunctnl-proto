@@ -1,7 +1,6 @@
 const request = require("supertest");
 const app = require("../../../app");
-const dotenv = require("dotenv");
-const { loginUser, createGroup } = require("../../../_shared/helpers/testSetup");
+const { loginUser, createGroup, registerUser } = require("../../../_shared/helpers/testSetup");
 
 describe("Token Refresh Flow", () => {
   let accessToken;
@@ -15,8 +14,10 @@ describe("Token Refresh Flow", () => {
 
   // Setup: Login to get initial tokens, create group to fetch later
   beforeAll(async () => {
+    const { email } = await registerUser();
+
     const { accessToken: initialAccessToken, refreshToken: initialRefreshToken } = await loginUser(
-      process.env.TEST_USER_1
+      email
     );
     accessToken = initialAccessToken;
     refreshToken = initialRefreshToken;
