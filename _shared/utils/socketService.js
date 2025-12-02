@@ -96,9 +96,21 @@ const broadcastMessageUpdated = ({ groupId, textChannelId, payload }) =>
 const broadcastMessageDeleted = ({ groupId, textChannelId, payload }) =>
   broadcast("message_deleted", "text_channel", { groupId, textChannelId }, payload);
 
+const broadcastNewComment = ({ groupId, imageId, payload }) =>
+  broadcast("new_comment", "image", { groupId, imageId }, payload);
+
+const broadcastCommentUpdated = ({ groupId, imageId, payload }) =>
+  broadcast("comment_updated", "image", { groupId, imageId }, payload);
+
+const broadcastCommentDeleted = ({ groupId, imageId, payload }) =>
+  broadcast("comment_deleted", "image", { groupId, imageId }, payload);
+
 module.exports = {
   initSocketServer,
   broadcastNewMessage,
   broadcastMessageUpdated,
   broadcastMessageDeleted,
+  broadcastNewComment,
+  broadcastCommentUpdated,
+  broadcastCommentDeleted,
 };
