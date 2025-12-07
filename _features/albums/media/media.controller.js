@@ -2,8 +2,6 @@ const fs = require("fs").promises;
 const path = require("path");
 const uploadConfig = require("../../../_shared/utils/uploadConfig");
 const {
-  addMedia,
-  // getAllMediaByAlbumId,
   getMediaById,
   deleteMediaById,
   updateMediaById,
@@ -18,14 +16,7 @@ const handleGetMediaById = async (req, res) => {
 
   res.status(200).json({
     success: true,
-    data: {
-      ...media,
-      urls: {
-        thumb: uploadConfig.getUrl("thumbs", `${media.filename}.jpg`),
-        display: uploadConfig.getUrl("display", `${media.filename}.jpg`),
-        original: uploadConfig.getUrl("original", `${media.filename}.jpg`),
-      },
-    },
+    data: media,
   });
 };
 

@@ -83,9 +83,12 @@ const handlePhotoUpload = async (req, res) => {
   const tempFilePath = tempFile.path;
   const filename = `${Date.now()}-${crypto.randomUUID()}`;
 
-  console.log(`Processing upload: ${tempFile.originalname}`);
-  console.log(`Size: ${(tempFile.size / 1024 / 1024).toFixed(2)}MB`);
-  console.log(`Storage: ${uploadConfig.basePath}`);
+  console.log("Processing upload...", {
+    originalName: tempFile.originalname,
+    fileSize: `${(tempFile.size / 1024 / 1024).toFixed(2)}MB`,
+    storageDestinationPath: uploadConfig.basePath,
+    processedFilename: filename,
+  });
 
   // Image processing
   await Promise.all([
@@ -117,6 +120,12 @@ const handlePhotoUpload = async (req, res) => {
     );
   }
 
+  const urls = {
+    thumb: uploadConfig.getUrl("thumbs", `${filename}.jpg`),
+    display: uploadConfig.getUrl("display", `${filename}.jpg`),
+    original: uploadConfig.getUrl("original", `${filename}.jpg`),
+  };
+
   // Insert metadata into DB
   const media = await addMedia(
     groupId,
@@ -125,7 +134,8 @@ const handlePhotoUpload = async (req, res) => {
     "image",
     "image/jpeg",
     stats.size,
-    filename
+    filename,
+    urls
   );
 
   // Delete temp file
@@ -133,14 +143,7 @@ const handlePhotoUpload = async (req, res) => {
 
   res.status(201).json({
     success: true,
-    data: {
-      ...media,
-      urls: {
-        thumb: uploadConfig.getUrl("thumbs", `${filename}.jpg`),
-        display: uploadConfig.getUrl("display", `${filename}.jpg`),
-        original: uploadConfig.getUrl("original", `${filename}.jpg`),
-      },
-    },
+    data: media,
   });
 };
 
