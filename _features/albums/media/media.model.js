@@ -47,22 +47,6 @@ const addMedia = async (
   return rows[0];
 };
 
-// GET ALL MEDIA BY ALBUM ID
-// const getAllMediaByAlbumId = async (groupId, albumId) => {
-//   const { rows } = await pool.query(
-//     `
-//     SELECT *
-//     FROM media
-//     WHERE group_id = $1
-//     AND album_id = $2
-//     ORDER BY created_at DESC;
-//   `,
-//     [groupId, albumId]
-//   );
-
-//   return rows;
-// };
-
 // GET MEDIA BY ID
 const getMediaById = async (groupId, albumId, mediaId) => {
   const { rows } = await pool.query(

@@ -41,6 +41,25 @@ const getAllAlbumsByGroupId = async (groupId) => {
 
 // GET ALBUM BY ID
 const getAlbumById = async (groupId, albumId) => {
+  const { rows } = await pool.query(
+    `
+    SELECT *
+    FROM media_albums
+    WHERE group_id = $1
+    AND id = $2;
+  `,
+    [groupId, albumId]
+  );
+
+  if (rows.length === 0) {
+    throw new NotFoundError(`Album with ID ${albumId} not found`);
+  }
+
+  return rows[0];
+};
+
+// GET ALBUM BY ID WITH MEDIA
+const getAlbumByIdWithMedia = async (groupId, albumId) => {
   return withTransaction(async (client) => {
     const albumResult = await client.query(
       `
@@ -73,22 +92,6 @@ const getAlbumById = async (groupId, albumId) => {
 
     return albumData;
   });
-
-  // const { rows } = await pool.query(
-  //   `
-  //   SELECT *
-  //   FROM media_albums
-  //   WHERE group_id = $1
-  //   AND id = $2;
-  // `,
-  //   [groupId, albumId]
-  // );
-
-  // if (rows.length === 0) {
-  //   throw new NotFoundError(`Album with ID ${albumId} not found`);
-  // }
-
-  // return rows[0];
 };
 
 // DELETE ALBUM BY ID
@@ -160,6 +163,7 @@ module.exports = {
   addAlbum,
   getAllAlbumsByGroupId,
   getAlbumById,
+  getAlbumByIdWithMedia,
   deleteAlbumById,
   updateAlbumById,
 };

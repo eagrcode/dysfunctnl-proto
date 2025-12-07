@@ -1,5 +1,6 @@
 const request = require("supertest");
 const app = require("../../../app");
+const uploadConfig = require("../../../_shared/utils/uploadConfig");
 const {
   createGroup,
   loginUser,
@@ -186,6 +187,97 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         created_by: expect.any(String),
         created_at: expect.any(String),
         updated_at: null,
+      });
+    });
+  });
+
+  // UPLOAD IMAGE TO ALBUM
+  describe("UPLOAD IMAGE TO ALBUM", () => {
+    test.each([
+      {
+        role: "Admin",
+        albumId: () => adminCreatedAlbumId,
+        accessToken: () => adminAccessToken,
+      },
+
+      {
+        role: "Member",
+        albumId: () => memberCreatedAlbumId,
+        accessToken: () => memberAccessToken,
+      },
+    ])(
+      "Should allow $role to upload an image to their album",
+      async ({ role, albumId, accessToken }) => {
+        const response = await request(app)
+          .post(`/groups/${groupId}/albums/${albumId()}/media/upload`)
+          .set("Authorization", `Bearer ${accessToken()}`)
+          .attach("image", "_test-images/test-image.jpg");
+
+        console.log(`UPLOAD IMAGE RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
+
+        expect(response.statusCode).toBe(201);
+        expect(response.body.success).toBe(true);
+        expect(uploadConfig.allowedTypes.image).toContain(response.body.data.mime_type);
+        expect(parseInt(response.body.data.size_bytes)).toBeLessThanOrEqual(
+          uploadConfig.limits.image
+        );
+        expect(response.body.data).toMatchObject({
+          id: expect.any(String),
+          album_id: albumId(),
+          group_id: groupId,
+          uploaded_by: expect.any(String),
+          type: "image",
+          mime_type: expect.stringContaining("image/"),
+          size_bytes: expect.any(String),
+          filename: expect.any(String),
+          created_at: expect.any(String),
+          updated_at: null,
+          urls: {
+            thumb: expect.stringContaining("/media/thumbs/"),
+            display: expect.stringContaining("/media/display/"),
+            original: expect.stringContaining("/media/original/"),
+          },
+        });
+      }
+    );
+  });
+
+  // GET ALBUM BY ID WITH MEDIA
+  describe("GET ALBUM BY ID WITH MEDIA", () => {
+    test.each([
+      {
+        role: "Admin",
+        accessToken: () => adminAccessToken,
+        albumId: () => adminCreatedAlbumId,
+      },
+      {
+        role: "Member",
+        accessToken: () => memberAccessToken,
+        albumId: () => memberCreatedAlbumId,
+      },
+    ])("Should allow $role to get album by ID", async ({ role, accessToken, albumId }) => {
+      const response = await request(app)
+        .get(`/groups/${groupId}/albums/${albumId()}/media`)
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${accessToken()}`);
+
+      console.log(
+        `GET ALBUM BY ID WITH MEDIA RESPONSE: ${role}`,
+        JSON.stringify(response.body, null, 2)
+      );
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data.media)).toBe(true);
+      expect(response.body.data).toMatchObject({
+        id: albumId(),
+        group_id: groupId,
+        name: expect.any(String),
+        description: expect.any(String),
+        created_by: expect.any(String),
+        created_at: expect.any(String),
+        updated_at: null,
+        media: expect.any(Array),
       });
     });
   });

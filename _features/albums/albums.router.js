@@ -4,6 +4,7 @@ const {
   handleAddAlbum,
   handleGetAllAlbumsByGroupId,
   handleGetAlbumById,
+  handleGetAlbumByIdWithMedia,
   handleDeleteAlbumById,
   handleUpdateAlbumById,
 } = require("./albums.controller");
@@ -16,6 +17,7 @@ albumsRouter.post("/", handleAddAlbum);
 albumsRouter.get("/:albumId", handleGetAlbumById);
 albumsRouter.patch("/:albumId", handleUpdateAlbumById);
 albumsRouter.delete("/:albumId", handleDeleteAlbumById);
+albumsRouter.get("/:albumId/media", handleGetAlbumByIdWithMedia);
 
 // NESTED MEDIA ROUTES
 albumsRouter.use("/:albumId/media", mediaRouter);

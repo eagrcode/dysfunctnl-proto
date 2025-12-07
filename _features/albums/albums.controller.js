@@ -2,10 +2,10 @@ const {
   addAlbum,
   getAllAlbumsByGroupId,
   getAlbumById,
+  getAlbumByIdWithMedia,
   deleteAlbumById,
   updateAlbumById,
 } = require("./albums.model");
-const { getAllMediaByAlbumId } = require("./media/media.model");
 
 // ADD NEW ALBUM
 const handleAddAlbum = async (req, res) => {
@@ -37,6 +37,18 @@ const handleGetAlbumById = async (req, res) => {
   const { groupId, albumId } = req.params;
 
   const album = await getAlbumById(groupId, albumId);
+
+  res.status(200).json({
+    success: true,
+    data: album,
+  });
+};
+
+// GET ALBUM BY ID WITH MEDIA
+const handleGetAlbumByIdWithMedia = async (req, res) => {
+  const { groupId, albumId } = req.params;
+
+  const album = await getAlbumByIdWithMedia(groupId, albumId);
 
   res.status(200).json({
     success: true,
@@ -77,6 +89,7 @@ module.exports = {
   handleAddAlbum,
   handleGetAllAlbumsByGroupId,
   handleGetAlbumById,
+  handleGetAlbumByIdWithMedia,
   handleDeleteAlbumById,
   handleUpdateAlbumById,
 };
