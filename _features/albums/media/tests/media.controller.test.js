@@ -11,8 +11,6 @@ const {
 
 dotenv.config();
 
-const TEST_EMAIL = process.env.TEST_USER_1;
-
 let adminAccessToken;
 let adminUserId;
 let groupId;
@@ -32,17 +30,21 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
 
   // Initial setup
   beforeAll(async () => {
-    const { user, accessToken } = await loginUser(TEST_EMAIL);
-    adminUserId = user.id;
+    // Register and login admin user
+    const { userId, email } = await registerUser();
+    adminUserId = userId;
+    const { accessToken } = await loginUser(email);
     adminAccessToken = accessToken;
 
+    // Create group as admin
     groupId = await createGroup(groupData, adminAccessToken);
 
+    // Register and login member user
     const { email: naEmail, userId: naUserId } = await registerUser();
     memberId = naUserId;
-
     memberAccessToken = (await loginUser(naEmail)).accessToken;
 
+    // Add member to group
     const { success, role } = await addMember(groupId, memberId, adminAccessToken);
     expect(success).toBe(true);
     expect(role.is_admin).toBe(false);
@@ -130,7 +132,7 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
         const response = await request(app)
           .post(`/groups/${groupId}/albums/${albumId()}/media/upload`)
           .set("Authorization", `Bearer ${accessToken()}`)
-          .attach("image", "_test-images/Screenshot 2025-07-17 182117.png");
+          .attach("image", "_test-images/test-image.jpg");
 
         console.log(`UPLOAD IMAGE RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 
@@ -209,6 +211,58 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
             display: expect.stringContaining("/media/display/"),
             original: expect.stringContaining("/media/original/"),
           },
+        });
+      }
+    );
+  });
+
+  // GET IMAGE WITH COMMENTS
+  describe("GET IMAGE WITH COMMENTS", () => {
+    test.each([
+      {
+        role: "Admin",
+        albumId: () => adminCreatedAlbumId,
+        accessToken: () => adminAccessToken,
+        mediaId: () => adminUploadedMediaId,
+      },
+      {
+        role: "Member",
+        albumId: () => memberCreatedAlbumId,
+        accessToken: () => memberAccessToken,
+        mediaId: () => memberUploadedMediaId,
+      },
+    ])(
+      "Should allow $role to get image with comments",
+      async ({ role, albumId, accessToken, mediaId }) => {
+        const response = await request(app)
+          .get(`/groups/${groupId}/albums/${albumId()}/media/${mediaId()}/comments`)
+          .set("Authorization", `Bearer ${accessToken()}`);
+
+        console.log(
+          `GET IMAGE WITH COMMENTS RESPONSE: ${role}`,
+          JSON.stringify(response.body, null, 2)
+        );
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(Array.isArray(response.body.data.comments)).toBe(true);
+        expect(response.body.data).toMatchObject({
+          id: expect.any(String),
+          album_id: albumId(),
+          group_id: groupId,
+          uploaded_by: expect.any(String),
+          type: "image",
+          mime_type: expect.stringContaining("image/"),
+          size_bytes: expect.any(String),
+          filename: expect.any(String),
+          created_at: expect.any(String),
+          updated_at: null,
+          urls: {
+            thumb: expect.stringContaining("/media/thumbs/"),
+            display: expect.stringContaining("/media/display/"),
+            original: expect.stringContaining("/media/original/"),
+          },
+          comments: expect.any(Array),
         });
       }
     );

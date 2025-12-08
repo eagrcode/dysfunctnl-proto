@@ -58,6 +58,42 @@ const getMediaById = async (groupId, albumId, mediaId) => {
   return rows[0];
 };
 
+// GET MEDIA BY ID
+const getMediaByIdWithComments = async (groupId, albumId, mediaId) => {
+  return withTransaction(async (client) => {
+    const mediaResult = await client.query(
+      `
+    SELECT *
+    FROM media
+    WHERE group_id = $1
+    AND album_id = $2
+    AND id = $3;
+  `,
+      [groupId, albumId, mediaId]
+    );
+
+    const mediaData = mediaResult.rows[0];
+
+    if (mediaData.length === 0) {
+      throw new NotFoundError(`No media found for ID: ${mediaId}`);
+    }
+
+    const commentsResult = await client.query(
+      `
+        SELECT *
+        FROM media_comments
+        WHERE media_id = $1
+        ORDER BY created_at ASC;
+      `,
+      [mediaId]
+    );
+
+    mediaData.comments = commentsResult.rows;
+
+    return mediaData;
+  });
+};
+
 // DELETE MEDIA BY ID
 const deleteMediaById = async (groupId, albumId, mediaId) => {
   const { rows } = await pool.query(
@@ -169,7 +205,7 @@ const updateMediaById = async (groupId, albumId, mediaId, updates) => {
 
 module.exports = {
   addMedia,
-  // getAllMediaByAlbumId,
+  getMediaByIdWithComments,
   getMediaById,
   deleteMediaById,
   updateMediaById,

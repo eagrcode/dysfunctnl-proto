@@ -2,6 +2,7 @@ const Router = require("express").Router;
 const mediaCommentsRouter = require("./comments/comments.router");
 const {
   handleGetMediaById,
+  handleGetMediaByIdWithComments,
   handleDeleteMediaById,
   handleUpdateMediaById,
 } = require("./media.controller");
@@ -13,6 +14,7 @@ mediaRouter.post("/upload", upload, handlePhotoUpload);
 mediaRouter.get("/:mediaId", handleGetMediaById);
 mediaRouter.patch("/:mediaId", handleUpdateMediaById);
 mediaRouter.delete("/:mediaId", handleDeleteMediaById);
+mediaRouter.get("/:mediaId/comments", handleGetMediaByIdWithComments);
 
 mediaRouter.use("/:mediaId/comments", mediaCommentsRouter);
 

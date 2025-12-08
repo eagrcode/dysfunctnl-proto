@@ -3,6 +3,7 @@ const path = require("path");
 const uploadConfig = require("../../../_shared/utils/uploadConfig");
 const {
   getMediaById,
+  getMediaByIdWithComments,
   deleteMediaById,
   updateMediaById,
   getFilenameById,
@@ -13,6 +14,18 @@ const handleGetMediaById = async (req, res) => {
   const { groupId, albumId, mediaId } = req.params;
 
   const media = await getMediaById(groupId, albumId, mediaId);
+
+  res.status(200).json({
+    success: true,
+    data: media,
+  });
+};
+
+// GET MEDIA BY ID
+const handleGetMediaByIdWithComments = async (req, res) => {
+  const { groupId, albumId, mediaId } = req.params;
+
+  const media = await getMediaByIdWithComments(groupId, albumId, mediaId);
 
   res.status(200).json({
     success: true,
@@ -67,6 +80,7 @@ const handleUpdateMediaById = async (req, res) => {
 
 module.exports = {
   handleGetMediaById,
+  handleGetMediaByIdWithComments,
   handleDeleteMediaById,
   handleUpdateMediaById,
 };
