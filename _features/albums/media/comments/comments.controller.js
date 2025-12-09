@@ -1,6 +1,6 @@
 const path = require("path");
 const {
-  broadcastNewMessage,
+  broadcastNewComment,
   broadcastMessageUpdated,
   broadcastMessageDeleted,
 } = require("../../../../_shared/utils/socketService");
@@ -32,7 +32,7 @@ const handleAddComment = async (req, res) => {
   };
 
   // WebSocket broadcast
-  broadcastNewMessage({
+  broadcastNewComment({
     groupId: req.params.groupId,
     albumId: albumId,
     mediaId: mediaId,

@@ -10,9 +10,10 @@ const {
 // ADD NEW ALBUM
 const handleAddAlbum = async (req, res) => {
   const { groupId } = req.params;
-  const { name, description, createdBy } = req.body;
+  const { name, description } = req.body;
+  const userId = req.user.id;
 
-  const result = await addAlbum(groupId, name, description, createdBy);
+  const result = await addAlbum(groupId, name, description, userId);
 
   res.status(201).json({
     success: true,

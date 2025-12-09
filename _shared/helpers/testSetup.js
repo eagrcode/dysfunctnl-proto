@@ -132,4 +132,57 @@ const createTextChannel = async (groupId, channelData, accessToken) => {
   }
 };
 
-module.exports = { registerUser, loginUser, createGroup, addMember, createTextChannel };
+// CREATE ALBUM
+const createAlbum = async (groupId, albumData, accessToken) => {
+  try {
+    const response = await request(app)
+      .post(`/groups/${groupId}/albums`)
+      .set("Content-Type", "application/json")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(albumData);
+
+    if (response.status !== 201) {
+      throw new Error(`Failed to create album: ${response.body.error || "Unknown error"}`);
+    }
+
+    console.log("CREATE ALBUM:", JSON.stringify(response.body, null, 2));
+
+    const albumId = response.body.data.id;
+
+    return albumId;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const uploadImageToAlbum = async (groupId, albumId, accessToken) => {
+  try {
+    const response = await request(app)
+      .post(`/groups/${groupId}/albums/${albumId}/media/upload`)
+      .set("Content-Type", "application/json")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("image", "_test-images/test-image.jpg");
+
+    if (response.status !== 201) {
+      throw new Error(`Failed to upload image: ${response.body.error || "Unknown error"}`);
+    }
+
+    console.log("UPLOAD IMAGE:", JSON.stringify(response.body, null, 2));
+
+    const imageId = response.body.data.id;
+
+    return imageId;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  createGroup,
+  addMember,
+  createTextChannel,
+  createAlbum,
+  uploadImageToAlbum,
+};
