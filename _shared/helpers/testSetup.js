@@ -161,7 +161,7 @@ const uploadImageToAlbum = async (groupId, albumId, accessToken) => {
       .post(`/groups/${groupId}/albums/${albumId}/media/upload`)
       .set("Content-Type", "application/json")
       .set("Authorization", `Bearer ${accessToken}`)
-      .attach("image", "_test-images/test-image.jpg");
+      .attach("image", "_test-images/test-image.png");
 
     if (response.status !== 201) {
       throw new Error(`Failed to upload image: ${response.body.error || "Unknown error"}`);
