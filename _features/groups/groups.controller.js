@@ -1,5 +1,11 @@
 const { body, param, validationResult } = require("express-validator");
-const { createGroup, getGroupById, updateGroup, deleteGroup } = require("./groups.model");
+const {
+  createGroup,
+  getUserGroups,
+  getGroupById,
+  updateGroup,
+  deleteGroup,
+} = require("./groups.model");
 
 // CREATE GROUP
 const handleCreateGroup = [
@@ -36,6 +42,18 @@ const handleCreateGroup = [
     });
   },
 ];
+
+// GET USER GROUPS
+const handleGetUserGroups = async (req, res) => {
+  const { id: userId } = req.user;
+
+  const result = await getUserGroups(userId);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
 
 // GET GROUP BY ID
 const handleGetGroupById = async (req, res) => {
@@ -104,6 +122,7 @@ const handleDeleteGroup = async (req, res) => {
 
 module.exports = {
   handleCreateGroup,
+  handleGetUserGroups,
   handleGetGroupById,
   handleUpdateGroup,
   handleDeleteGroup,

@@ -28,6 +28,21 @@ const createGroup = async (name, createdById, description) => {
   });
 };
 
+// GET USER GROUPS
+const getUserGroups = async (userId) => {
+  const result = await pool.query(
+    `
+    SELECT g.*
+    FROM groups g
+    JOIN group_members gm on g.id = gm.group_id
+    WHERE gm.user_id = $1
+    `,
+    [userId]
+  );
+
+  return result.rows;
+};
+
 // GET GROUP BY ID
 const getGroupById = async (groupId) => {
   const result = await pool.query("SELECT * FROM groups WHERE id = $1", [groupId]);
@@ -78,6 +93,7 @@ const deleteGroup = async (groupId) => {
 
 module.exports = {
   createGroup,
+  getUserGroups,
   getGroupById,
   updateGroup,
   deleteGroup,

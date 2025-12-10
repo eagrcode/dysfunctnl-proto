@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../../../app");
 const dotenv = require("dotenv");
+const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
 const { loginUser, registerUser, addMember } = require("../../../_shared/helpers/testSetup");
 
 dotenv.config();
@@ -42,6 +43,8 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
 
       groupId = response.body.data.group.id;
 
+      customConsoleLog("CREATE GROUP response:", response.body);
+
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.data.group).toMatchObject({
@@ -79,6 +82,18 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
       console.log("CREATE GROUP with invalid URL:", JSON.stringify(response, null, 2));
 
       expect(response.status).toBe(404);
+    });
+  });
+
+  // GET USER GROUPS
+  describe("Get User Groups", () => {
+    test("should retrieve groups for the user", async () => {
+      const response = await request(app)
+        .get("/groups")
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${adminAccessToken}`);
+
+      customConsoleLog("GET USER GROUPS response:", response.body);
     });
   });
 
