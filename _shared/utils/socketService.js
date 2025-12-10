@@ -1,11 +1,12 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
+const customConsoleLog = require("./customConsoleLog");
 
 let io = null;
 
 const initSocketServer = (httpServer) => {
   if (io) {
-    console.log("Socket.IO already initialised");
+    customConsoleLog("Socket.IO already initialised");
     return io;
   }
 
@@ -24,34 +25,49 @@ const initSocketServer = (httpServer) => {
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) return next(new Error("Invalid token"));
       socket.user = user;
-      console.log(`Socket authenticated: User ID ${user.id}`);
+      customConsoleLog("Socket authenticated:", {
+        userId: user.id,
+      });
       next();
     });
   });
 
   // Connection handler
   io.on("connection", (socket) => {
-    console.log(`Client connected: ${socket.id}, User ID: ${socket.user.id}`);
+    customConsoleLog("Client connected:", {
+      socketId: socket.id,
+      userId: socket.user.id,
+    });
 
     // Join channel
     socket.on("join_channel", (type, ids) => {
       const roomName = getRoom(type, ids);
       socket.join(roomName);
+      customConsoleLog("User joined room:", {
+        userId: socket.user.id,
+        roomName,
+      });
       socket.emit("joined_channel", { type, ids, roomName });
-      console.log(`User ${socket.user.id} joined room: ${roomName}`);
     });
 
     // Leave channel
     socket.on("leave_channel", (type, ids) => {
       const roomName = getRoom(type, ids);
       socket.leave(roomName);
+      customConsoleLog("User left room:", {
+        userId: socket.user.id,
+        roomName,
+      });
       socket.emit("left_channel", { type, ids, roomName });
-      console.log(`User ${socket.user.id} left room: ${roomName}`);
     });
 
     // Disconnection handler
     socket.on("disconnect", (reason) => {
-      console.log(`Client disconnected: ${socket.id} (${reason})`);
+      customConsoleLog("Client disconnected:", {
+        socketId: socket.id,
+        userId: socket.user.id,
+        reason,
+      });
     });
 
     // Error handler
@@ -60,16 +76,17 @@ const initSocketServer = (httpServer) => {
     });
   });
 
-  console.log("Socket.io server initialised");
+  customConsoleLog("Socket.io server initialised");
   return io;
 };
 
 const getRoom = (type, ids) => {
+  customConsoleLog("Structuring room name from details:", { type, ids });
   if (type === "text_channel") {
     return `group_${ids.groupId}_channel_${ids.textChannelId}`;
   }
   if (type === "image") {
-    return `group_${ids.groupId}_image_${ids.imageId}`;
+    return `group_${ids.groupId}_image_${ids.mediaId}`;
   }
   throw new Error("Invalid room type");
 };
@@ -79,7 +96,7 @@ const broadcast = (eventType, channelType, ids, payload) => {
     throw new Error("SocketService not initialised");
   }
   const roomName = getRoom(channelType, ids);
-  console.log(`Broadcasting...`, {
+  customConsoleLog(`Broadcasting...`, {
     eventType,
     roomName,
     payload,
@@ -96,14 +113,14 @@ const broadcastMessageUpdated = ({ groupId, textChannelId, payload }) =>
 const broadcastMessageDeleted = ({ groupId, textChannelId, payload }) =>
   broadcast("message_deleted", "text_channel", { groupId, textChannelId }, payload);
 
-const broadcastNewComment = ({ groupId, imageId, payload }) =>
-  broadcast("new_comment", "image", { groupId, imageId }, payload);
+const broadcastNewComment = ({ groupId, mediaId, payload }) =>
+  broadcast("new_comment", "image", { groupId, mediaId }, payload);
 
-const broadcastCommentUpdated = ({ groupId, imageId, payload }) =>
-  broadcast("comment_updated", "image", { groupId, imageId }, payload);
+const broadcastCommentUpdated = ({ groupId, mediaId, payload }) =>
+  broadcast("comment_updated", "image", { groupId, mediaId }, payload);
 
-const broadcastCommentDeleted = ({ groupId, imageId, payload }) =>
-  broadcast("comment_deleted", "image", { groupId, imageId }, payload);
+const broadcastCommentDeleted = ({ groupId, mediaId, payload }) =>
+  broadcast("comment_deleted", "image", { groupId, mediaId }, payload);
 
 module.exports = {
   initSocketServer,
