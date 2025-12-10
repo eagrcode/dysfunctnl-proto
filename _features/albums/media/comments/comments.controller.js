@@ -1,4 +1,4 @@
-const path = require("path");
+const customConsoleLog = require("../../../../_shared/utils/customConsoleLog");
 const {
   broadcastNewComment,
   broadcastMessageUpdated,
@@ -12,14 +12,11 @@ const handleAddComment = async (req, res) => {
   const { mediaId, albumId } = req.params;
   const { content } = req.body;
 
-  console.log(
-    `/${path.basename(__filename)} - Attempting to add comment with the following data:`,
-    {
-      senderId,
-      mediaId,
-      content,
-    }
-  );
+  customConsoleLog("Attempting to add comment with the following data:", {
+    mediaId,
+    senderId,
+    content,
+  });
 
   const comment = await addComment(mediaId, senderId, content);
 
@@ -34,7 +31,6 @@ const handleAddComment = async (req, res) => {
   // WebSocket broadcast
   broadcastNewComment({
     groupId: req.params.groupId,
-    albumId: albumId,
     mediaId: mediaId,
     payload: payload,
   });
@@ -50,22 +46,19 @@ const handleUpdateComment = async (req, res) => {
   const userId = req.user.id;
   const is_admin = req.groupMembership.is_admin;
   const { mediaId, commentId, albumId } = req.params;
-  const { newContent } = req.body;
+  const { updatedContent } = req.body;
 
-  console.log(
-    `/${path.basename(__filename)} - Attempting to update comment with the following data:`,
-    {
-      newContent,
-    }
-  );
+  customConsoleLog(`Attempting to update comment with the following data:`, {
+    updatedContent,
+  });
 
-  const updatedComment = await updateComment(mediaId, commentId, userId, newContent, is_admin);
+  const updatedComment = await updateComment(mediaId, commentId, userId, updatedContent, is_admin);
 
   const payload = {
     id: commentId,
     mediaId: mediaId,
     senderId: updatedComment.sender_id,
-    newContent: updatedComment.content,
+    updatedContent: updatedComment.content,
     updatedAt: updatedComment.updated_at,
   };
 
@@ -77,7 +70,7 @@ const handleUpdateComment = async (req, res) => {
     payload: payload,
   });
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     data: payload,
   });
@@ -89,21 +82,16 @@ const handleDeleteComment = async (req, res) => {
   const is_admin = req.groupMembership.is_admin;
   const { mediaId, commentId, albumId } = req.params;
 
-  console.log(
-    `/${path.basename(__filename)} - Attempting to delete comment with the following data:`,
-    {
-      commentId,
-      senderId,
-      mediaId,
-    }
-  );
+  customConsoleLog(`Attempting to delete comment with the following data:`, {
+    commentId,
+    mediaId,
+  });
 
   const deletedComment = await deleteComment(mediaId, commentId, userId, is_admin);
 
   const payload = {
     id: deletedComment.id,
     mediaId: mediaId,
-    senderId: deletedComment.sender_id,
   };
 
   // WebSocket broadcast

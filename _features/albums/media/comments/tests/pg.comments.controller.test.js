@@ -3,6 +3,7 @@ const app = require("../../../../../app");
 const io = require("socket.io-client");
 const { createServer } = require("http");
 const { initSocketServer } = require("../../../../../_shared/utils/socketService");
+const customConsoleLog = require("../../../../../_shared/utils/customConsoleLog");
 const {
   createGroup,
   loginUser,
@@ -21,6 +22,8 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
   let albumId;
   let adminUploadedImageId;
   let memberUploadedImageId;
+  let adminCommentId;
+  let memberCommentId;
   let httpServer;
   let serverPort;
   let adminSocket;
@@ -68,10 +71,10 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
     initSocketServer(httpServer);
 
     await new Promise((resolve) => {
-      console.log("Starting test server...");
+      customConsoleLog("Starting test server...");
       httpServer.listen(0, () => {
         serverPort = httpServer.address().port;
-        console.log(`Test server listening on port ${serverPort}`);
+        customConsoleLog(`Test server listening on port ${serverPort}`);
         resolve();
       });
     });
@@ -90,7 +93,7 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
   // Cleanup: Delete the created group
   afterAll(async () => {
     if (groupId) {
-      console.log("CLEANUP: Deleting test group with ID:", groupId);
+      customConsoleLog("CLEANUP: Deleting test group with ID:", { groupId });
 
       await request(app)
         .delete(`/groups/${groupId}`)
@@ -100,12 +103,12 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
 
     // Close sockets and server
     if (httpServer.listening) {
-      console.log("Disconnecting user sockets and closing test server...");
+      customConsoleLog("Disconnecting user sockets and closing test server...");
       await new Promise((resolve) => {
         if (adminSocket.connected) adminSocket.disconnect();
         if (memberSocket.connected) memberSocket.disconnect();
         httpServer.close(resolve);
-        console.log("Test server closed");
+        customConsoleLog("Test server closed");
       });
     }
   });
@@ -126,7 +129,7 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
       currentSocket.connect();
 
       currentSocket.on("connect", () => {
-        console.log(`${role} connected to server with socket ID:`, currentSocket.id);
+        customConsoleLog(`${role} connected to server:`, { socketId: currentSocket.id });
         expect(currentSocket.connected).toBe(true);
         done();
       });
@@ -148,24 +151,24 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
     ])("$role joins channel", ({ role, socket, imageId }, done) => {
       const currentSocket = socket();
 
-      console.log(`${role} attempting to join channel:`, {
+      customConsoleLog(`${role} attempting to join channel:`, {
         type: "image",
         ids: {
-          imageId: imageId(),
+          mediaId: imageId(),
           groupId: groupId,
         },
       });
 
       currentSocket.emit("join_channel", "image", {
-        imageId: imageId(),
         groupId: groupId,
+        mediaId: imageId(),
       });
 
       currentSocket.on("joined_channel", (data) => {
-        console.log(`${role} joined channel:`, data);
+        customConsoleLog(`${role} joined channel:`, data);
 
         expect(data.type).toBe("image");
-        expect(data.ids.imageId).toBe(imageId());
+        expect(data.ids.mediaId).toBe(imageId());
         expect(data.ids.groupId).toBe(groupId);
         expect(data.roomName).toBeDefined();
 
@@ -196,12 +199,20 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
       async ({ role, userId, accessToken, socket, imageId }) => {
         let socketEventFired = false;
         const commentContent = `This is a comment from ${role}`;
+        const responseAssertion = {
+          id: expect.any(String),
+          mediaId: imageId(),
+          senderId: userId(),
+          content: commentContent,
+          createdAt: expect.any(String),
+        };
 
         socket().once("new_comment", (data) => {
-          console.log(`Received new_message event for ${role}`);
+          customConsoleLog(` ${role} - Received new_comment event`);
           socketEventFired = true;
-          console.log(`Socket event fired = ${socketEventFired}`);
-          console.log(`${role} - Socket event received with data:`, data);
+          customConsoleLog(` ${role} - Socket event fired = ${socketEventFired}`);
+          customConsoleLog(`${role} - Socket event received with data:`, data);
+          expect(data).toMatchObject(responseAssertion);
         });
 
         const response = await request(app)
@@ -210,8 +221,129 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
 
+        customConsoleLog(
+          `ADD COMMENT RESPONSE FOR ${role}:`,
+          JSON.stringify(response.body, null, 2)
+        );
+
+        role === "Admin"
+          ? (adminCommentId = response.body.data.id)
+          : (memberCommentId = response.body.data.id);
+
         expect(response.status).toBe(201);
         expect(response.body.success).toBe(true);
+        expect(response.body.data).toMatchObject(responseAssertion);
+      }
+    );
+  });
+
+  // UPDATE COMMENT
+  describe("UPDATE COMMENT", () => {
+    test.each([
+      {
+        role: "Admin",
+        userId: () => adminUserId,
+        accessToken: () => adminAccessToken,
+        socket: () => adminSocket,
+        imageId: () => adminUploadedImageId,
+        commentId: () => adminCommentId,
+      },
+      {
+        role: "Member",
+        userId: () => memberId,
+        accessToken: () => memberAccessToken,
+        socket: () => memberSocket,
+        imageId: () => adminUploadedImageId,
+        commentId: () => memberCommentId,
+      },
+    ])(
+      "Should allow $role to update comment and receive WebSocket broadcast",
+      async ({ role, userId, accessToken, socket, imageId, commentId }) => {
+        let socketEventFired = false;
+        const updatedCommentContent = `This is an updated comment from ${role}`;
+        const responseAssertion = {
+          id: commentId(),
+          mediaId: imageId(),
+          senderId: userId(),
+          updatedContent: updatedCommentContent,
+          updatedAt: expect.any(String),
+        };
+
+        socket().once("comment_updated", (data) => {
+          customConsoleLog(` ${role} - Received comment_updated event`);
+          socketEventFired = true;
+          customConsoleLog(` ${role} - Socket event fired = ${socketEventFired}`);
+          customConsoleLog(`${role} - Socket event received with data:`, data);
+          expect(data).toMatchObject(responseAssertion);
+        });
+
+        const response = await request(app)
+          .patch(`/groups/${groupId}/albums/${albumId}/media/${imageId()}/comments/${commentId()}`)
+          .send({ updatedContent: updatedCommentContent })
+          .set("Content-Type", "application/json")
+          .set("Authorization", `Bearer ${accessToken()}`);
+
+        customConsoleLog(
+          `UPDATE COMMENT RESPONSE FOR ${role}:`,
+          JSON.stringify(response.body, null, 2)
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toMatchObject(responseAssertion);
+      }
+    );
+  });
+
+  // DELETE COMMENT
+  describe("DELETE COMMENT", () => {
+    test.each([
+      {
+        role: "Admin",
+        userId: () => adminUserId,
+        accessToken: () => adminAccessToken,
+        socket: () => adminSocket,
+        imageId: () => adminUploadedImageId,
+        commentId: () => adminCommentId,
+      },
+      {
+        role: "Member",
+        userId: () => memberId,
+        accessToken: () => memberAccessToken,
+        socket: () => memberSocket,
+        imageId: () => adminUploadedImageId,
+        commentId: () => memberCommentId,
+      },
+    ])(
+      "Should allow $role to delete comment and receive WebSocket broadcast",
+      async ({ role, userId, accessToken, socket, imageId, commentId }) => {
+        let socketEventFired = false;
+        const responseAssertion = {
+          id: commentId(),
+          mediaId: imageId(),
+        };
+
+        socket().once("comment_deleted", (data) => {
+          customConsoleLog(` ${role} - Received comment_deleted event`);
+          socketEventFired = true;
+          customConsoleLog(` ${role} - Socket event fired = ${socketEventFired}`);
+          customConsoleLog(`${role} - Socket event received with data:`, data);
+          expect(data).toMatchObject(responseAssertion);
+        });
+
+        const response = await request(app)
+          .delete(`/groups/${groupId}/albums/${albumId}/media/${imageId()}/comments/${commentId()}`)
+          .set("Content-Type", "application/json")
+          .set("Authorization", `Bearer ${accessToken()}`);
+
+        customConsoleLog(
+          `DELETE COMMENT RESPONSE FOR ${role}:`,
+          JSON.stringify(response.body, null, 2)
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toMatchObject(responseAssertion);
       }
     );
   });
