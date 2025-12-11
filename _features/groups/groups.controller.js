@@ -1,4 +1,5 @@
 const { body, param, validationResult } = require("express-validator");
+const { ValidationError } = require("../../_shared/utils/errors");
 const {
   createGroup,
   getUserGroups,
@@ -28,7 +29,7 @@ const handleCreateGroup = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      throw new ValidationError("Invalid group data", errors.array());
     }
 
     const { name, description } = req.body;
@@ -86,7 +87,7 @@ const handleUpdateGroup = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      throw new ValidationError("Invalid group data", errors.array());
     }
 
     const { groupId } = req.params;
