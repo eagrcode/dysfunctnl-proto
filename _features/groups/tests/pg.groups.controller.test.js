@@ -65,7 +65,7 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      console.log("CREATE GROUP with missing data:", JSON.stringify(response, null, 2));
+      customConsoleLog("CREATE GROUP with missing data response:", response.body);
 
       expect(response.status).toBe(400);
       expect(response.body.errors).toBeDefined();
@@ -79,7 +79,7 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      console.log("CREATE GROUP with invalid URL:", JSON.stringify(response, null, 2));
+      customConsoleLog("CREATE GROUP with invalid URL:", response.body);
 
       expect(response.status).toBe(404);
     });
@@ -105,6 +105,8 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
+      customConsoleLog("READ GROUP response:", response.body);
+
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data).toMatchObject({
@@ -126,6 +128,8 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
+      customConsoleLog("UPDATE GROUP response:", response.body);
+
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data).toMatchObject({
@@ -142,6 +146,8 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .send({ name: "", description: "" }) // Missing required fields
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
+
+      customConsoleLog("UPDATE GROUP with missing data response:", response.body);
 
       expect(response.status).toBe(400);
       expect(response.body.errors).toBeDefined();
@@ -167,6 +173,8 @@ describe("Groups API Integration Tests - Authorised Actions (as Admin or Member)
         .get(`/groups/${groupId}`)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${memberAccessToken}`);
+
+      customConsoleLog("NON-ADMIN MEMBER READ GROUP response:", response.body);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
