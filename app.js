@@ -5,6 +5,7 @@ const groupsRouter = require("./_features/groups/groups.router");
 const imageUploadCleanup = require("./_shared/middleware/imageUploadCleanup");
 const { errorHandler } = require("./_shared/middleware/errorHandler");
 const staticFileServeConfig = require("./_shared/utils/staticFileServeConfig");
+const { NotFoundError } = require("./_shared/utils/errors");
 
 process.env.TZ = "UTC";
 console.log("Server timezone:", process.env.TZ);
@@ -20,6 +21,11 @@ app.use("/groups", groupsRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Dysfunctnl Server!");
+});
+
+// 404 handler
+app.use((req, res) => {
+  throw new NotFoundError("Endpoint not found");
 });
 
 app.use(imageUploadCleanup);

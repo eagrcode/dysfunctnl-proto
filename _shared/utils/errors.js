@@ -1,7 +1,6 @@
 class AppError extends Error {
-  constructor(message, conditions, statusCode) {
+  constructor(message, statusCode) {
     super(message);
-    this.conditions = conditions ?? null;
     this.statusCode = statusCode;
     this.isOperational = true;
     Error.captureStackTrace?.(this, this.constructor);
@@ -9,8 +8,8 @@ class AppError extends Error {
 }
 
 class NotFoundError extends AppError {
-  constructor(message = "Resource not found", conditions = {}) {
-    super(message, conditions, 404);
+  constructor(message = "Resource not found") {
+    super(message, 404);
     this.code = "NOT_FOUND";
   }
 }
@@ -23,8 +22,8 @@ class ConflictError extends AppError {
 }
 
 class ValidationError extends AppError {
-  constructor(message = "Validation failed", conditions = {}, errors = []) {
-    super(message, conditions, 400);
+  constructor(message = "Validation failed", errors = []) {
+    super(message, 400);
     this.code = "VALIDATION_ERROR";
     this.errors = errors;
   }
@@ -47,6 +46,7 @@ class ForbiddenError extends AppError {
 class FailedActionError extends AppError {
   constructor(message = "", conditions = {}) {
     super(message, conditions, 403);
+    this.conditions = conditions;
     this.code = "ACTION_FAILED";
   }
 }

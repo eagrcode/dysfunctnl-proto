@@ -2,16 +2,17 @@
 const errorHandler = (err, req, res, next) => {
   console.error("Error:", {
     message: err.message,
-    conditions: err.conditions,
+    ...(err.conditions && { conditions: err.conditions }),
     statusCode: err.statusCode,
+    errorCode: err.code,
+    ...(err.errors && { validationError: err.errors }),
     stack: err.stack,
-    validationError: err.errors,
   });
 
   if (err.isOperational) {
     const response = {
       success: false,
-      error: err.message,
+      message: err.message,
       code: err.code,
     };
 
