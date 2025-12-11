@@ -72,7 +72,7 @@ const handleUpdateMediaById = async (req, res) => {
 
   const result = await updateMediaById(groupId, albumId, mediaId, data);
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     data: result,
   });

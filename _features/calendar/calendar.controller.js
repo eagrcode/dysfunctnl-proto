@@ -188,18 +188,6 @@ const handleGetEventsByRange = [
     const { groupId } = req.params;
     const { start, end } = req.query;
 
-    console.log("QUERY PARAMETERS", req.query);
-
-    console.log("START TIME", start);
-    console.log("END TIME", end);
-
-    // if (!start || !end) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Both startTime and endTime query parameters are required",
-    //   });
-    // }
-
     const result = await getEventsByRange(groupId, start, end);
 
     res.status(200).json({

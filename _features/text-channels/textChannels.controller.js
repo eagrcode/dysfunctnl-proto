@@ -51,7 +51,7 @@ const handleUpdateTextChannel = async (req, res) => {
 
   const result = await updateTextChannel(groupId, textChannelId, channelName);
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     data: result,
   });

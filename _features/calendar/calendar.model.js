@@ -20,10 +20,6 @@ const createEvent = async (
     [groupId, createdBy, title, description, startTime, endTime, allDay, participants, location]
   );
 
-  if (result.rows.length === 0) {
-    throw new Error("Failed to create event");
-  }
-
   return result.rows[0];
 };
 

@@ -16,7 +16,7 @@ const handleGetAllLists = async (req, res) => {
 // CREATE NEW LIST
 const handleCreateList = async (req, res) => {
   const { groupId } = req.params;
-  const { listType, title, assignedTo } = req.body.data;
+  const { listType, title, assignedTo } = req.body;
   userId = req.user.id;
 
   const result = await createList(userId, groupId, listType, title, assignedTo);
@@ -51,7 +51,7 @@ const handleUpdateList = async (req, res) => {
 
   const result = await updateList(groupId, listId, data, is_admin, userId);
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     data: result,
   });

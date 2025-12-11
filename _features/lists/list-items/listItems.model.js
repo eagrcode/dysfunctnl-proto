@@ -30,10 +30,7 @@ const createListItem = async (listId, content, is_admin, userId) => {
   );
 
   if (result.rows.length === 0) {
-    throw new FailedActionError("Cannot complete action", {
-      reason1: "List does not exist",
-      reason2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to create list item");
   }
 
   return result.rows[0];
@@ -70,10 +67,7 @@ const updateListItem = async (listId, itemId, content, is_admin, userId) => {
   );
 
   if (result.rows.length === 0) {
-    throw new FailedActionError("Failed to update list item", {
-      reason1: "List item not found",
-      reason2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to update list item");
   }
 
   return result.rows[0];
@@ -96,10 +90,7 @@ const toggleComplete = async (listId, itemId, bool, is_admin, userId) => {
   );
 
   if (result.rows.length === 0) {
-    throw new ForbiddenError("Failed to update completed status", {
-      reason1: "List item not found",
-      reason2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to toggle completed status");
   }
 
   return result.rows[0];
@@ -121,10 +112,7 @@ const deleteListItem = async (listId, itemId, is_admin, userId) => {
   );
 
   if (result.rows.length === 0) {
-    throw new FailedActionError("Failed to delete list item", {
-      reason1: "List item not found",
-      reason2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to create list item");
   }
 
   return result.rows[0];

@@ -21,10 +21,6 @@ const createList = async (userId, groupId, listType, title, assignedTo) => {
     [userId, groupId, listType, title, assignedTo]
   );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Failed to create list");
-  }
-
   return result.rows[0];
 };
 

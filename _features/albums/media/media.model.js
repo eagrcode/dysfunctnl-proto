@@ -31,10 +31,6 @@ const addMedia = async (
     [albumId, groupId, uploadedBy, type, mimeType, sizeBytes, filename, urls]
   );
 
-  if (rows.length === 0) {
-    throw new NotFoundError(`Media not added`);
-  }
-
   return rows[0];
 };
 
@@ -72,7 +68,7 @@ const getMediaByIdWithComments = async (groupId, albumId, mediaId) => {
       [groupId, albumId, mediaId]
     );
 
-    const mediaData = mediaResult.rows[0];
+    const mediaData = mediaResult.rows;
 
     if (mediaData.length === 0) {
       throw new NotFoundError(`No media found for ID: ${mediaId}`);
@@ -88,7 +84,7 @@ const getMediaByIdWithComments = async (groupId, albumId, mediaId) => {
       [mediaId]
     );
 
-    mediaData.comments = commentsResult.rows;
+    mediaData[0].comments = commentsResult.rows;
 
     return mediaData;
   });

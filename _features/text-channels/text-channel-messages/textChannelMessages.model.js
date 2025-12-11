@@ -12,24 +12,11 @@ const getAllMessages = async (textChannelId) => {
     [textChannelId]
   );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("No messages found for this text channel");
-  }
-
   return result.rows;
 };
 
 // CREATE NEW MESSAGE
 const createMessage = async (textChannelId, content, authorId) => {
-  console.log(
-    `${path.basename(__filename)}: Attempting to create message with the following data:`,
-    {
-      authorId,
-      textChannelId,
-      content,
-    }
-  );
-
   const result = await pool.query(
     `INSERT INTO text_channel_messages
      (channel_id, content, sender_id)
@@ -37,10 +24,6 @@ const createMessage = async (textChannelId, content, authorId) => {
      RETURNING id, created_at`,
     [textChannelId, content, authorId]
   );
-
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Failed to create message");
-  }
 
   return result.rows[0];
 };
@@ -58,10 +41,7 @@ const updateMessage = async (textChannelId, messageId, newContent, userId, is_ad
   );
 
   if (result.rows.length === 0) {
-    throw new FailedActionError("Failed to update message", {
-      condition1: "Message not found",
-      condition2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to update message");
   }
 
   return result.rows[0];
@@ -80,10 +60,7 @@ const deleteMessage = async (textChannelId, messageId, userId, is_admin) => {
   );
 
   if (result.rows.length === 0) {
-    throw new FailedActionError("Failed to delete message", {
-      condition1: "Message not found",
-      condition2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to update message");
   }
 
   return result.rows[0];

@@ -17,10 +17,6 @@ const addAlbum = async (groupId, name, description, createdBy) => {
     [groupId, name, description, createdBy]
   );
 
-  if (rows.length === 0) {
-    throw new NotFoundError(`Album not added`);
-  }
-
   return rows[0];
 };
 
@@ -146,9 +142,6 @@ const updateAlbumById = async (groupId, albumId, name, description, is_admin, us
     AND (created_by = $${paramIndex++} OR $${paramIndex} = true) 
     RETURNING *;
   `;
-
-  console.log("Update Album Query:", query);
-  console.log("With Values:", values);
 
   const { rows } = await pool.query(query, values);
 

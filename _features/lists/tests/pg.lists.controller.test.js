@@ -7,7 +7,6 @@ const {
   addMember,
   registerUser,
 } = require("../../../_shared/helpers/testSetup");
-const e = require("express");
 
 dotenv.config();
 
@@ -112,7 +111,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
 
         const response = await request(app)
           .post(`/groups/${groupId}/lists`)
-          .send({ data: listData })
+          .send({ listData })
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
 

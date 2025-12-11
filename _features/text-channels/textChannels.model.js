@@ -10,10 +10,6 @@ const getAllTextChannels = async (groupId) => {
     [groupId]
   );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("No text channels found for this group");
-  }
-
   return result.rows;
 };
 
@@ -26,10 +22,6 @@ const createTextChannel = async (groupId, channelName, createdBy) => {
      RETURNING *`,
     [groupId, channelName, createdBy]
   );
-
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Failed to create text channel");
-  }
 
   return result.rows[0];
 };

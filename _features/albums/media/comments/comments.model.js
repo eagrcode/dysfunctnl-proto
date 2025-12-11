@@ -1,5 +1,5 @@
 const pool = require("../../../../_shared/utils/db");
-const { FailedActionError } = require("../../../../_shared/utils/errors");
+const { FailedActionError, NotFoundError } = require("../../../../_shared/utils/errors");
 
 // ADD COMMENT
 const addComment = async (mediaId, senderId, content) => {
@@ -15,13 +15,6 @@ const addComment = async (mediaId, senderId, content) => {
     `,
     [mediaId, senderId, content]
   );
-
-  if (rows.length === 0) {
-    throw new FailedActionError("Failed to add comment", {
-      condition1: "Media not found",
-      condition2: "Permission denied",
-    });
-  }
 
   return rows[0];
 };
@@ -40,10 +33,7 @@ const updateComment = async (mediaId, commentId, senderId, newContent, is_admin)
   );
 
   if (result.rows.length === 0) {
-    throw new FailedActionError("Failed to update comment", {
-      condition1: "Comment not found",
-      condition2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to update comment");
   }
 
   return result.rows[0];
@@ -62,10 +52,7 @@ const deleteComment = async (mediaId, commentId, senderId, is_admin) => {
   );
 
   if (result.rows.length === 0) {
-    throw new FailedActionError("Failed to delete comment", {
-      condition1: "Comment not found",
-      condition2: "Permission denied",
-    });
+    throw new NotFoundError("Failed to delete comment");
   }
 
   return result.rows[0];

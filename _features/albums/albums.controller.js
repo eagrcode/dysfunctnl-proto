@@ -80,7 +80,7 @@ const handleUpdateAlbumById = async (req, res) => {
 
   const result = await updateAlbumById(groupId, albumId, name, description, is_admin, userId);
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     data: result,
   });

@@ -13,10 +13,6 @@ const getGroupMembers = async (groupId) => {
     [groupId]
   );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Group not found or has no members");
-  }
-
   return result.rows;
 };
 

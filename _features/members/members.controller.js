@@ -73,7 +73,7 @@ const handleUpdateMemberRole = [
 
     const result = await updateMemberRole(isAdmin, groupId, userId);
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       data: result,
     });

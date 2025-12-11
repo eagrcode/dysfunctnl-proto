@@ -1,5 +1,5 @@
 const pool = require("../utils/db");
-const { ForbiddenError } = require("../utils/errors");
+const { ForbiddenError, NotFoundError } = require("../utils/errors");
 
 const PERMISSION_LEVELS = {
   MEMBER: "member",
@@ -49,7 +49,7 @@ const permissionRequired = (level) => {
       );
 
       if (result.rows.length === 0) {
-        throw new ForbiddenError("Not a group member");
+        throw new NotFoundError("Group not found");
       }
 
       req.groupMembership = result.rows[0];
