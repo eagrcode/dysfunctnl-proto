@@ -225,7 +225,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           JSON.stringify(response.body, null, 2)
         );
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.data).toMatchObject({
           id: adminCreatedChannelId,
@@ -462,7 +462,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
 
         console.log(`UPDATE MESSAGE RESPONSE FOR ${role}:`, JSON.stringify(response.body, null, 2));
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.data).toMatchObject({
           id: messageId(),

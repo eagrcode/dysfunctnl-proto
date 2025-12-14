@@ -255,7 +255,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
           JSON.stringify(response.body, null, 2)
         );
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.data).toMatchObject({
           user_id: nonAdminUserId,

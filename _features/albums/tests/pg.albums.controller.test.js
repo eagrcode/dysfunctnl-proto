@@ -317,7 +317,7 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
 
       console.log(`UPDATE ALBUM BY ID RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 
-      expect(response.statusCode).toBe(201);
+      expect(response.statusCode).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data.updated_at).toBeDefined();
       expect(response.body.data).toMatchObject({
