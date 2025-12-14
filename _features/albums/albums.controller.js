@@ -6,20 +6,44 @@ const {
   deleteAlbumById,
   updateAlbumById,
 } = require("./albums.model");
+const { body, validationResult } = require("express-validator");
+const { ValidationError } = require("../../_shared/utils/errors");
 
 // ADD NEW ALBUM
-const handleAddAlbum = async (req, res) => {
-  const { groupId } = req.params;
-  const { name, description } = req.body;
-  const userId = req.user.id;
+const handleAddAlbum = [
+  body("name")
+    .notEmpty()
+    .withMessage("Album name is required")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Album name must be between 1 and 100 characters"),
 
-  const result = await addAlbum(groupId, name, description, userId);
+  body("description")
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ max: 500 })
+    .withMessage("Description must not exceed 500 characters"),
 
-  res.status(201).json({
-    success: true,
-    data: result,
-  });
-};
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Invalid album data", errors.array());
+    }
+
+    const { groupId } = req.params;
+    const { name, description } = req.body;
+    const userId = req.user.id;
+
+    const result = await addAlbum(groupId, name, description, userId);
+
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
+  },
+];
 
 // GET ALL ALBUMS BY GROUP ID
 const handleGetAllAlbumsByGroupId = async (req, res) => {
@@ -72,19 +96,39 @@ const handleDeleteAlbumById = async (req, res) => {
 };
 
 // UPDATE ALBUM BY ID
-const handleUpdateAlbumById = async (req, res) => {
-  const { groupId, albumId } = req.params;
-  const { name, description } = req.body;
-  const { is_admin } = req.groupMembership;
-  const userId = req.user.id;
+const handleUpdateAlbumById = [
+  body("name")
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Album name must be between 1 and 100 characters"),
+  body("description")
+    .optional()
+    .trim()
+    .escape()
+    .isLength({ max: 500 })
+    .withMessage("Description must not exceed 500 characters"),
 
-  const result = await updateAlbumById(groupId, albumId, name, description, is_admin, userId);
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Invalid album data", errors.array());
+    }
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
-};
+    const { groupId, albumId } = req.params;
+    const { name, description } = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
+
+    const result = await updateAlbumById(groupId, albumId, name, description, is_admin, userId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  },
+];
 
 module.exports = {
   handleAddAlbum,
