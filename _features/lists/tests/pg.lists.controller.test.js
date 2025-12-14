@@ -111,7 +111,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
 
         const response = await request(app)
           .post(`/groups/${groupId}/lists`)
-          .send({ listData })
+          .send(listData)
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
 
@@ -209,7 +209,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
 
       const response = await request(app)
         .post(`/groups/${groupId}/lists/${listId()}/items`)
-        .send({ data: itemData })
+        .send(itemData)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${accessToken()}`);
 
@@ -432,7 +432,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
     ])("$testName", async ({ role, accessToken, listId, listItemId }) => {
       const response = await request(app)
         .patch(`/groups/${groupId}/lists/${listId()}/items/${listItemId()}/toggle`)
-        .send({ data: { completed: true } })
+        .send({ completed: true })
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${accessToken()}`);
 

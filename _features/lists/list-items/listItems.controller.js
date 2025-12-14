@@ -22,7 +22,7 @@ const {
 // CREATE A NEW LIST ITEM
 const handleCreateListItem = async (req, res) => {
   const { listId } = req.params;
-  const { content } = req.body.data;
+  const { content } = req.body;
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
 
@@ -64,7 +64,7 @@ const handleUpdateListItem = async (req, res) => {
 // TOGGLE COMPLETE STATUS OF A LIST ITEM
 const handleToggleComplete = async (req, res) => {
   const { listId, itemId } = req.params;
-  const { completed } = req.body.data;
+  const { completed } = req.body;
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
 
