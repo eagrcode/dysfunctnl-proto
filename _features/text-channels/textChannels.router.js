@@ -26,7 +26,7 @@ textChannelsRouter.patch("/:textChannelId", permissionRequired("admin"), handleU
 // Messages Routes
 textChannelsRouter.get("/:textChannelId/messages", handleGetAllMessages);
 textChannelsRouter.post("/:textChannelId/messages", handleCreateMessage);
-textChannelsRouter.patch("/:textChannelId/messages/:messageId/delete", handleDeleteMessage);
-textChannelsRouter.patch("/:textChannelId/messages/:messageId/update", handleUpdateMessage);
+textChannelsRouter.delete("/:textChannelId/messages/:messageId", handleDeleteMessage);
+textChannelsRouter.patch("/:textChannelId/messages/:messageId", handleUpdateMessage);
 
 module.exports = textChannelsRouter;

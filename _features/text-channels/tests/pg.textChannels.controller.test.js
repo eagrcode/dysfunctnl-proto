@@ -452,7 +452,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
 
         const response = await request(app)
           .patch(
-            `/groups/${groupId}/text-channels/${adminCreatedChannelId}/messages/${messageId()}/update`
+            `/groups/${groupId}/text-channels/${adminCreatedChannelId}/messages/${messageId()}`
           )
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`)
@@ -520,8 +520,8 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
         });
 
         const response = await request(app)
-          .patch(
-            `/groups/${groupId}/text-channels/${adminCreatedChannelId}/messages/${messageId()}/delete`
+          .delete(
+            `/groups/${groupId}/text-channels/${adminCreatedChannelId}/messages/${messageId()}`
           )
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
