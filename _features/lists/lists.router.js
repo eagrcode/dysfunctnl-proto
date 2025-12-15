@@ -14,8 +14,12 @@ const {
   handleToggleComplete,
   handleDeleteListItem,
 } = require("./list-items/listItems.controller");
+const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const listsRouter = Router({ mergeParams: true });
+
+listsRouter.use("/:listId", validateUUIDParams);
+listsRouter.use("/:listId/items/:itemId", validateUUIDParams);
 
 /* LIST ROUTES */
 listsRouter.get("/", handleGetAllLists);

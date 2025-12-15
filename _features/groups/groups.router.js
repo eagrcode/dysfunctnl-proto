@@ -13,6 +13,7 @@ const calendarRouter = require("../calendar/calendar.router");
 const authenticate = require("../../_shared/middleware/auth");
 const textChannelsRouter = require("../text-channels/textChannels.router");
 const permissionRequired = require("../../_shared/middleware/groupSecurity");
+const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const groupsRouter = Router();
 
@@ -20,7 +21,7 @@ groupsRouter.post("/", authenticate, handleCreateGroup);
 groupsRouter.get("/", authenticate, handleGetUserGroups);
 
 // Apply base middleware to ALL group-context routes
-groupsRouter.use("/:groupId", authenticate, permissionRequired("member"));
+groupsRouter.use("/:groupId", validateUUIDParams, authenticate, permissionRequired("member"));
 
 // Routes with group context
 groupsRouter.get("/:groupId", handleGetGroupById);

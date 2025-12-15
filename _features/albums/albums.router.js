@@ -8,8 +8,11 @@ const {
   handleDeleteAlbumById,
   handleUpdateAlbumById,
 } = require("./albums.controller");
+const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const albumsRouter = Router({ mergeParams: true });
+
+albumsRouter.use("/:albumId", validateUUIDParams);
 
 // ALBUM ROUTES
 albumsRouter.get("/", handleGetAllAlbumsByGroupId);

@@ -7,8 +7,11 @@ const {
   handleUpdateMediaById,
 } = require("./media.controller");
 const { upload, handlePhotoUpload } = require("./media.upload.controller");
+const validateUUIDParams = require("../../../_shared/middleware/validateUUID");
 
 const mediaRouter = Router({ mergeParams: true });
+
+mediaRouter.use("/:mediaId", validateUUIDParams);
 
 mediaRouter.post("/upload", upload, handlePhotoUpload);
 mediaRouter.get("/:mediaId", handleGetMediaById);

@@ -1,4 +1,4 @@
-const { Router } = require("express");
+const { Router, text } = require("express");
 const permissionRequired = require("../../_shared/middleware/groupSecurity");
 const {
   handleGetAllTextChannels,
@@ -13,8 +13,12 @@ const {
   handleDeleteMessage,
   handleUpdateMessage,
 } = require("./text-channel-messages/textChannelMessages.controller");
+const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const textChannelsRouter = Router({ mergeParams: true });
+
+// textChannelsRouter.use("/:textChannelId", validateUUIDParams);
+// textChannelsRouter.use("/:textChannelId/messages/:messageId", validateUUIDParams);
 
 // Text Channel Routes
 textChannelsRouter.get("/", handleGetAllTextChannels);

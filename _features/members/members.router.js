@@ -7,8 +7,11 @@ const {
   handleUpdateMemberRole,
   handleRemoveMemberFromGroup,
 } = require("./members.controller");
+const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const membersRouter = Router({ mergeParams: true });
+
+membersRouter.use("/:userId", validateUUIDParams);
 
 membersRouter.get("/", handleGetGroupMembers);
 membersRouter.get("/:userId", handleGetGroupMemberById);
