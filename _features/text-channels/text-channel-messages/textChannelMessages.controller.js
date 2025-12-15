@@ -9,8 +9,18 @@ const {
   broadcastMessageUpdated,
   broadcastMessageDeleted,
 } = require("../../../_shared/utils/socketService");
+const { body, validationResult } = require("express-validator");
+const { ValidationError } = require("../../_shared/utils/errors");
 
-const path = require("path");
+const validationAssertions = [
+  body("content")
+    .notEmpty()
+    .withMessage("Message content is required")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage("Message content must be between 1 and 2000 characters"),
+];
 
 // GET ALL MESSAGES
 const handleGetAllMessages = async (req, res) => {
@@ -25,57 +35,47 @@ const handleGetAllMessages = async (req, res) => {
 };
 
 // CREATE NEW MESSAGE
-const handleCreateMessage = async (req, res) => {
-  const authorId = req.user.id;
-  const { textChannelId, groupId } = req.params;
-  const { content } = req.body;
-
-  console.log(
-    `/${path.basename(__filename)} - Attempting to create message with the following data:`,
-    {
-      authorId,
-      textChannelId,
-      content,
+const handleCreateMessage = [
+  ...validationAssertions,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Invalid message data", errors.array());
     }
-  );
 
-  const message = await createMessage(textChannelId, content, authorId);
+    const authorId = req.user.id;
+    const { textChannelId, groupId } = req.params;
+    const { content } = req.body;
 
-  const payload = {
-    id: message.id,
-    authorId: authorId,
-    textChannelId: textChannelId,
-    content: content,
-    createdAt: message.created_at,
-  };
+    const message = await createMessage(textChannelId, content, authorId);
 
-  // WebSocket broadcast
-  broadcastNewMessage({
-    groupId: groupId,
-    textChannelId: textChannelId,
-    payload: payload,
-  });
+    const payload = {
+      id: message.id,
+      authorId: authorId,
+      textChannelId: textChannelId,
+      content: content,
+      createdAt: message.created_at,
+    };
 
-  res.status(201).json({
-    success: true,
-    data: payload,
-  });
-};
+    // WebSocket broadcast
+    broadcastNewMessage({
+      groupId: groupId,
+      textChannelId: textChannelId,
+      payload: payload,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: payload,
+    });
+  },
+];
 
 // DELETE MESSAGE
 const handleDeleteMessage = async (req, res) => {
   const { textChannelId, messageId, groupId } = req.params;
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
-
-  console.log(
-    `/${path.basename(__filename)} - Attempting to delte message with the following data:`,
-    {
-      userId,
-      textChannelId,
-      messageId,
-    }
-  );
 
   const deletedMessage = await deleteMessage(textChannelId, messageId, userId, is_admin);
 
@@ -100,50 +100,42 @@ const handleDeleteMessage = async (req, res) => {
 };
 
 // UPDATE MESSAGE
-const handleUpdateMessage = async (req, res) => {
-  const { textChannelId, messageId, groupId } = req.params;
-  const { newContent } = req.body;
-  const { is_admin } = req.groupMembership;
-  const userId = req.user.id;
-
-  console.log(
-    `/${path.basename(__filename)} - Attempting to update message with the following data:`,
-    {
-      userId,
-      textChannelId,
-      messageId,
-      newContent,
+const handleUpdateMessage = [
+  ...validationAssertions,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Invalid message data", errors.array());
     }
-  );
 
-  const updatedMessage = await updateMessage(
-    textChannelId,
-    messageId,
-    newContent,
-    userId,
-    is_admin
-  );
+    const { textChannelId, messageId, groupId } = req.params;
+    const { content } = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
 
-  const payload = {
-    id: messageId,
-    authorId: updatedMessage.sender_id,
-    textChannelId: textChannelId,
-    content: newContent,
-    updatedAt: updatedMessage.updated_at,
-  };
+    const updatedMessage = await updateMessage(textChannelId, messageId, content, userId, is_admin);
 
-  // WebSocket broadcast
-  broadcastMessageUpdated({
-    groupId: groupId,
-    textChannelId: textChannelId,
-    payload: payload,
-  });
+    const payload = {
+      id: messageId,
+      authorId: updatedMessage.sender_id,
+      textChannelId: textChannelId,
+      content: content,
+      updatedAt: updatedMessage.updated_at,
+    };
 
-  res.status(200).json({
-    success: true,
-    data: payload,
-  });
-};
+    // WebSocket broadcast
+    broadcastMessageUpdated({
+      groupId: groupId,
+      textChannelId: textChannelId,
+      payload: payload,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: payload,
+    });
+  },
+];
 
 module.exports = {
   handleGetAllMessages,

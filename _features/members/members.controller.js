@@ -1,4 +1,4 @@
-const { body, param, validationResult } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../_shared/utils/errors");
 const {
   getGroupMembers,
@@ -9,19 +9,16 @@ const {
 } = require("./members.model");
 
 // GET ALL MEMBERS
-const handleGetGroupMembers = [
-  async (req, res) => {
-    const { groupId } = req.params;
+const handleGetGroupMembers = async (req, res) => {
+  const { groupId } = req.params;
 
-    const result = await getGroupMembers(groupId);
+  const result = await getGroupMembers(groupId);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  },
-];
-
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+};
 // GET MEMBER BY ID
 const handleGetGroupMemberById = async (req, res) => {
   const { groupId } = req.params;
@@ -58,7 +55,6 @@ const handleAddUserToGroup = [
 
 // UPDATE MEMBER ROLE
 const handleUpdateMemberRole = [
-  body("userId").isUUID().withMessage("Invalid user ID format"),
   body("isAdmin").isBoolean().withMessage("Invalid role format"),
 
   async (req, res) => {

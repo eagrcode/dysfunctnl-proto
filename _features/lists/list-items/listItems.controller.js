@@ -6,33 +6,41 @@ const {
   toggleComplete,
   deleteListItem,
 } = require("./listItems.model");
+const { body, validationResult } = require("express-validator");
+const { ValidationError } = require("../../_shared/utils/errors");
 
-// GET LIST ITEMS
-// const handleGetListItems = async (req, res) => {
-//   const { listId } = req.params;
-
-//   const result = await getListItems(listId);
-
-//   res.status(200).json({
-//     success: true,
-//     data: result,
-//   });
-// };
+const validationAssertions = [
+  body("content")
+    .notEmpty()
+    .withMessage("Item content is required")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage("Item content must be between 1 and 1000 characters"),
+];
 
 // CREATE A NEW LIST ITEM
-const handleCreateListItem = async (req, res) => {
-  const { listId } = req.params;
-  const { content } = req.body;
-  const { is_admin } = req.groupMembership;
-  const userId = req.user.id;
+const handleCreateListItem = [
+  ...validationAssertions,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Validation failed", errors.array());
+    }
 
-  const result = await createListItem(listId, content, is_admin, userId);
+    const { listId } = req.params;
+    const { content } = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
 
-  res.status(201).json({
-    success: true,
-    data: result,
-  });
-};
+    const result = await createListItem(listId, content, is_admin, userId);
+
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
+  },
+];
 
 // GET LIST ITEM BY ID
 const handleGetListItemById = async (req, res) => {
@@ -47,34 +55,51 @@ const handleGetListItemById = async (req, res) => {
 };
 
 // UPDATE A LIST ITEM
-const handleUpdateListItem = async (req, res) => {
-  const { listId, itemId } = req.params;
-  const { content } = req.body.data;
-  const { is_admin } = req.groupMembership;
-  const userId = req.user.id;
+const handleUpdateListItem = [
+  ...validationAssertions,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Validation failed", errors.array());
+    }
 
-  const result = await updateListItem(listId, itemId, content, is_admin, userId);
+    const { listId, itemId } = req.params;
+    const { content } = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
-};
+    const result = await updateListItem(listId, itemId, content, is_admin, userId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  },
+];
 
 // TOGGLE COMPLETE STATUS OF A LIST ITEM
-const handleToggleComplete = async (req, res) => {
-  const { listId, itemId } = req.params;
-  const { completed } = req.body;
-  const { is_admin } = req.groupMembership;
-  const userId = req.user.id;
+const handleToggleComplete = [
+  body("completed").isBoolean().withMessage("Completed must be a boolean"),
 
-  const result = await toggleComplete(listId, itemId, completed, is_admin, userId);
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Validation failed", errors.array());
+    }
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
-};
+    const { listId, itemId } = req.params;
+    const { completed } = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
+
+    const result = await toggleComplete(listId, itemId, completed, is_admin, userId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  },
+];
 
 // DELETE A LIST ITEM
 const handleDeleteListItem = async (req, res) => {
@@ -91,7 +116,6 @@ const handleDeleteListItem = async (req, res) => {
 };
 
 module.exports = {
-  // handleGetListItems,
   handleCreateListItem,
   handleGetListItemById,
   handleUpdateListItem,

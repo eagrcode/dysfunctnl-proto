@@ -1,4 +1,4 @@
-const { body, param, validationResult } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../_shared/utils/errors");
 const {
   createGroup,
