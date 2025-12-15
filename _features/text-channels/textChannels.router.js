@@ -17,8 +17,8 @@ const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const textChannelsRouter = Router({ mergeParams: true });
 
-// textChannelsRouter.use("/:textChannelId", validateUUIDParams);
-// textChannelsRouter.use("/:textChannelId/messages/:messageId", validateUUIDParams);
+textChannelsRouter.use("/:textChannelId", validateUUIDParams);
+textChannelsRouter.use("/:textChannelId/messages/:messageId", validateUUIDParams);
 
 // Text Channel Routes
 textChannelsRouter.get("/", handleGetAllTextChannels);
