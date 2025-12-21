@@ -8,15 +8,22 @@ const {
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../_shared/utils/errors");
 
-const validationAssertions = [
-  body("channelName")
-    .notEmpty()
-    .withMessage("Channel name is required")
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Channel name must be between 1 and 100 characters"),
-];
+const reqValidation = {
+  handleCreateTextChannel: [
+    body("channelName")
+      .isString()
+      .withMessage("Channel name must be a string")
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Channel name must be between 1 and 100 characters"),
+  ],
+  handleUpdateTextChannel: [
+    body("channelName")
+      .isString()
+      .withMessage("Channel name must be a string")
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Channel name must be between 1 and 100 characters"),
+  ],
+};
 
 // GET ALL TEXT CHANNELS
 const handleGetAllTextChannels = async (req, res) => {
@@ -32,7 +39,8 @@ const handleGetAllTextChannels = async (req, res) => {
 
 // CREATE NEW TEXT CHANNEL
 const handleCreateTextChannel = [
-  ...validationAssertions,
+  ...reqValidation.handleCreateTextChannel,
+
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -66,7 +74,8 @@ const handleGetTextChannelById = async (req, res) => {
 
 // UPDATE TEXT CHANNEL
 const handleUpdateTextChannel = [
-  ...validationAssertions,
+  ...reqValidation.handleUpdateTextChannel,
+
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

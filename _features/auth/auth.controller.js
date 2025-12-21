@@ -11,39 +11,62 @@ const {
   registration,
 } = require("./auth.model");
 
+const reqValidation = {
+  handleUserRegistration: [
+    body("email")
+      .notEmpty()
+      .withMessage("Email address is required")
+      .trim()
+      .escape()
+      .isEmail()
+      .withMessage("Invalid email address"),
+
+    body("password")
+      .notEmpty()
+      .withMessage("Password is required")
+      .trim()
+      .escape()
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters long"),
+
+    body("first_name")
+      .notEmpty()
+      .withMessage("First name is required")
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 30 })
+      .withMessage("First name must be between 1 and 30 characters"),
+
+    body("last_name")
+      .notEmpty()
+      .withMessage("Last name is required")
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 30 })
+      .withMessage("Last name must be between 1 and 30 characters"),
+  ],
+  handleUserLogin: [
+    body("email")
+      .notEmpty()
+      .withMessage("Email address is required")
+      .trim()
+      .escape()
+      .isEmail()
+      .withMessage("Invalid email address"),
+
+    body("password")
+      .notEmpty()
+      .withMessage("Password is required")
+      .trim()
+      .escape()
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters long"),
+  ],
+};
+
 // REGISTRATION
 const handleUserRegistration = [
-  body("email")
-    .notEmpty()
-    .withMessage("Email address is required")
-    .trim()
-    .escape()
-    .isEmail()
-    .withMessage("Invalid email address"),
-
-  body("password")
-    .notEmpty()
-    .withMessage("Password is required")
-    .trim()
-    .escape()
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long"),
-
-  body("first_name")
-    .notEmpty()
-    .withMessage("First name is required")
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 30 })
-    .withMessage("First name must be between 1 and 30 characters"),
-
-  body("last_name")
-    .notEmpty()
-    .withMessage("Last name is required")
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 30 })
-    .withMessage("Last name must be between 1 and 30 characters"),
+  ...reqValidation.handleUserRegistration,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -63,21 +86,7 @@ const handleUserRegistration = [
 
 // LOGIN
 const handleUserLogin = [
-  body("email")
-    .notEmpty()
-    .withMessage("Email address is required")
-    .trim()
-    .escape()
-    .isEmail()
-    .withMessage("Invalid email address"),
-
-  body("password")
-    .notEmpty()
-    .withMessage("Password is required")
-    .trim()
-    .escape()
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long"),
+  ...reqValidation.handleUserLogin,
 
   async (req, res) => {
     const errors = validationResult(req);

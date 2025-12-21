@@ -9,22 +9,42 @@ const {
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../_shared/utils/errors");
 
+const reqValidation = {
+  handleAddAlbum: [
+    body("name")
+      .notEmpty()
+      .withMessage("Album name is required")
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Album name must be between 1 and 100 characters"),
+
+    body("description")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 500 })
+      .withMessage("Description must not exceed 500 characters"),
+  ],
+  handleUpdateAlbumById: [
+    body("name")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Album name must be between 1 and 100 characters"),
+    body("description")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 500 })
+      .withMessage("Description must not exceed 500 characters"),
+  ],
+};
+
 // ADD NEW ALBUM
 const handleAddAlbum = [
-  body("name")
-    .notEmpty()
-    .withMessage("Album name is required")
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Album name must be between 1 and 100 characters"),
-
-  body("description")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ max: 500 })
-    .withMessage("Description must not exceed 500 characters"),
+  ...reqValidation.handleAddAlbum,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -97,18 +117,7 @@ const handleDeleteAlbumById = async (req, res) => {
 
 // UPDATE ALBUM BY ID
 const handleUpdateAlbumById = [
-  body("name")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Album name must be between 1 and 100 characters"),
-  body("description")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ max: 500 })
-    .withMessage("Description must not exceed 500 characters"),
+  ...reqValidation.handleUpdateAlbumById,
 
   async (req, res) => {
     const errors = validationResult(req);

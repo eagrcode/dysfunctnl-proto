@@ -313,7 +313,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
 
       const response = await request(app)
         .patch(`/groups/${groupId}/lists/${listId()}`)
-        .send({ data: updates })
+        .send(updates)
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${accessToken()}`);
 

@@ -8,6 +8,12 @@ const {
   removeMemberFromGroup,
 } = require("./members.model");
 
+const reqValidation = {
+  handleAddUserToGroup: [body("userIdToAdd").isUUID().withMessage("Invalid user ID format")],
+  handleUpdateMemberRole: [body("isAdmin").isBoolean().withMessage("Invalid role format")],
+  handleRemoveMemberFromGroup: [body("userId").isUUID().withMessage("Invalid user ID format")],
+};
+
 // GET ALL MEMBERS
 const handleGetGroupMembers = async (req, res) => {
   const { groupId } = req.params;
@@ -34,7 +40,7 @@ const handleGetGroupMemberById = async (req, res) => {
 
 // ADD USER TO GROUP
 const handleAddUserToGroup = [
-  body("userIdToAdd").isUUID().withMessage("Invalid user ID format"),
+  ...reqValidation.handleAddUserToGroup,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -55,7 +61,7 @@ const handleAddUserToGroup = [
 
 // UPDATE MEMBER ROLE
 const handleUpdateMemberRole = [
-  body("isAdmin").isBoolean().withMessage("Invalid role format"),
+  ...reqValidation.handleUpdateMemberRole,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -78,7 +84,7 @@ const handleUpdateMemberRole = [
 
 // REMOVE MEMBER FROM GROUP
 const handleRemoveMemberFromGroup = [
-  body("userId").isUUID().withMessage("Invalid user ID format"),
+  ...reqValidation.handleRemoveMemberFromGroup,
 
   async (req, res) => {
     const errors = validationResult(req);

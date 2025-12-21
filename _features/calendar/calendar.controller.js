@@ -8,85 +8,98 @@ const {
   getEventsByRange,
 } = require("./calendar.model");
 
-const createValidationFields = [
-  body("title")
-    .notEmpty()
-    .withMessage("Event title is required")
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Title must be between 1 and 100 characters"),
-  body("description")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ max: 500 })
-    .withMessage("Description must not exceed 500 characters"),
-  body("startTime")
-    .notEmpty()
-    .withMessage("Start time is required")
-    .isISO8601()
-    .withMessage("Start time must be a valid ISO 8601 date"),
-  body("endTime")
-    .notEmpty()
-    .withMessage("End time is required")
-    .isISO8601()
-    .withMessage("End time must be a valid ISO 8601 date"),
-  body("allDay").optional().isBoolean().withMessage("All day must be a boolean value").toBoolean(),
-  body("participants")
-    .optional()
-    .isArray()
-    .withMessage("Participants must be an array of user IDs"),
-  body("location")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ max: 200 })
-    .withMessage("Location must not exceed 200 characters"),
-];
-const updateValidationFields = [
-  body("title")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Title must be between 1 and 100 characters"),
-  body("description")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ max: 500 })
-    .withMessage("Description must not exceed 500 characters"),
-  body("startTime").optional().isISO8601().withMessage("Start time must be a valid ISO 8601 date"),
-  body("endTime").optional().isISO8601().withMessage("End time must be a valid ISO 8601 date"),
-  body("allDay").optional().isBoolean().withMessage("All day must be a boolean value").toBoolean(),
-  body("participants")
-    .optional()
-    .isArray()
-    .withMessage("Participants must be an array of user IDs"),
-  body("location")
-    .optional()
-    .trim()
-    .escape()
-    .isLength({ max: 200 })
-    .withMessage("Location must not exceed 200 characters"),
-];
-const eventsByRangeValidationFields = [
-  query("start")
-    .notEmpty()
-    .withMessage("startTime query parameter is required")
-    .isISO8601()
-    .withMessage("startTime must be a valid ISO 8601 date"),
-  query("end")
-    .notEmpty()
-    .withMessage("endTime query parameter is required")
-    .isISO8601()
-    .withMessage("endTime must be a valid ISO 8601 date"),
-];
+const reqValidation = {
+  handleCreateEvent: [
+    body("title")
+      .notEmpty()
+      .withMessage("Event title is required")
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Title must be between 1 and 100 characters"),
+    body("description")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 500 })
+      .withMessage("Description must not exceed 500 characters"),
+    body("startTime")
+      .notEmpty()
+      .withMessage("Start time is required")
+      .isISO8601()
+      .withMessage("Start time must be a valid ISO 8601 date"),
+    body("endTime")
+      .notEmpty()
+      .withMessage("End time is required")
+      .isISO8601()
+      .withMessage("End time must be a valid ISO 8601 date"),
+    body("allDay")
+      .optional()
+      .isBoolean()
+      .withMessage("All day must be a boolean value")
+      .toBoolean(),
+    body("participants")
+      .optional()
+      .isArray()
+      .withMessage("Participants must be an array of user IDs"),
+    body("location")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 200 })
+      .withMessage("Location must not exceed 200 characters"),
+  ],
+  handleUpdateEvent: [
+    body("title")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Title must be between 1 and 100 characters"),
+    body("description")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 500 })
+      .withMessage("Description must not exceed 500 characters"),
+    body("startTime")
+      .optional()
+      .isISO8601()
+      .withMessage("Start time must be a valid ISO 8601 date"),
+    body("endTime").optional().isISO8601().withMessage("End time must be a valid ISO 8601 date"),
+    body("allDay")
+      .optional()
+      .isBoolean()
+      .withMessage("All day must be a boolean value")
+      .toBoolean(),
+    body("participants")
+      .optional()
+      .isArray()
+      .withMessage("Participants must be an array of user IDs"),
+    body("location")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 200 })
+      .withMessage("Location must not exceed 200 characters"),
+  ],
+  handleGetEventsByRange: [
+    query("start")
+      .notEmpty()
+      .withMessage("startTime query parameter is required")
+      .isISO8601()
+      .withMessage("startTime must be a valid ISO 8601 date"),
+    query("end")
+      .notEmpty()
+      .withMessage("endTime query parameter is required")
+      .isISO8601()
+      .withMessage("endTime must be a valid ISO 8601 date"),
+  ],
+};
 
 // CREATE EVENT
 const handleCreateEvent = [
-  ...createValidationFields,
+  ...reqValidation.handleCreateEvent,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -139,7 +152,7 @@ const handleGetEventById = async (req, res) => {
 
 // UPDATE EVENT
 const handleUpdateEvent = [
-  ...updateValidationFields,
+  ...reqValidation.handleUpdateEvent,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -177,7 +190,7 @@ const handleDeleteEvent = async (req, res) => {
 
 // GET EVENTS BY RANGE
 const handleGetEventsByRange = [
-  ...eventsByRangeValidationFields,
+  ...reqValidation.handleGetEventsByRange,
 
   async (req, res) => {
     const errors = validationResult(req);
