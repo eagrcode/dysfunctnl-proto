@@ -6,7 +6,7 @@ const {
 } = require("../../../../_shared/utils/socketService");
 const { addComment, updateComment, deleteComment } = require("./comments.model");
 const { body, validationResult } = require("express-validator");
-const { ValidationError } = require("../../_shared/utils/errors");
+const { ValidationError } = require("../../../../_shared/utils/errors");
 
 const reqValidation = [
   body("content")

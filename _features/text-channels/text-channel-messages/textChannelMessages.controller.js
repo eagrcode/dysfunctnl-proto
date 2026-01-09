@@ -10,7 +10,7 @@ const {
   broadcastMessageDeleted,
 } = require("../../../_shared/utils/socketService");
 const { body, validationResult } = require("express-validator");
-const { ValidationError } = require("../../_shared/utils/errors");
+const { ValidationError } = require("../../../_shared/utils/errors");
 
 const validationAssertions = [
   body("content")
