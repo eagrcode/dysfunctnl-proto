@@ -6,6 +6,7 @@ const imageUploadCleanup = require("./_shared/middleware/imageUploadCleanup");
 const { errorHandler } = require("./_shared/middleware/errorHandler");
 const staticFileServeConfig = require("./_shared/utils/staticFileServeConfig");
 const { NotFoundError } = require("./_shared/utils/errors");
+const userRouter = require("./_features/user/user.router");
 
 process.env.TZ = "UTC";
 console.log("Server timezone:", process.env.TZ);
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(generalLimiter);
 app.use("/media", staticFileServeConfig);
 app.use("/auth", authRouter);
+app.use("/users", userRouter);
 app.use("/groups", groupsRouter);
 
 app.get("/", (req, res) => {
