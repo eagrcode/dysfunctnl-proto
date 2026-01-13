@@ -103,21 +103,12 @@ const handleUserLogin = [
     }
 
     const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
+      expiresIn: "4s",
     });
-
-    const existingToken = await getRefreshToken(user.id);
-
     const refreshToken = crypto.randomBytes(64).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
-    if (!existingToken) {
-      console.log("No existing refresh token...creating a new one");
-      await addRefreshToken(user.id, tokenHash);
-    } else {
-      console.log("Refresh token exists...updating");
-      await updateRefreshToken(user.id, tokenHash);
-    }
+    await addRefreshToken(user.id, tokenHash);
 
     res.status(200).json({ user, accessToken, refreshToken });
   },
@@ -127,28 +118,37 @@ const handleUserLogin = [
 const handleRefreshAccessToken = async (req, res) => {
   const { refreshToken } = req.body;
 
+  console.log("Received refresh token:", refreshToken ? refreshToken : null);
+
   if (!refreshToken) return res.status(401).json({ error: "Refresh token required" });
 
   const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
-  try {
-    const result = await pool.query("SELECT * FROM refresh_tokens WHERE token_hash = $1", [
-      tokenHash,
-    ]);
-    const stored = result.rows[0];
+  const currentToken = await getRefreshToken(tokenHash);
 
-    if (!stored) {
-      return res.status(403).json({ error: "Invalid or expired refresh token" });
-    }
+  console.log("Current token from DB:", currentToken);
 
-    const accessToken = jwt.sign({ id: stored.user_id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-
-    res.json({ accessToken });
-  } catch (error) {
-    res.status(500).json({ error: "Refresh failed: " + error.message });
+  if (!currentToken) {
+    return res.status(403).json({ error: "Invalid or expired refresh token" });
   }
+
+  const userId = currentToken.user_id;
+  const newRefreshToken = crypto.randomBytes(64).toString("hex");
+  const newTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
+  const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
+
+  console.log(
+    "Token match: updating to new refresh token for user ID:",
+    userId,
+    accessToken,
+    newTokenHash
+  );
+
+  await addRefreshToken(userId, newTokenHash);
+
+  res.json({ accessToken, refreshToken: newRefreshToken });
 };
 
 module.exports = {

@@ -1,4 +1,5 @@
 const pool = require("../../_shared/utils/db");
+const { NotFoundError } = require("../../_shared/utils/errors");
 
 // REGISTRATION
 const registration = async (email, password_hash, first_name, last_name) => {
@@ -18,30 +19,33 @@ const login = async (email) => {
 };
 
 // CHECK IF CURRENT REFRESH TOKEN
-const getRefreshToken = async (userId) => {
-  const result = await pool.query("SELECT token_hash from refresh_tokens WHERE user_id = $1", [
-    userId,
-  ]);
+const getRefreshToken = async (tokenHash) => {
+  const query = `
+    SELECT user_id, token_hash 
+    FROM refresh_tokens
+    WHERE token_hash = $1
+  `;
 
-  return result.rows[0];
-};
+  const result = await pool.query(query, [tokenHash]);
 
-// UPDATE EXISTING REFRESH TOKEN
-const updateRefreshToken = async (userId, tokenHash) => {
-  const result = await pool.query(
-    "UPDATE refresh_tokens SET token_hash = $1 WHERE user_id = $2 RETURNING *",
-    [tokenHash, userId]
-  );
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Refresh token not found");
+  }
 
   return result.rows[0];
 };
 
 // ADD REFRESH TOKEN
 const addRefreshToken = async (userId, tokenHash) => {
-  const result = await pool.query(
-    "INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3) RETURNING *",
-    [userId, tokenHash, null]
-  );
+  const query = `
+    INSERT INTO refresh_tokens (user_id, token_hash)
+    VALUES ($1, $2)
+    ON CONFLICT (user_id)
+    DO UPDATE SET token_hash = EXCLUDED.token_hash
+    RETURNING token_hash
+  `;
+
+  const result = await pool.query(query, [userId, tokenHash]);
 
   return result.rows[0];
 };
@@ -50,6 +54,5 @@ module.exports = {
   registration,
   login,
   getRefreshToken,
-  updateRefreshToken,
   addRefreshToken,
 };
