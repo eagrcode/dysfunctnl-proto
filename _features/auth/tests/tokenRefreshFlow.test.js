@@ -28,10 +28,7 @@ describe("Token Refresh Flow", () => {
   test("should attempt access, refresh if invalid, and retry", async () => {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    console.log(
-      "Attempting to access protected resource with expired access token:",
-      accessToken.slice(0, 7) + "***"
-    );
+    console.log("Attempting to access protected resource with expired access token:", accessToken);
 
     let response = await request(app)
       .get(`/groups/${groupId}`)
@@ -48,16 +45,13 @@ describe("Token Refresh Flow", () => {
         .send({ refreshToken })
         .set("Content-Type", "application/json");
 
-      console.log(
-        "Refresh Response:",
-        JSON.stringify(refreshResponse.body, null, 2).slice(0, 7) + "***"
-      );
+      console.log("NEW TOKENS:", JSON.stringify(refreshResponse.body, null, 2));
 
       expect(refreshResponse.status).toBe(200);
       expect(refreshResponse.body.accessToken).toBeDefined();
       accessToken = refreshResponse.body.accessToken;
 
-      console.log("Retrying access with new access token:", accessToken.slice(0, 7) + "***");
+      console.log("Retrying access with new access token:", accessToken);
 
       response = await request(app)
         .get(`/groups/${groupId}`)

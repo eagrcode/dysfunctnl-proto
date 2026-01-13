@@ -71,6 +71,8 @@ describe("Auth API tests", () => {
         .send(invalidCredentials)
         .set("Content-Type", "application/json");
 
+      console.log("INVALID LOGIN RESPONSE:", JSON.stringify(response.body, null, 2));
+
       expect(response.status).toBe(401);
       expect(response.body.error).toBe("Invalid credentials");
     });
