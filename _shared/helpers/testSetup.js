@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../../app"); // Adjust path as needed
 const dotenv = require("dotenv");
+const customConsoleLog = require("../utils/customConsoleLog");
 
 dotenv.config();
 
@@ -87,7 +88,7 @@ const createGroup = async (data, accessToken) => {
 const addMember = async (groupId, memberId, adminAccessToken) => {
   try {
     const response = await request(app)
-      .post(`/groups/${groupId}/members/add-member`)
+      .post(`/groups/${groupId}/members`)
       .send({ userIdToAdd: memberId })
       .set("Content-Type", "application/json")
       .set("Authorization", `Bearer ${adminAccessToken}`);

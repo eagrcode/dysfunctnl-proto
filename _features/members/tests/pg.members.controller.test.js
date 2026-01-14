@@ -142,7 +142,6 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
       );
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toBeDefined();
       expect(response.body.code).toBe("NOT_FOUND");
     });
   });
@@ -158,7 +157,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
     // Valid input test
     test("should allow admin to add a new member to the group", async () => {
       const response = await request(app)
-        .post(`/groups/${groupId}/members/add-member`)
+        .post(`/groups/${groupId}/members`)
         .send({ userIdToAdd: newMemberId })
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${groupCreatorAccessToken}`);
@@ -180,7 +179,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
     // Invalid input test
     test("should prevent adding a member with invalid userId format", async () => {
       const response = await request(app)
-        .post(`/groups/${groupId}/members/add-member`)
+        .post(`/groups/${groupId}/members`)
         .send({ userIdToAdd: "invalid-uuid" })
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${groupCreatorAccessToken}`);
@@ -197,7 +196,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
     // Duplicate member test
     test("should prevent adding a user who is already a member", async () => {
       const response = await request(app)
-        .post(`/groups/${groupId}/members/add-member`)
+        .post(`/groups/${groupId}/members`)
         .send({ userIdToAdd: newMemberId }) // Same user as before
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${groupCreatorAccessToken}`);
@@ -216,7 +215,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
     test("should prevent adding a non-existent user as member", async () => {
       const nonExistentUserId = INVALID_USER_ID; // Valid UUID but non-existent
       const response = await request(app)
-        .post(`/groups/${groupId}/members/add-member`)
+        .post(`/groups/${groupId}/members`)
         .send({ userIdToAdd: nonExistentUserId })
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${groupCreatorAccessToken}`);
@@ -311,8 +310,8 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
       );
 
       expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe("NOT_FOUND");
       expect(response.status).toBe(404);
-      expect(response.body.error).toBeDefined();
     });
   });
 
@@ -369,7 +368,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
 
       expect(response.body.success).toBe(false);
       expect(response.status).toBe(404);
-      expect(response.body.error).toBeDefined();
+      expect(response.body.code).toBe("NOT_FOUND");
     });
   });
 });
