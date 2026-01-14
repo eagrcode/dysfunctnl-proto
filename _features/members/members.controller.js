@@ -10,7 +10,10 @@ const {
 
 const reqValidation = {
   handleAddUserToGroup: [body("userIdToAdd").isUUID().withMessage("Invalid user ID format")],
-  handleUpdateMemberRole: [body("isAdmin").isBoolean().withMessage("Invalid role format")],
+  handleUpdateMemberRole: [
+    body("isAdmin").isBoolean().withMessage("Invalid role format"),
+    body("userId").isUUID().withMessage("Invalid user ID format"),
+  ],
   handleRemoveMemberFromGroup: [body("userId").isUUID().withMessage("Invalid user ID format")],
 };
 
