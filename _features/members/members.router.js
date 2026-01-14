@@ -11,12 +11,9 @@ const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const membersRouter = Router({ mergeParams: true });
 
-membersRouter.use("/:userId", validateUUIDParams);
-
+membersRouter.post("/", permissionRequired("admin"), handleAddUserToGroup);
 membersRouter.get("/", handleGetGroupMembers);
-membersRouter.get("/:userId", handleGetGroupMemberById);
-membersRouter.post("/add-member", permissionRequired("admin"), handleAddUserToGroup);
-// membersRouter.patch("/:userId", permissionRequired("admin"), updateMember);
+membersRouter.get("/:userId", validateUUIDParams, handleGetGroupMemberById);
 membersRouter.patch("/role", permissionRequired("admin"), handleUpdateMemberRole);
 membersRouter.delete("/remove", permissionRequired("admin"), handleRemoveMemberFromGroup);
 
