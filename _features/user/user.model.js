@@ -57,7 +57,9 @@ const deleteUserAccount = async (userId) => {
     RETURNING id
   `;
 
-  await pool.query(query, [userId]);
+  const result = await pool.query(query, [userId]);
+
+  return result.rows[0];
 };
 
 module.exports = {
