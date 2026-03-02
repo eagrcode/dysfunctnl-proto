@@ -280,11 +280,31 @@ AFTER INSERT ON list_items
 FOR EACH ROW
 EXECUTE FUNCTION check_list_completion();
 
+-- Function to check list completion on item delete (uses OLD, not NEW)
+CREATE OR REPLACE FUNCTION check_list_completion_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM list_items
+        WHERE list_id = OLD.list_id AND completed = FALSE
+    ) THEN
+        UPDATE lists
+        SET completed = TRUE, completed_at = NOW()
+        WHERE id = OLD.list_id;
+    ELSE
+        UPDATE lists
+        SET completed = FALSE, completed_at = NULL
+        WHERE id = OLD.list_id;
+    END IF;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Trigger for list item deletes
 CREATE TRIGGER check_list_completion_on_delete
 AFTER DELETE ON list_items
 FOR EACH ROW
-EXECUTE FUNCTION check_list_completion();
+EXECUTE FUNCTION check_list_completion_on_delete();
 
 -- =====================================================
 -- SAMPLE TEST DATA (OPTIONAL - Comment out in production)
