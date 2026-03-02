@@ -22,7 +22,7 @@ let mediaUrls;
 let adminUploadedMediaId;
 let memberUploadedMediaId;
 
-describe("Media Upload API Integration Tests - Authorised Actions", () => {
+describe("Media API Tests - Authorised Actions", () => {
   const groupData = {
     name: "Test Group",
     description: "Test description",
@@ -75,7 +75,7 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
         userId: () => memberId,
         accessToken: () => memberAccessToken,
       },
-    ])("Should allow $role to create an album", async ({ role, userId, accessToken }) => {
+    ])("should allow $role to create an album", async ({ role, userId, accessToken }) => {
       const albumData = {
         name: `Test Album by ${role}`,
         description: "This is a test album",
@@ -127,7 +127,7 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
         accessToken: () => memberAccessToken,
       },
     ])(
-      "Should allow $role to upload an image to their album",
+      "should allow $role to upload an image to their album",
       async ({ role, albumId, accessToken }) => {
         const response = await request(app)
           .post(`/groups/${groupId}/albums/${albumId()}/media/upload`)
@@ -185,7 +185,7 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
         mediaId: () => memberUploadedMediaId,
       },
     ])(
-      "Should allow $role to get metadata of uploaded image",
+      "should allow $role to get metadata of uploaded image",
       async ({ role, albumId, accessToken, mediaId }) => {
         const response = await request(app)
           .get(`/groups/${groupId}/albums/${albumId()}/media/${mediaId()}`)
@@ -232,7 +232,7 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
         mediaId: () => memberUploadedMediaId,
       },
     ])(
-      "Should allow $role to get image with comments",
+      "should allow $role to get image with comments",
       async ({ role, albumId, accessToken, mediaId }) => {
         const response = await request(app)
           .get(`/groups/${groupId}/albums/${albumId()}/media/${mediaId()}/comments`)
@@ -274,7 +274,7 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
       { role: "Admin", url: () => mediaUrls.original },
       { role: "Member", url: () => mediaUrls.display },
       { role: "Member", url: () => mediaUrls.thumb },
-    ])("Should serve the uploaded image for $role", async ({ role, url }) => {
+    ])("should serve the uploaded image for $role", async ({ role, url }) => {
       const response = await request(app).get(url());
 
       console.log(`SERVE UPLOADED IMAGE RESPONSE: ${role}`, {
@@ -303,7 +303,7 @@ describe("Media Upload API Integration Tests - Authorised Actions", () => {
         mediaId: () => memberUploadedMediaId,
       },
     ])(
-      "Should allow $role to delete their uploaded image",
+      "should allow $role to delete their uploaded image",
       async ({ role, albumId, accessToken, mediaId }) => {
         const response = await request(app)
           .delete(`/groups/${groupId}/albums/${albumId()}/media/${mediaId()}`)

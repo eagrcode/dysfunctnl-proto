@@ -10,7 +10,7 @@ const {
 
 dotenv.config();
 
-describe("Calendar API Integration Tests - Authorised Actions", () => {
+describe("Calendar API Tests - Authorised Actions", () => {
   let adminAccessToken;
   let adminUserId;
   let groupId;
@@ -71,7 +71,7 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
         userId: () => memberId,
         accessToken: () => memberAccessToken,
       },
-    ])("Should allow $role to create a calandar event", async ({ role, userId, accessToken }) => {
+    ])("should allow $role to create a calendar event", async ({ role, userId, accessToken }) => {
       const eventData = {
         createdBy: userId(),
         title: "Family Meetup",
@@ -121,7 +121,7 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
           accessToken: () => memberAccessToken,
         },
       ])(
-        "Should fail to create calendar event with missing data as $role",
+        "should fail to create calendar event with missing data as $role",
         async ({ role, accessToken }) => {
           const invalidEventData = {
             createdBy: "",
@@ -149,7 +149,7 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
 
     // Invalid URL test
     describe("Create Calendar Event - Invalid URL", () => {
-      test("Should fail to create calendar event with invalid URL", async () => {
+      test("should fail to create calendar event with invalid URL", async () => {
         const eventData = {
           createdBy: adminUserId,
           title: "Ladz Sesh",
@@ -188,7 +188,7 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
         role: "Member",
         accessToken: () => memberAccessToken,
       },
-    ])("Should allow $role to get calendar event by ID", async ({ role, accessToken }) => {
+    ])("should allow $role to get calendar event by ID", async ({ role, accessToken }) => {
       const response = await request(app)
         .get(`/groups/${groupId}/calendar/${eventId}`)
         .set("Content-Type", "application/json")
@@ -206,7 +206,7 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
 
   // UPDATE EVENT
   describe("Update Calendar Event", () => {
-    test("Should allow event creator to update calendar event", async () => {
+    test("should allow event creator to update calendar event", async () => {
       const updatedEventData = {
         startTime: "2024-12-20T11:00:00.000Z",
         endTime: "2024-12-20T19:00:00.000Z",
@@ -247,7 +247,7 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
         role: "Member",
         accessToken: () => memberAccessToken,
       },
-    ])("Should allow $role to get calendar events by range", async ({ role, accessToken }) => {
+    ])("should allow $role to get calendar events by range", async ({ role, accessToken }) => {
       const start = "2024-12-01T00:00:00.000Z";
       const end = "2024-12-31T23:59:59.999Z";
 
@@ -282,7 +282,7 @@ describe("Calendar API Integration Tests - Authorised Actions", () => {
 
   // DELETE EVENT
   describe("Delete Calendar Event", () => {
-    test("Should allow event creator to delete calendar event", async () => {
+    test("should allow event creator to delete calendar event", async () => {
       const response = await request(app)
         .delete(`/groups/${groupId}/calendar/${eventId}`)
         .set("Content-Type", "application/json")

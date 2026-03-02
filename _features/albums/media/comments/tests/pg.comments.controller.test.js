@@ -13,7 +13,7 @@ const {
   uploadImageToAlbum,
 } = require("../../../../../_shared/helpers/testSetup");
 
-describe("Media Comments Controller Integration Tests - Authorised Actions", () => {
+describe("Comments API Tests - Authorised Actions", () => {
   let adminUserId;
   let adminAccessToken;
   let groupId;
@@ -195,7 +195,7 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
         imageId: () => adminUploadedImageId,
       },
     ])(
-      "Should allow $role to add comment and receive WebSocket broadcast",
+      "should allow $role to add comment and receive WebSocket broadcast",
       async ({ role, userId, accessToken, socket, imageId }) => {
         let socketEventFired = false;
         const commentContent = `This is a comment from ${role}`;
@@ -257,7 +257,7 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
         commentId: () => memberCommentId,
       },
     ])(
-      "Should allow $role to update comment and receive WebSocket broadcast",
+      "should allow $role to update comment and receive WebSocket broadcast",
       async ({ role, userId, accessToken, socket, imageId, commentId }) => {
         let socketEventFired = false;
         const updatedCommentContent = `This is an updated comment from ${role}`;
@@ -315,7 +315,7 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
         commentId: () => memberCommentId,
       },
     ])(
-      "Should allow $role to delete comment and receive WebSocket broadcast",
+      "should allow $role to delete comment and receive WebSocket broadcast",
       async ({ role, userId, accessToken, socket, imageId, commentId }) => {
         let socketEventFired = false;
         const responseAssertion = {

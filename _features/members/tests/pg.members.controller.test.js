@@ -12,7 +12,7 @@ dotenv.config();
 
 const INVALID_USER_ID = "00000000-0000-0000-0000-000000000000"; // Valid UUID but non-existent user
 
-describe("Members API Integration Tests - Authorised Actions (as Admin or Member)", () => {
+describe("Members API Tests - Authorised Actions", () => {
   let groupCreatorAccessToken;
   let groupCreatorId;
   let groupId;
@@ -207,8 +207,9 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
       );
 
       expect(response.body.success).toBe(false);
-      expect(response.status).toBe(500);
-      expect(response.body.error).toBeDefined();
+      expect(response.status).toBe(409);
+      expect(response.body.code).toBe("CONFLICT");
+      expect(response.body.message).toBeDefined();
     });
 
     // Non-existent user test
@@ -227,7 +228,7 @@ describe("Members API Integration Tests - Authorised Actions (as Admin or Member
 
       expect(response.body.success).toBe(false);
       expect(response.status).toBe(500);
-      expect(response.body.error).toBeDefined();
+      expect(response.body.message).toBeDefined();
     });
   });
 

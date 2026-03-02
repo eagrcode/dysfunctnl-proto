@@ -8,7 +8,7 @@ const {
   addMember,
 } = require("../../../_shared/helpers/testSetup");
 
-describe("ALbums API Integration Tests - Authorised Actions", () => {
+describe("Albums API Tests - Authorised Actions", () => {
   let adminAccessToken;
   let adminUserId;
   let groupId;
@@ -77,7 +77,7 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         accessToken: () => memberAccessToken,
         group: 2,
       },
-    ])("Should allow $role to create an album", async ({ role, userId, accessToken, group }) => {
+    ])("should allow $role to create an album", async ({ role, userId, accessToken, group }) => {
       const albumData = {
         name: `Test Album by ${role}`,
         description: "This is a test album",
@@ -129,7 +129,7 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         role: "Member",
         accessToken: () => memberAccessToken,
       },
-    ])("Should allow $role to get all albums", async ({ role, accessToken }) => {
+    ])("should allow $role to get all albums", async ({ role, accessToken }) => {
       const response = await request(app)
         .get(`/groups/${groupId}/albums`)
         .set("Content-Type", "application/json")
@@ -169,7 +169,7 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         accessToken: () => memberAccessToken,
         albumId: () => memberCreatedAlbumId,
       },
-    ])("Should allow $role to get album by ID", async ({ role, accessToken, albumId }) => {
+    ])("should allow $role to get album by ID", async ({ role, accessToken, albumId }) => {
       const response = await request(app)
         .get(`/groups/${groupId}/albums/${albumId()}`)
         .set("Content-Type", "application/json")
@@ -206,7 +206,7 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         accessToken: () => memberAccessToken,
       },
     ])(
-      "Should allow $role to upload an image to their album",
+      "should allow $role to upload an image to their album",
       async ({ role, albumId, accessToken }) => {
         const response = await request(app)
           .post(`/groups/${groupId}/albums/${albumId()}/media/upload`)
@@ -255,7 +255,7 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         accessToken: () => memberAccessToken,
         albumId: () => memberCreatedAlbumId,
       },
-    ])("Should allow $role to get album by ID", async ({ role, accessToken, albumId }) => {
+    ])("should allow $role to get album by ID", async ({ role, accessToken, albumId }) => {
       const response = await request(app)
         .get(`/groups/${groupId}/albums/${albumId()}/media`)
         .set("Content-Type", "application/json")
@@ -289,19 +289,19 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         role: "Admin",
         accessToken: () => adminAccessToken,
         albumId: () => adminCreatedAlbumId,
-        description: "Should allow admin to update own created album",
+        description: "should allow admin to update own created album",
       },
       {
         role: "Member",
         accessToken: () => memberAccessToken,
         albumId: () => memberCreatedAlbumId,
-        description: "Should allow member to update own created album",
+        description: "should allow member to update own created album",
       },
       {
         role: "Admin",
         accessToken: () => adminAccessToken,
         albumId: () => memberCreatedAlbumId,
-        description: "Should allow admin to update member created album",
+        description: "should allow admin to update member created album",
       },
     ])("Current role = $role: $description", async ({ role, accessToken, albumId }) => {
       const updatedData = {
@@ -351,19 +351,19 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         role: "Admin",
         accessToken: () => adminAccessToken,
         albumId: () => adminCreatedAlbumId,
-        description: "Should allow admin to delete own created album",
+        description: "should allow admin to delete own created album",
       },
       {
         role: "Member",
         accessToken: () => memberAccessToken,
         albumId: () => memberCreatedAlbumId,
-        description: "Should allow member to delete own created album",
+        description: "should allow member to delete own created album",
       },
       {
         role: "Admin",
         accessToken: () => adminAccessToken,
         albumId: () => memberCreatedAlbumId2,
-        description: "Should allow admin to delete member created album",
+        description: "should allow admin to delete member created album",
       },
     ])("Current role = $role: $description", async ({ role, accessToken, albumId }) => {
       const response = await request(app)

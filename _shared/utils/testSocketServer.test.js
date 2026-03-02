@@ -17,7 +17,7 @@ dotenv.config();
 
 const TEST_EMAIL = process.env.TEST_USER_1;
 
-describe("Socket.IO Server Tests", () => {
+describe("WebSocket API Tests - Socket.IO", () => {
   let adminAccessToken;
   let adminUserId;
   let groupId;
@@ -114,7 +114,7 @@ describe("Socket.IO Server Tests", () => {
         role: "Member",
         socket: () => memberSocket,
       },
-    ])("Connect as $role", ({ role, socket }, done) => {
+    ])("should connect as $role", ({ role, socket }, done) => {
       const currentSocket = socket();
 
       currentSocket.connect();
@@ -139,7 +139,7 @@ describe("Socket.IO Server Tests", () => {
         socket: () => memberSocket,
         channelId: () => channelId2,
       },
-    ])("$role joins channel", ({ role, socket, channelId }, done) => {
+    ])("should allow $role to join channel", ({ role, socket, channelId }, done) => {
       const currentSocket = socket();
 
       console.log(`${role} attempting to join channel:`, {
@@ -186,7 +186,7 @@ describe("Socket.IO Server Tests", () => {
         message: "Member message in channel 2",
         accessToken: () => memberAccessToken,
       },
-    ])("$role sends message", ({ role, socket, channelId, userId, message, accessToken }, done) => {
+    ])("should allow $role to send message", ({ role, socket, channelId, userId, message, accessToken }, done) => {
       const currentSocket = socket();
 
       broadcastNewMessage({
@@ -296,7 +296,7 @@ describe("Socket.IO Server Tests", () => {
         socket: () => memberSocket,
         channelId: () => channelId2,
       },
-    ])("$role leaves channel", ({ role, socket, channelId }, done) => {
+    ])("should allow $role to leave channel", ({ role, socket, channelId }, done) => {
       const currentSocket = socket();
 
       console.log(`${role} sending leave channel request:`, {

@@ -13,7 +13,7 @@ const {
 
 dotenv.config();
 
-describe("Text Channels/Messages Integration Tests - Authorised Actions", () => {
+describe("Text Channels API Tests - Authorised Actions", () => {
   let adminAccessToken;
   let adminUserId;
   let groupId;
@@ -103,7 +103,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
   describe("Text Channels Controller - Admin and Member Actions", () => {
     // CREATE TEXT CHANNEL
     describe("CREATE Text Channel - POST /groups/:groupId/text-channels", () => {
-      test("should allow an admin to create a text channel", async () => {
+      test("should allow admin to create a text channel", async () => {
         const channelName = "Admin Created Channel";
 
         const response = await request(app)
@@ -209,7 +209,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
 
     // UPDATE TEXT CHANNEL
     describe("UPDATE Text Channel - PATCH /groups/:groupId/text-channels/:textChannelId", () => {
-      test("should allow an admin to update a text channel", async () => {
+      test("should allow admin to update a text channel", async () => {
         const newChannelName = "Updated Channel Name";
 
         const response = await request(app)
@@ -389,6 +389,11 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           expect(response.status).toBe(200);
           expect(response.body.success).toBe(true);
           expect(Array.isArray(response.body.data)).toBe(true);
+          expect(response.body.pagination).toEqual(
+            expect.objectContaining({
+              hasMore: expect.any(Boolean),
+            })
+          );
           expect(response.body.data).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -542,7 +547,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
 
   // DELETE TEXT CHANNEL
   describe("DELETE Text Channel - DELETE /groups/:groupId/text-channels/:textChannelId", () => {
-    test("should allow an admin to delete a text channel", async () => {
+    test("should allow admin to delete a text channel", async () => {
       const response = await request(app)
         .delete(`/groups/${groupId}/text-channels/${adminCreatedChannelId}`)
         .set("Content-Type", "application/json")

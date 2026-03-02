@@ -2,7 +2,7 @@ const request = require("supertest");
 const app = require("../../../app");
 const { loginUser, createGroup, registerUser } = require("../../../_shared/helpers/testSetup");
 
-describe("Token Refresh Flow", () => {
+describe("Auth API Tests - Token Refresh Flow", () => {
   let accessToken;
   let refreshToken;
   let groupId;
@@ -37,7 +37,7 @@ describe("Token Refresh Flow", () => {
 
     console.log("Initial Response:", JSON.stringify(response.body, null, 2));
 
-    if (response.status === 401 && response.body.error === "Invalid token") {
+    if (response.status === 401 && response.body.message === "Invalid token") {
       console.log("Access token expired, attempting to refresh...");
 
       const refreshResponse = await request(app)

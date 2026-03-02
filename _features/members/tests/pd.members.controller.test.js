@@ -10,7 +10,7 @@ const {
 
 dotenv.config();
 
-describe("List Controller - Unauthorised Actions", () => {
+describe("Members API Tests - Unauthorised Actions", () => {
   let groupCreatorAccessToken;
   let groupCreatorId;
   let groupId;
@@ -84,7 +84,7 @@ describe("List Controller - Unauthorised Actions", () => {
       );
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBeDefined();
+      expect(response.body.message).toBeDefined();
       expect(response.body.code).toBe("PERMISSION_DENIED");
     });
   });
@@ -113,7 +113,7 @@ describe("List Controller - Unauthorised Actions", () => {
         );
 
         expect(response.status).toBe(403);
-        expect(response.body.error).toBeDefined();
+        expect(response.body.message).toBeDefined();
         expect(response.body.code).toBe("PERMISSION_DENIED");
       }
     );
@@ -134,7 +134,7 @@ describe("List Controller - Unauthorised Actions", () => {
       );
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBeDefined();
+      expect(response.body.message).toBeDefined();
       expect(response.body.code).toBe("PERMISSION_DENIED");
     });
   });
