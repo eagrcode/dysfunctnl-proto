@@ -4,8 +4,8 @@ const { NotFoundError } = require("../../_shared/utils/errors");
 // REGISTRATION
 const registration = async (email, password_hash, first_name, last_name) => {
   const result = await pool.query(
-    "INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING *",
-    [email, password_hash, first_name, last_name]
+    "INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name",
+    [email, password_hash, first_name, last_name],
   );
 
   return result.rows[0];

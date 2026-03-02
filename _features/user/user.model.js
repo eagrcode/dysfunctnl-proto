@@ -3,7 +3,7 @@ const pool = require("../../_shared/utils/db");
 // GET USER PROFILE
 const getUserProfile = async (userId) => {
   const query = `
-    SELECT * FROM users
+    SELECT id, email, first_name, last_name FROM users
     WHERE id = $1
   `;
 
@@ -20,7 +20,7 @@ const updateUserProfile = async (userId, profileData) => {
 
   if (profileData.firstName) {
     fields.push(`first_name = $${index++}`);
-    values.push(profileData.username);
+    values.push(profileData.firstName);
   }
   if (profileData.lastName) {
     fields.push(`last_name = $${index++}`);
