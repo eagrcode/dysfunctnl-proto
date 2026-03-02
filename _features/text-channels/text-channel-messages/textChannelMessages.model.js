@@ -8,8 +8,9 @@ const getAllMessages = async (textChannelId) => {
   const result = await pool.query(
     `SELECT * FROM text_channel_messages
      WHERE channel_id = $1
+     AND deleted_at IS NULL
      ORDER BY created_at DESC`,
-    [textChannelId]
+    [textChannelId],
   );
 
   return result.rows;
@@ -22,7 +23,7 @@ const createMessage = async (textChannelId, content, authorId) => {
      (channel_id, content, sender_id)
      VALUES ($1, $2, $3)
      RETURNING id, created_at`,
-    [textChannelId, content, authorId]
+    [textChannelId, content, authorId],
   );
 
   return result.rows[0];
@@ -37,7 +38,7 @@ const updateMessage = async (textChannelId, messageId, newContent, userId, is_ad
      AND id = $3
      AND (sender_id = $4 OR $5 = TRUE)
      RETURNING content, updated_at, sender_id`,
-    [newContent, textChannelId, messageId, userId, is_admin]
+    [newContent, textChannelId, messageId, userId, is_admin],
   );
 
   if (result.rows.length === 0) {
@@ -56,7 +57,7 @@ const deleteMessage = async (textChannelId, messageId, userId, is_admin) => {
      AND id = $2
      AND (sender_id = $3 OR $4 = TRUE)
      RETURNING id, deleted_at, sender_id`,
-    [textChannelId, messageId, userId, is_admin]
+    [textChannelId, messageId, userId, is_admin],
   );
 
   if (result.rows.length === 0) {
