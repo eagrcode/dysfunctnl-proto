@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const customConsoleLog = require("./customConsoleLog");
+const { handleCheckGroupMembership } = require("./socketCheckGroupMembership");
 
 let io = null;
 
@@ -40,7 +41,20 @@ const initSocketServer = (httpServer) => {
     });
 
     // Join channel
-    socket.on("join_channel", (type, ids) => {
+    socket.on("join_channel", async (type, ids) => {
+      // Validate user is member of the group before allowing them to join the channel
+      const groupId = ids.groupId;
+      const userId = socket.user.id;
+
+      const isMember = await handleCheckGroupMembership(userId, groupId);
+      if (!isMember) {
+        customConsoleLog("Unauthorised channel join attempt:", {
+          userId,
+          groupId,
+        });
+        return socket.emit("error", "You are not a member of this group");
+      }
+
       const roomName = getRoom(type, ids);
       socket.join(roomName);
       customConsoleLog("User joined room:", {

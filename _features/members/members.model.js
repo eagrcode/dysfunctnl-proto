@@ -10,7 +10,7 @@ const getGroupMembers = async (groupId) => {
     INNER JOIN users u on gm.user_id = u.id
     INNER JOIN group_members_roles gmr on gm.user_id = gmr.user_id AND gm.group_id = gmr.group_id
     WHERE gm.group_id = $1`,
-    [groupId]
+    [groupId],
   );
 
   return result.rows;
@@ -25,7 +25,7 @@ const getGroupMemberById = async (groupId, userId) => {
     INNER JOIN group_members_roles gmr on u.id = gmr.user_id AND gm.group_id = gmr.group_id
     WHERE gm.group_id = $1
     AND gm.user_id = $2`,
-    [groupId, userId]
+    [groupId, userId],
   );
 
   if (result.rows.length === 0) {
@@ -40,12 +40,12 @@ const addUserToGroup = async (groupId, userIdToAdd) => {
   return withTransaction(async (client) => {
     const result = await client.query(
       "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
-      [groupId, userIdToAdd]
+      [groupId, userIdToAdd],
     );
 
     const memberRoleResult = await client.query(
       "INSERT INTO group_members_roles (user_id, group_id, is_admin) VALUES ($1, $2, $3) RETURNING is_admin",
-      [userIdToAdd, groupId, false]
+      [userIdToAdd, groupId, false],
     );
 
     return { member: result.rows[0], role: memberRoleResult.rows[0] };
@@ -56,7 +56,7 @@ const addUserToGroup = async (groupId, userIdToAdd) => {
 const updateMemberRole = async (bool, groupId, userId) => {
   const result = await pool.query(
     "UPDATE group_members_roles SET is_admin = $1 WHERE group_id = $2 AND user_id = $3 RETURNING *",
-    [bool, groupId, userId]
+    [bool, groupId, userId],
   );
 
   if (result.rows.length === 0) {
@@ -69,8 +69,31 @@ const updateMemberRole = async (bool, groupId, userId) => {
 // REMOVE MEMBER FROM GROUP
 const removeMemberFromGroup = async (groupId, userId) => {
   const result = await pool.query(
-    "DELETE FROM group_members WHERE group_id = $1 AND user_id = $2 RETURNING *",
-    [groupId, userId]
+    `DELETE FROM group_members
+     INNER JOIN groups g 
+     ON group_members.group_id = g.id 
+     WHERE group_id = $1 
+     AND user_id = $2
+     AND user_id != g.created_by 
+     RETURNING *`,
+    [groupId, userId],
+  );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Member not found in this group");
+  }
+
+  return result.rows[0];
+};
+
+// CHECK USER GROUP MEMBERSHIP
+const checkGroupMembership = async (groupId, userID) => {
+  const result = await pool.query(
+    `SELECT 1 FROM group_members 
+     WHERE group_id = $1 
+     AND user_id = $2
+     LIMIT 1`,
+    [groupId, userID],
   );
 
   if (result.rows.length === 0) {
@@ -86,4 +109,5 @@ module.exports = {
   addUserToGroup,
   updateMemberRole,
   removeMemberFromGroup,
+  checkGroupMembership,
 };
