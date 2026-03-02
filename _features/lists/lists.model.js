@@ -80,10 +80,7 @@ const updateList = async (groupId, listId, updates, is_admin, userId) => {
   const result = await pool.query(query, values);
 
   if (result.rows.length === 0) {
-    throw new ForbiddenError({
-      reason1: "List does not exist",
-      reason2: "Permission denied",
-    });
+    throw new ForbiddenError("List not found or permission denied");
   }
 
   return result.rows[0];
@@ -103,10 +100,7 @@ const deleteList = async (groupId, listId, is_admin, userId) => {
   );
 
   if (result.rows.length === 0) {
-    throw new ForbiddenError({
-      reason1: "List does not exist",
-      reason2: "Permission denied",
-    });
+    throw new ForbiddenError("List not found or permission denied");
   }
 
   return result.rows[0];

@@ -112,7 +112,7 @@ const deleteListItem = async (listId, itemId, is_admin, userId) => {
   );
 
   if (result.rows.length === 0) {
-    throw new NotFoundError("Failed to create list item");
+    throw new NotFoundError("Failed to delete list item");
   }
 
   return result.rows[0];
