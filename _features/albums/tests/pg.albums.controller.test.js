@@ -211,7 +211,7 @@ describe("ALbums API Integration Tests - Authorised Actions", () => {
         const response = await request(app)
           .post(`/groups/${groupId}/albums/${albumId()}/media/upload`)
           .set("Authorization", `Bearer ${accessToken()}`)
-          .attach("image", "_test-images/test-image.jpg");
+          .attach("image", "_test-images/test-image.png");
 
         console.log(`UPLOAD IMAGE RESPONSE: ${role}`, JSON.stringify(response.body, null, 2));
 

@@ -379,13 +379,11 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
         testName: "should update the list item content, as Admin",
       },
     ])("$testName", async ({ role, accessToken, listId, listItemId }) => {
-      const itemUpdates = {
-        content: `${role} Updated Test Item Content`,
-      };
+      const newContent = `${role} Updated Test Item Content`;
 
       const response = await request(app)
         .patch(`/groups/${groupId}/lists/${listId()}/items/${listItemId()}`)
-        .send({ data: itemUpdates })
+        .send({ content: newContent })
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${accessToken()}`);
 
@@ -394,7 +392,7 @@ describe("Lists API Integration Tests - Authorised Actions (as Admin or Member)"
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data.id).toBe(listItemId());
-      expect(response.body.data.content).toBe(itemUpdates.content);
+      expect(response.body.data.content).toBe(newContent);
     });
   });
 

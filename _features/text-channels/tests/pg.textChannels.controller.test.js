@@ -457,7 +457,7 @@ describe("Text Channels/Messages Integration Tests - Authorised Actions", () => 
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`)
           .send({
-            newContent: newContent,
+            content: newContent,
           });
 
         console.log(`UPDATE MESSAGE RESPONSE FOR ${role}:`, JSON.stringify(response.body, null, 2));

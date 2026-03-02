@@ -279,7 +279,7 @@ describe("Media Comments Controller Integration Tests - Authorised Actions", () 
 
         const response = await request(app)
           .patch(`/groups/${groupId}/albums/${albumId}/media/${imageId()}/comments/${commentId()}`)
-          .send({ updatedContent: updatedCommentContent })
+          .send({ content: updatedCommentContent })
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
 
