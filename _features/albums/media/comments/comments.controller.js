@@ -1,8 +1,8 @@
 const customConsoleLog = require("../../../../_shared/utils/customConsoleLog");
 const {
   broadcastNewComment,
-  broadcastMessageUpdated,
-  broadcastMessageDeleted,
+  broadcastCommentUpdated,
+  broadcastCommentDeleted,
 } = require("../../../../_shared/utils/socketService");
 const { addComment, updateComment, deleteComment } = require("./comments.model");
 const { body, validationResult } = require("express-validator");
@@ -13,6 +13,7 @@ const reqValidation = [
     .notEmpty()
     .withMessage("Comment content is required")
     .trim()
+    .escape()
     .isLength({ min: 1, max: 1000 })
     .withMessage("Comment content must be between 1 and 1000 characters"),
 ];
@@ -87,7 +88,7 @@ const handleUpdateComment = [
     };
 
     // WebSocket broadcast
-    broadcastMessageUpdated({
+    broadcastCommentUpdated({
       groupId: req.params.groupId,
       albumId: albumId,
       mediaId: mediaId,
@@ -120,7 +121,7 @@ const handleDeleteComment = async (req, res) => {
   };
 
   // WebSocket broadcast
-  broadcastMessageDeleted({
+  broadcastCommentDeleted({
     groupId: req.params.groupId,
     albumId: albumId,
     mediaId: mediaId,
