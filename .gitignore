@@ -23,3 +23,7 @@ uploads/
 !uploads/original/
 !uploads/videos/
 !uploads/video-thumbs/
+
+.VSCodeCounter/
+
+!
