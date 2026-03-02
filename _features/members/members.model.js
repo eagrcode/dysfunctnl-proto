@@ -38,6 +38,15 @@ const getGroupMemberById = async (groupId, userId) => {
 // ADD NEW MEMBER
 const addUserToGroup = async (groupId, userIdToAdd) => {
   return withTransaction(async (client) => {
+    const existing = await client.query(
+      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, userIdToAdd],
+    );
+
+    if (existing.rows.length > 0) {
+      throw new ConflictError("User is already a member of this group");
+    }
+
     const result = await client.query(
       "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
       [groupId, userIdToAdd],
@@ -54,8 +63,26 @@ const addUserToGroup = async (groupId, userIdToAdd) => {
 
 // UPDATE MEMBER ROLE
 const updateMemberRole = async (bool, groupId, userId) => {
+  if (!bool) {
+    const checkAdminCount = await pool.query(
+      `
+    SELECT COUNT(*) FROM group_members_roles
+    WHERE group_id = $1 AND is_admin = true
+    `,
+      [groupId],
+    );
+
+    const adminCount = parseInt(checkAdminCount.rows[0].count, 10);
+
+    if (adminCount === 1) {
+      throw new ConflictError("Cannot remove admin role from the last admin in the group");
+    }
+  }
+
   const result = await pool.query(
-    "UPDATE group_members_roles SET is_admin = $1 WHERE group_id = $2 AND user_id = $3 RETURNING *",
+    `UPDATE group_members_roles 
+     SET is_admin = $1 WHERE group_id = $2 
+     AND user_id = $3 RETURNING *`,
     [bool, groupId, userId],
   );
 
@@ -70,11 +97,11 @@ const updateMemberRole = async (bool, groupId, userId) => {
 const removeMemberFromGroup = async (groupId, userId) => {
   const result = await pool.query(
     `DELETE FROM group_members
-     INNER JOIN groups g 
-     ON group_members.group_id = g.id 
-     WHERE group_id = $1 
-     AND user_id = $2
-     AND user_id != g.created_by 
+     USING groups g
+     WHERE group_members.group_id = g.id
+     AND group_members.group_id = $1 
+     AND group_members.user_id = $2
+     AND group_members.user_id != g.created_by 
      RETURNING *`,
     [groupId, userId],
   );

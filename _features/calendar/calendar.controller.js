@@ -1,6 +1,10 @@
 const { body, validationResult, query } = require("express-validator");
 const { ForbiddenError, ValidationError } = require("../../_shared/utils/errors");
 const {
+  parsePaginationParams,
+  buildPaginationResponse,
+} = require("../../_shared/utils/pagination");
+const {
   createEvent,
   getEventById,
   updateEvent,
@@ -32,7 +36,13 @@ const reqValidation = {
       .notEmpty()
       .withMessage("End time is required")
       .isISO8601()
-      .withMessage("End time must be a valid ISO 8601 date"),
+      .withMessage("End time must be a valid ISO 8601 date")
+      .custom((endTime, { req }) => {
+        if (new Date(endTime) <= new Date(req.body.startTime)) {
+          throw new Error("End time must be after start time");
+        }
+        return true;
+      }),
     body("allDay")
       .optional()
       .isBoolean()
@@ -40,8 +50,9 @@ const reqValidation = {
       .toBoolean(),
     body("participants")
       .optional()
-      .isArray()
-      .withMessage("Participants must be an array of user IDs"),
+      .isArray({ max: 100 })
+      .withMessage("Participants must be an array of up to 100 user IDs"),
+    body("participants.*").isUUID().withMessage("Each participant must be a valid UUID"),
     body("location")
       .optional()
       .trim()
@@ -66,7 +77,16 @@ const reqValidation = {
       .optional()
       .isISO8601()
       .withMessage("Start time must be a valid ISO 8601 date"),
-    body("endTime").optional().isISO8601().withMessage("End time must be a valid ISO 8601 date"),
+    body("endTime")
+      .optional()
+      .isISO8601()
+      .withMessage("End time must be a valid ISO 8601 date")
+      .custom((endTime, { req }) => {
+        if (new Date(endTime) <= new Date(req.body.startTime)) {
+          throw new Error("End time must be after start time");
+        }
+        return true;
+      }),
     body("allDay")
       .optional()
       .isBoolean()
@@ -74,8 +94,9 @@ const reqValidation = {
       .toBoolean(),
     body("participants")
       .optional()
-      .isArray()
-      .withMessage("Participants must be an array of user IDs"),
+      .isArray({ max: 100 })
+      .withMessage("Participants must be an array of up to 100 user IDs"),
+    body("participants.*").isUUID().withMessage("Each participant must be a valid UUID"),
     body("location")
       .optional()
       .trim()
@@ -128,7 +149,7 @@ const handleCreateEvent = [
       endTime,
       allDay,
       participants,
-      location
+      location,
     );
 
     res.status(201).json({
@@ -200,12 +221,15 @@ const handleGetEventsByRange = [
 
     const { groupId } = req.params;
     const { start, end } = req.query;
+    const { limit, cursor } = parsePaginationParams(req.query);
 
-    const result = await getEventsByRange(groupId, start, end);
+    const rows = await getEventsByRange(groupId, start, end, { limit, cursor });
+    const { data, pagination } = buildPaginationResponse(rows, limit, "start_time");
 
     res.status(200).json({
       success: true,
-      data: result,
+      data,
+      pagination,
     });
   },
 ];

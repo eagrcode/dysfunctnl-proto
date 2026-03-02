@@ -45,7 +45,7 @@ class ForbiddenError extends AppError {
 
 class FailedActionError extends AppError {
   constructor(message = "", conditions = {}) {
-    super(message, conditions, 403);
+    super(message, 403);
     this.conditions = conditions;
     this.code = "ACTION_FAILED";
   }
@@ -53,9 +53,8 @@ class FailedActionError extends AppError {
 
 class UploadError extends AppError {
   constructor(message, statusCode = 400, tempFilePath = null) {
-    super(message);
+    super(message, statusCode);
     this.name = "UploadError";
-    this.statusCode = statusCode;
     this.tempFilePath = tempFilePath;
   }
 }
