@@ -6,25 +6,21 @@ const createGroup = async (name, createdById, description) => {
   return withTransaction(async (client) => {
     const groupResult = await client.query(
       "INSERT INTO groups (name, created_by, description) VALUES ($1, $2, $3) RETURNING *",
-      [name, createdById, description]
+      [name, createdById, description],
     );
     const groupResultId = groupResult.rows[0].id;
 
     const memberResult = await client.query(
       "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
-      [groupResultId, createdById]
+      [groupResultId, createdById],
     );
 
     const memberRoleResult = await client.query(
       "insert into group_members_roles (user_id, group_id, is_admin) values ($1, $2, $3) returning is_admin",
-      [createdById, groupResultId, true]
+      [createdById, groupResultId, true],
     );
 
-    return {
-      group: groupResult.rows[0],
-      member: memberResult.rows[0],
-      role: memberRoleResult.rows[0],
-    };
+    return groupResultId;
   });
 };
 
@@ -37,10 +33,10 @@ const getUserGroups = async (userId) => {
     JOIN group_members gm on g.id = gm.group_id
     WHERE gm.user_id = $1
     `,
-    [userId]
+    [userId],
   );
 
-  return result.rows;
+  return result.rows || [];
 };
 
 // GET GROUP BY ID
