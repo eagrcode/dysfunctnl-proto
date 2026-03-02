@@ -12,7 +12,7 @@ const addMedia = async (
   // bucketKey,
   sizeBytes,
   filename,
-  urls
+  urls,
 ) => {
   const { rows } = await pool.query(
     `
@@ -28,7 +28,7 @@ const addMedia = async (
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *;
   `,
-    [albumId, groupId, uploadedBy, type, mimeType, sizeBytes, filename, urls]
+    [albumId, groupId, uploadedBy, type, mimeType, sizeBytes, filename, urls],
   );
 
   return rows[0];
@@ -44,7 +44,7 @@ const getMediaById = async (groupId, albumId, mediaId) => {
     AND album_id = $2
     AND id = $3;
   `,
-    [groupId, albumId, mediaId]
+    [groupId, albumId, mediaId],
   );
 
   if (rows.length === 0) {
@@ -65,12 +65,12 @@ const getMediaByIdWithComments = async (groupId, albumId, mediaId) => {
     AND album_id = $2
     AND id = $3;
   `,
-      [groupId, albumId, mediaId]
+      [groupId, albumId, mediaId],
     );
 
-    const mediaData = mediaResult.rows;
+    const mediaData = mediaResult.rows[0];
 
-    if (mediaData.length === 0) {
+    if (!mediaData) {
       throw new NotFoundError(`No media found for ID: ${mediaId}`);
     }
 
@@ -81,26 +81,27 @@ const getMediaByIdWithComments = async (groupId, albumId, mediaId) => {
         WHERE media_id = $1
         ORDER BY created_at ASC;
       `,
-      [mediaId]
+      [mediaId],
     );
 
-    mediaData[0].comments = commentsResult.rows;
+    mediaData.comments = commentsResult.rows || [];
 
     return mediaData;
   });
 };
 
 // DELETE MEDIA BY ID
-const deleteMediaById = async (groupId, albumId, mediaId) => {
+const deleteMediaById = async (groupId, albumId, mediaId, isAdmin, userId) => {
   const { rows } = await pool.query(
     `
     DELETE FROM media
     WHERE group_id = $1
     AND album_id = $2
     AND id = $3
+    AND ($4 = true OR uploaded_by = $5)
     RETURNING id, album_id, group_id, filename;
   `,
-    [groupId, albumId, mediaId]
+    [groupId, albumId, mediaId, isAdmin, userId],
   );
 
   if (rows.length === 0) {
@@ -120,7 +121,7 @@ const getFilenameById = async (groupId, albumId, mediaId) => {
     AND album_id = $2
     AND id = $3;
   `,
-    [groupId, albumId, mediaId]
+    [groupId, albumId, mediaId],
   );
 
   if (rows.length === 0) {
@@ -131,7 +132,7 @@ const getFilenameById = async (groupId, albumId, mediaId) => {
 };
 
 // UPDATE MEDIA BY ID
-const updateMediaById = async (groupId, albumId, mediaId, updates) => {
+const updateMediaById = async (groupId, albumId, mediaId, updates, isAdmin, userId) => {
   const fields = [];
   const values = [];
   let paramIndex = 1;
@@ -156,7 +157,7 @@ const updateMediaById = async (groupId, albumId, mediaId, updates) => {
       const { rows: albumRows } = await client.query(
         `SELECT id FROM albums 
          WHERE id = $1 AND group_id = $2 FOR UPDATE`,
-        [updates.newAlbumId, groupId]
+        [updates.newAlbumId, groupId],
       );
 
       if (albumRows.length === 0) {
@@ -168,10 +169,11 @@ const updateMediaById = async (groupId, albumId, mediaId, updates) => {
 
       const updateQuery = `UPDATE media 
                            SET ${fields.join(", ")} 
-                           WHERE id = $${paramIndex++} AND album_id = $${paramIndex++} 
+                           WHERE id = $${paramIndex++} AND album_id = $${paramIndex++}
+                           AND ($${paramIndex++} = true OR uploaded_by = $${paramIndex++})
                            RETURNING *`;
 
-      values.push(mediaId, albumId);
+      values.push(mediaId, albumId, isAdmin, userId);
 
       const { rows } = await client.query(updateQuery, values);
 
@@ -185,9 +187,10 @@ const updateMediaById = async (groupId, albumId, mediaId, updates) => {
     const updateQuery = `UPDATE media 
                          SET ${fields.join(", ")} 
                          WHERE id = $${paramIndex++} AND album_id = $${paramIndex++} 
+                         AND ($${paramIndex++} = true OR uploaded_by = $${paramIndex++})
                          RETURNING *`;
 
-    values.push(mediaId, albumId);
+    values.push(mediaId, albumId, isAdmin, userId);
 
     const { rows } = await pool.query(updateQuery, values);
 

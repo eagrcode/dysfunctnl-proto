@@ -36,6 +36,8 @@ const handleGetMediaByIdWithComments = async (req, res) => {
 // DELETE MEDIA BY ID
 const handleDeleteMediaById = async (req, res) => {
   const { groupId, albumId, mediaId } = req.params;
+  const isAdmin = req.user.is_admin;
+  const userId = req.user.id;
 
   const filename = await getFilenameById(groupId, albumId, mediaId);
 
@@ -52,12 +54,12 @@ const handleDeleteMediaById = async (req, res) => {
       }
 
       console.log(`Successfully deleted file at ${filePath}, or file did not exist.`);
-    })
+    }),
   );
 
   await Promise.all(deleteFiles);
 
-  const result = await deleteMediaById(groupId, albumId, mediaId);
+  const result = await deleteMediaById(groupId, albumId, mediaId, isAdmin, userId);
 
   res.status(200).json({
     success: true,
@@ -69,8 +71,10 @@ const handleDeleteMediaById = async (req, res) => {
 const handleUpdateMediaById = async (req, res) => {
   const { groupId, albumId, mediaId } = req.params;
   const { data } = req.body;
+  const isAdmin = req.user.is_admin;
+  const userId = req.user.id;
 
-  const result = await updateMediaById(groupId, albumId, mediaId, data);
+  const result = await updateMediaById(groupId, albumId, mediaId, data, isAdmin, userId);
 
   res.status(200).json({
     success: true,
