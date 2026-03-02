@@ -12,11 +12,12 @@ const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const albumsRouter = Router({ mergeParams: true });
 
-albumsRouter.use("/:albumId", validateUUIDParams);
-
 // ALBUM ROUTES
 albumsRouter.get("/", handleGetAllAlbumsByGroupId);
 albumsRouter.post("/", handleAddAlbum);
+
+albumsRouter.use("/:albumId", validateUUIDParams);
+
 albumsRouter.get("/:albumId", handleGetAlbumById);
 albumsRouter.patch("/:albumId", handleUpdateAlbumById);
 albumsRouter.delete("/:albumId", handleDeleteAlbumById);

@@ -8,9 +8,10 @@ const validateUUIDParams = require("../../../../_shared/middleware/validateUUID"
 
 const mediaCommentsRouter = Router({ mergeParams: true });
 
+mediaCommentsRouter.post("/", handleAddComment);
+
 mediaCommentsRouter.use("/:commentId", validateUUIDParams);
 
-mediaCommentsRouter.post("/", handleAddComment);
 mediaCommentsRouter.patch("/:commentId", handleUpdateComment);
 mediaCommentsRouter.delete("/:commentId", handleDeleteComment);
 

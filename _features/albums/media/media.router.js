@@ -11,9 +11,10 @@ const validateUUIDParams = require("../../../_shared/middleware/validateUUID");
 
 const mediaRouter = Router({ mergeParams: true });
 
+mediaRouter.post("/upload", upload, handlePhotoUpload);
+
 mediaRouter.use("/:mediaId", validateUUIDParams);
 
-mediaRouter.post("/upload", upload, handlePhotoUpload);
 mediaRouter.get("/:mediaId", handleGetMediaById);
 mediaRouter.patch("/:mediaId", handleUpdateMediaById);
 mediaRouter.delete("/:mediaId", handleDeleteMediaById);
