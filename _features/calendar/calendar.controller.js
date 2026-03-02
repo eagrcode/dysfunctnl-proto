@@ -1,5 +1,5 @@
 const { body, validationResult, query } = require("express-validator");
-const { ForbiddenError } = require("../../_shared/utils/errors");
+const { ForbiddenError, ValidationError } = require("../../_shared/utils/errors");
 const {
   createEvent,
   getEventById,
@@ -104,7 +104,7 @@ const handleCreateEvent = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      throw new ValidationError("Validation failed", errors.array());
     }
 
     const { groupId } = req.params;
@@ -157,7 +157,7 @@ const handleUpdateEvent = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      throw new ValidationError("Validation failed", errors.array());
     }
 
     const { groupId, eventId } = req.params;
@@ -195,7 +195,7 @@ const handleGetEventsByRange = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      throw new ValidationError("Validation failed", errors.array());
     }
 
     const { groupId } = req.params;

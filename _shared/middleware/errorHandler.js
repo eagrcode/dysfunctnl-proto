@@ -20,13 +20,13 @@ const errorHandler = (err, req, res, next) => {
       response.errors = err.errors;
     }
 
-    return res.status(err.statusCode).json(response);
+    return res.status(err.statusCode || 400).json(response);
   }
 
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
       success: false,
-      error: "File too large",
+      message: "File too large",
       code: "FILE_TOO_LARGE",
     });
   }
@@ -34,7 +34,7 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === "LIMIT_UNEXPECTED_FILE") {
     return res.status(400).json({
       success: false,
-      error: "Unexpected file field name",
+      message: "Unexpected file field name",
       code: "INVALID_FIELD",
     });
   }
@@ -46,7 +46,7 @@ const errorHandler = (err, req, res, next) => {
   ) {
     return res.status(400).json({
       success: false,
-      error: "Invalid or corrupted image file",
+      message: "Invalid or corrupted image file",
       code: "INVALID_IMAGE",
     });
   }
@@ -54,7 +54,8 @@ const errorHandler = (err, req, res, next) => {
   // Generic error
   res.status(500).json({
     success: false,
-    error: process.env.NODE_ENV === "production" ? "An unexpected error occurred" : err.message,
+    message: process.env.NODE_ENV === "production" ? "An unexpected error occurred" : err.message,
+    code: "INTERNAL_ERROR",
   });
 };
 

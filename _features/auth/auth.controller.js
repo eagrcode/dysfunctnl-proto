@@ -10,6 +10,7 @@ const {
   addRefreshToken,
   registration,
 } = require("./auth.model");
+const { ValidationError, UnauthorisedError, ForbiddenError } = require("../../_shared/utils/errors");
 
 const reqValidation = {
   handleUserRegistration: [
@@ -71,7 +72,7 @@ const handleUserRegistration = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      throw new ValidationError("Validation failed", errors.array());
     }
 
     const { email, password, first_name, last_name } = req.body;
@@ -91,26 +92,37 @@ const handleUserLogin = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      throw new ValidationError("Validation failed", errors.array());
     }
+
+    let userData;
 
     const { email, password } = req.body;
 
     const user = await login(email);
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      throw new UnauthorisedError("Invalid credentials");
     }
 
     const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "4s",
+      expiresIn: "120m",
     });
     const refreshToken = crypto.randomBytes(64).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
     await addRefreshToken(user.id, tokenHash);
 
-    res.status(200).json({ user, accessToken, refreshToken });
+    userData = {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      accessToken,
+      refreshToken,
+    };
+
+    res.status(200).json({ success: true, user: userData });
   },
 ];
 
@@ -120,7 +132,7 @@ const handleRefreshAccessToken = async (req, res) => {
 
   console.log("Received refresh token:", refreshToken ? refreshToken : null);
 
-  if (!refreshToken) return res.status(401).json({ error: "Refresh token required" });
+  if (!refreshToken) throw new UnauthorisedError("Refresh token required");
 
   const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
@@ -129,7 +141,7 @@ const handleRefreshAccessToken = async (req, res) => {
   console.log("Current token from DB:", currentToken);
 
   if (!currentToken) {
-    return res.status(403).json({ error: "Invalid or expired refresh token" });
+    throw new ForbiddenError("Invalid or expired refresh token");
   }
 
   const userId = currentToken.user_id;
@@ -143,7 +155,7 @@ const handleRefreshAccessToken = async (req, res) => {
     "Token match: updating to new refresh token for user ID:",
     userId,
     accessToken,
-    newTokenHash
+    newTokenHash,
   );
 
   await addRefreshToken(userId, newTokenHash);
