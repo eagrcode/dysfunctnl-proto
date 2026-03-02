@@ -24,6 +24,7 @@ const getRefreshToken = async (tokenHash) => {
     SELECT user_id, token_hash 
     FROM refresh_tokens
     WHERE token_hash = $1
+    AND expires_at > NOW()
   `;
 
   const result = await pool.query(query, [tokenHash]);

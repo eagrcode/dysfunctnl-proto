@@ -12,6 +12,8 @@ const {
 } = require("./auth.model");
 const { ValidationError, UnauthorisedError, ForbiddenError } = require("../../_shared/utils/errors");
 
+const DUMMY_HASH = bcrypt.hashSync("dummy", 10);
+
 const reqValidation = {
   handleUserRegistration: [
     body("email")
@@ -100,8 +102,9 @@ const handleUserLogin = [
     const { email, password } = req.body;
 
     const user = await login(email);
+    const isValid = await bcrypt.compare(password, user?.password_hash || DUMMY_HASH);
 
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    if (!user || !isValid) {
       throw new UnauthorisedError("Invalid credentials");
     }
 
