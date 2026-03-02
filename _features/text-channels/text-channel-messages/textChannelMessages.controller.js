@@ -11,6 +11,7 @@ const {
 } = require("../../../_shared/utils/socketService");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../../_shared/utils/errors");
+const { parsePaginationParams, buildPaginationResponse } = require("../../../_shared/utils/pagination");
 
 const validationAssertions = [
   body("content")
@@ -25,12 +26,15 @@ const validationAssertions = [
 // GET ALL MESSAGES
 const handleGetAllMessages = async (req, res) => {
   const { textChannelId } = req.params;
+  const { limit, cursor } = parsePaginationParams(req.query);
 
-  const result = await getAllMessages(textChannelId);
+  const rows = await getAllMessages(textChannelId, { limit, cursor });
+  const { data, pagination } = buildPaginationResponse(rows, limit, "created_at");
 
   res.status(200).json({
     success: true,
-    data: result,
+    data,
+    pagination,
   });
 };
 

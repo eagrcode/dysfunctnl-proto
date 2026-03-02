@@ -4,13 +4,23 @@ const { NotFoundError, FailedActionError } = require("../../../_shared/utils/err
 const path = require("path");
 
 // GET ALL MESSAGES
-const getAllMessages = async (textChannelId) => {
+const getAllMessages = async (textChannelId, { limit, cursor }) => {
+  const values = [textChannelId, limit + 1];
+  let cursorClause = "";
+
+  if (cursor) {
+    cursorClause = `AND created_at < $${values.length + 1}`;
+    values.push(cursor);
+  }
+
   const result = await pool.query(
     `SELECT * FROM text_channel_messages
      WHERE channel_id = $1
      AND deleted_at IS NULL
-     ORDER BY created_at DESC`,
-    [textChannelId],
+     ${cursorClause}
+     ORDER BY created_at DESC
+     LIMIT $2`,
+    values,
   );
 
   return result.rows;

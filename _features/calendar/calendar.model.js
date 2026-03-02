@@ -38,14 +38,24 @@ const getEventById = async (eventId, groupId) => {
 };
 
 // GET EVENTS BY RANGE
-const getEventsByRange = async (groupId, startTime, endTime) => {
+const getEventsByRange = async (groupId, startTime, endTime, { limit, cursor }) => {
+  const values = [groupId, endTime, startTime, limit + 1];
+  let cursorClause = "";
+
+  if (cursor) {
+    cursorClause = `AND start_time > $${values.length + 1}`;
+    values.push(cursor);
+  }
+
   const result = await pool.query(
     `SELECT * FROM calendar
      WHERE group_id = $1
      AND start_time < $2
      AND end_time > $3
-     ORDER BY start_time ASC`,
-    [groupId, endTime, startTime]
+     ${cursorClause}
+     ORDER BY start_time ASC
+     LIMIT $4`,
+    values,
   );
 
   return result.rows;

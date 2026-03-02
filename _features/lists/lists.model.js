@@ -2,10 +2,22 @@ const pool = require("../../_shared/utils/db");
 const { NotFoundError, ForbiddenError } = require("../../_shared/utils/errors");
 
 // GET ALL LISTS
-const getAllLists = async (groupId) => {
+const getAllLists = async (groupId, { limit, cursor }) => {
+  const values = [groupId, limit + 1];
+  let cursorClause = "";
+
+  if (cursor) {
+    cursorClause = `AND created_at < $${values.length + 1}`;
+    values.push(cursor);
+  }
+
   const result = await pool.query(
-    "SELECT * FROM lists WHERE group_id = $1 ORDER BY created_at DESC",
-    [groupId]
+    `SELECT * FROM lists
+     WHERE group_id = $1
+     ${cursorClause}
+     ORDER BY created_at DESC
+     LIMIT $2`,
+    values,
   );
 
   return result.rows;

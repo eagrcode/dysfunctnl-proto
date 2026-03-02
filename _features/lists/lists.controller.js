@@ -2,6 +2,7 @@ const { getAllLists, createList, getListById, updateList, deleteList } = require
 const { getListItems } = require("./list-items/listItems.model");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../_shared/utils/errors");
+const { parsePaginationParams, buildPaginationResponse } = require("../../_shared/utils/pagination");
 
 const reqValidation = {
   handleCreateList: [
@@ -33,12 +34,15 @@ const reqValidation = {
 // GET ALL LISTS
 const handleGetAllLists = async (req, res) => {
   const { groupId } = req.params;
+  const { limit, cursor } = parsePaginationParams(req.query);
 
-  const result = await getAllLists(groupId);
+  const rows = await getAllLists(groupId, { limit, cursor });
+  const { data, pagination } = buildPaginationResponse(rows, limit, "created_at");
 
   res.status(200).json({
     success: true,
-    data: result,
+    data,
+    pagination,
   });
 };
 

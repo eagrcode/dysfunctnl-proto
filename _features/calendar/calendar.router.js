@@ -10,11 +10,12 @@ const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const calendarRouter = Router({ mergeParams: true });
 
-calendarRouter.use("/:eventId", validateUUIDParams);
-
 /* CALENDAR ROUTES */
 calendarRouter.post("/", handleCreateEvent);
 calendarRouter.get("/range", handleGetEventsByRange);
+
+calendarRouter.use("/:eventId", validateUUIDParams);
+
 calendarRouter.get("/:eventId", handleGetEventById);
 calendarRouter.patch("/:eventId", handleUpdateEvent);
 calendarRouter.delete("/:eventId", handleDeleteEvent);
