@@ -7,6 +7,7 @@ const { errorHandler } = require("./_shared/middleware/errorHandler");
 const staticFileServeConfig = require("./_shared/utils/staticFileServeConfig");
 const { NotFoundError } = require("./_shared/utils/errors");
 const userRouter = require("./_features/user/user.router");
+const authenticate = require("../../_shared/middleware/auth");
 
 process.env.TZ = "UTC";
 console.log("Server timezone:", process.env.TZ);
@@ -14,11 +15,11 @@ console.log("Node timezone:", Intl.DateTimeFormat().resolvedOptions().timeZone);
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 app.use(generalLimiter);
 app.use("/media", staticFileServeConfig);
 app.use("/auth", authRouter);
-app.use("/users", userRouter);
+app.use("/users", authenticate, userRouter);
 app.use("/groups", groupsRouter);
 
 app.get("/", (req, res) => {
