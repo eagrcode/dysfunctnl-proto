@@ -20,7 +20,9 @@ const registerUser = async () => {
     .set("Content-Type", "application/json");
 
   if (response.status !== 201) {
-    throw new Error(`Failed to register: ${response.body.message || response.body.error || "Unknown error"}`);
+    throw new Error(
+      `Failed to register: ${response.body.message || response.body.error || "Unknown error"}`,
+    );
   }
 
   console.log("REGISTER MEMBER:", JSON.stringify(response.body, null, 2));
@@ -46,7 +48,9 @@ const loginUser = async (email) => {
       .set("Content-Type", "application/json");
 
     if (response.status !== 200) {
-      throw new Error(`Failed to login: ${response.body.message || response.body.error || "Unknown error"}`);
+      throw new Error(
+        `Failed to login: ${response.body.message || response.body.error || "Unknown error"}`,
+      );
     }
 
     console.log("LOGIN:", JSON.stringify(response.body, null, 2));
@@ -72,7 +76,9 @@ const createGroup = async (data, accessToken) => {
       .set("Authorization", `Bearer ${accessToken}`);
 
     if (response.status !== 201) {
-      throw new Error(`Failed to create group: ${response.body.message || response.body.error || "Unknown error"}`);
+      throw new Error(
+        `Failed to create group: ${response.body.message || response.body.error || "Unknown error"}`,
+      );
     }
 
     console.log("CREATE GROUP:", JSON.stringify(response.body, null, 2));
@@ -96,7 +102,9 @@ const addMember = async (groupId, memberId, adminAccessToken) => {
     console.log("ADD MEMBER:", JSON.stringify(response.body, null, 2));
 
     if (response.status !== 201) {
-      throw new Error(`Failed to add member to group: ${response.body.message || response.body.error || "Unknown error"}`);
+      throw new Error(
+        `Failed to add member to group: ${response.body.message || response.body.error || "Unknown error"}`,
+      );
     }
 
     const { success } = response.body;
@@ -120,7 +128,9 @@ const createTextChannel = async (groupId, channelData, accessToken) => {
       });
 
     if (response.status !== 201) {
-      throw new Error(`Failed to create text channel: ${response.body.message || response.body.error || "Unknown error"}`);
+      throw new Error(
+        `Failed to create text channel: ${response.body.message || response.body.error || "Unknown error"}`,
+      );
     }
 
     console.log("CREATE TEXT CHANNEL:", JSON.stringify(response.body, null, 2));
@@ -143,7 +153,9 @@ const createAlbum = async (groupId, albumData, accessToken) => {
       .send(albumData);
 
     if (response.status !== 201) {
-      throw new Error(`Failed to create album: ${response.body.message || response.body.error || "Unknown error"}`);
+      throw new Error(
+        `Failed to create album: ${response.body.message || response.body.error || "Unknown error"}`,
+      );
     }
 
     console.log("CREATE ALBUM:", JSON.stringify(response.body, null, 2));
@@ -165,7 +177,9 @@ const uploadImageToAlbum = async (groupId, albumId, accessToken) => {
       .attach("image", "_test-images/test-image.png");
 
     if (response.status !== 201) {
-      throw new Error(`Failed to upload image: ${response.body.message || response.body.error || "Unknown error"}`);
+      throw new Error(
+        `Failed to upload image: ${response.body.message || response.body.error || "Unknown error"}`,
+      );
     }
 
     console.log("UPLOAD IMAGE:", JSON.stringify(response.body, null, 2));

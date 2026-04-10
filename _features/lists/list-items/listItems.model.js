@@ -8,8 +8,8 @@ const {
 // GET ALL LIST ITEMS
 const getListItems = async (listId) => {
   const result = await pool.query(
-    "SELECT * FROM list_items WHERE list_id = $1 ORDER BY created_at DESC",
-    [listId]
+    "SELECT * FROM list_items WHERE list_id = $1 ORDER BY created_at ASC",
+    [listId],
   );
 
   return result.rows;
@@ -26,7 +26,7 @@ const createListItem = async (listId, content, is_admin, userId) => {
        AND (created_by = $3 OR assigned_to = $3 OR $4 = true)
        RETURNING *
     `,
-    [listId, content, userId, is_admin]
+    [listId, content, userId, is_admin],
   );
 
   if (result.rows.length === 0) {
@@ -63,7 +63,7 @@ const updateListItem = async (listId, itemId, content, is_admin, userId) => {
       AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
       RETURNING li.id, li.content
     `,
-    [content, listId, itemId, userId, is_admin]
+    [content, listId, itemId, userId, is_admin],
   );
 
   if (result.rows.length === 0) {
@@ -86,7 +86,7 @@ const toggleComplete = async (listId, itemId, bool, is_admin, userId) => {
       AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
       RETURNING li.id, li.completed
     `,
-    [bool, listId, itemId, userId, is_admin]
+    [bool, listId, itemId, userId, is_admin],
   );
 
   if (result.rows.length === 0) {
@@ -108,7 +108,7 @@ const deleteListItem = async (listId, itemId, is_admin, userId) => {
       AND (l.created_by = $3 OR l.assigned_to = $3 OR $4 = true)
       RETURNING li.id
     `,
-    [listId, itemId, userId, is_admin]
+    [listId, itemId, userId, is_admin],
   );
 
   if (result.rows.length === 0) {

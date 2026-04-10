@@ -2,12 +2,16 @@ const { getAllLists, createList, getListById, updateList, deleteList } = require
 const { getListItems } = require("./list-items/listItems.model");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../_shared/utils/errors");
-const { parsePaginationParams, buildPaginationResponse } = require("../../_shared/utils/pagination");
+const {
+  parsePaginationParams,
+  buildPaginationResponse,
+} = require("../../_shared/utils/pagination");
 
 const reqValidation = {
   handleCreateList: [
     body("listType").isIn(["todo", "shopping", "other"]).withMessage("Invalid list type"),
     body("assignedTo").optional().isUUID().withMessage("Invalid assignedTo user ID format"),
+    body("itemsArr").optional().isArray(),
     body("title")
       .notEmpty()
       .withMessage("List title is required")
@@ -57,10 +61,10 @@ const handleCreateList = [
     }
 
     const { groupId } = req.params;
-    const { listType, title, assignedTo } = req.body;
-    userId = req.user.id;
+    const { listType, title, assignedTo, itemsArr = [] } = req.body;
+    const userId = req.user.id;
 
-    const result = await createList(userId, groupId, listType, title, assignedTo);
+    const result = await createList(userId, groupId, listType, title, assignedTo, itemsArr);
 
     res.status(201).json({
       success: true,

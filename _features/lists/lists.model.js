@@ -1,5 +1,6 @@
 const pool = require("../../_shared/utils/db");
 const { NotFoundError, ForbiddenError } = require("../../_shared/utils/errors");
+const withTransaction = require("../../_shared/utils/queryTransaction");
 
 // GET ALL LISTS
 const getAllLists = async (groupId, { limit, cursor }) => {
@@ -24,16 +25,32 @@ const getAllLists = async (groupId, { limit, cursor }) => {
 };
 
 // CREATE NEW LIST
-const createList = async (userId, groupId, listType, title, assignedTo) => {
-  const result = await pool.query(
-    `INSERT INTO lists 
-     (created_by, group_id, list_type, title, assigned_to) 
-     VALUES ($1, $2, $3, $4, $5) 
-     RETURNING *`,
-    [userId, groupId, listType, title, assignedTo]
-  );
+const createList = async (userId, groupId, listType, title, assignedTo, itemsArr = []) => {
+  return withTransaction(async (client) => {
+    const listRes = await client.query(
+      `INSERT INTO lists 
+       (created_by, group_id, list_type, title, assigned_to) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING *`,
+      [userId, groupId, listType, title, assignedTo],
+    );
 
-  return result.rows[0];
+    const listData = listRes.rows[0];
+
+    const listId = listData.id;
+
+    if (itemsArr.length > 0) {
+      const itemValues = itemsArr.map((item, index) => `($1, $${index + 2})`).join(", ");
+      const itemsRes = await client.query(
+        `INSERT INTO list_items (list_id, content) VALUES ${itemValues} RETURNING *`,
+        [listId, ...itemsArr],
+      );
+
+      listData.items = itemsRes ? itemsRes.rows : [];
+    }
+
+    return listData;
+  });
 };
 
 // GET LIST BY ID
@@ -108,7 +125,7 @@ const deleteList = async (groupId, listId, is_admin, userId) => {
       AND (created_by = $3 OR $4 = true) 
       RETURNING *
     `,
-    [groupId, listId, userId, is_admin]
+    [groupId, listId, userId, is_admin],
   );
 
   if (result.rows.length === 0) {

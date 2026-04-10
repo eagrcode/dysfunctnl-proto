@@ -10,7 +10,11 @@ const {
   addRefreshToken,
   registration,
 } = require("./auth.model");
-const { ValidationError, UnauthorisedError, ForbiddenError } = require("../../_shared/utils/errors");
+const {
+  ValidationError,
+  UnauthorisedError,
+  ForbiddenError,
+} = require("../../_shared/utils/errors");
 
 const DUMMY_HASH = bcrypt.hashSync("dummy", 10);
 
@@ -57,13 +61,7 @@ const reqValidation = {
       .isEmail()
       .withMessage("Invalid email address"),
 
-    body("password")
-      .notEmpty()
-      .withMessage("Password is required")
-      .trim()
-      .escape()
-      .isLength({ min: 8 })
-      .withMessage("Password must be at least 8 characters long"),
+    body("password").notEmpty().withMessage("Password is required").trim().escape(),
   ],
 };
 
@@ -83,7 +81,7 @@ const handleUserRegistration = [
 
     const result = await registration(email, password_hash, first_name, last_name);
 
-    res.status(201).json(result);
+    res.status(201).json({ success: true, data: result });
   },
 ];
 
@@ -109,7 +107,7 @@ const handleUserLogin = [
     }
 
     const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "120m",
+      expiresIn: "5s",
     });
     const refreshToken = crypto.randomBytes(64).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
@@ -151,7 +149,7 @@ const handleRefreshAccessToken = async (req, res) => {
   const newRefreshToken = crypto.randomBytes(64).toString("hex");
   const newTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
   const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: "15m",
+    expiresIn: "5s",
   });
 
   console.log(

@@ -16,9 +16,8 @@ describe("Auth API Tests - Token Refresh Flow", () => {
   beforeAll(async () => {
     const { email } = await registerUser();
 
-    const { accessToken: initialAccessToken, refreshToken: initialRefreshToken } = await loginUser(
-      email
-    );
+    const { accessToken: initialAccessToken, refreshToken: initialRefreshToken } =
+      await loginUser(email);
     accessToken = initialAccessToken;
     refreshToken = initialRefreshToken;
 
