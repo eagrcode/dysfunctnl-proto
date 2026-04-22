@@ -107,7 +107,7 @@ const handleUserLogin = [
     }
 
     const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "5s",
+      expiresIn: "15m",
     });
     const refreshToken = crypto.randomBytes(64).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
@@ -149,7 +149,7 @@ const handleRefreshAccessToken = async (req, res) => {
   const newRefreshToken = crypto.randomBytes(64).toString("hex");
   const newTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
   const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: "5s",
+    expiresIn: "15m",
   });
 
   console.log(

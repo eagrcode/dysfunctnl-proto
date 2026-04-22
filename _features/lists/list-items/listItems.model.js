@@ -8,7 +8,7 @@ const {
 // GET ALL LIST ITEMS
 const getListItems = async (listId) => {
   const result = await pool.query(
-    "SELECT * FROM list_items WHERE list_id = $1 ORDER BY created_at ASC",
+    "SELECT * FROM list_items WHERE list_id = $1 ORDER BY created_at DESC",
     [listId],
   );
 
