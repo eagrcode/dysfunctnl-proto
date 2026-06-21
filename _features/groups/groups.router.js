@@ -6,6 +6,7 @@ const {
   handleDeleteGroup,
 } = require("./groups.controller");
 const { Router } = require("express");
+const dashboardRouter = require("../dashboard/dashboard.router");
 const listsRouter = require("../lists/lists.router");
 const albumsRouter = require("../albums/albums.router");
 const membersRouter = require("../members/members.router");
@@ -29,6 +30,7 @@ groupsRouter.patch("/:groupId", permissionRequired("admin"), handleUpdateGroup);
 groupsRouter.delete("/:groupId", permissionRequired("creator"), handleDeleteGroup);
 
 // Mount child routers
+groupsRouter.use("/:groupId/dashboard", dashboardRouter);
 groupsRouter.use("/:groupId/members", membersRouter);
 groupsRouter.use("/:groupId/text-channels", textChannelsRouter);
 groupsRouter.use("/:groupId/lists", listsRouter);

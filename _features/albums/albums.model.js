@@ -14,7 +14,7 @@ const addAlbum = async (groupId, name, description, createdBy) => {
     ) VALUES ($1, $2, $3, $4)
     RETURNING *;
   `,
-    [groupId, name, description, createdBy]
+    [groupId, name, description, createdBy],
   );
 
   return rows[0];
@@ -29,7 +29,7 @@ const getAllAlbumsByGroupId = async (groupId) => {
     WHERE group_id = $1
     ORDER BY created_at DESC;
   `,
-    [groupId]
+    [groupId],
   );
 
   return rows;
@@ -44,7 +44,7 @@ const getAlbumById = async (groupId, albumId) => {
     WHERE group_id = $1
     AND id = $2;
   `,
-    [groupId, albumId]
+    [groupId, albumId],
   );
 
   if (rows.length === 0) {
@@ -64,7 +64,7 @@ const getAlbumByIdWithMedia = async (groupId, albumId) => {
     WHERE group_id = $1
     AND id = $2;
   `,
-      [groupId, albumId]
+      [groupId, albumId],
     );
 
     const albumData = albumResult.rows[0];
@@ -81,7 +81,7 @@ const getAlbumByIdWithMedia = async (groupId, albumId) => {
         AND album_id = $2
         ORDER BY created_at DESC;
       `,
-      [groupId, albumId]
+      [groupId, albumId],
     );
 
     albumData.media = mediaResult.rows;
@@ -100,7 +100,7 @@ const deleteAlbumById = async (groupId, albumId, is_admin, userId) => {
     AND (created_by = $3 OR $4 = true)
     RETURNING id, created_by;
   `,
-    [groupId, albumId, userId, is_admin]
+    [groupId, albumId, userId, is_admin],
   );
 
   if (rows.length === 0) {
