@@ -12,14 +12,14 @@ const {
   handleGetListItemById,
   handleUpdateListItem,
   handleToggleComplete,
-  handleDeleteListItem,
+  handleToggleCompleteAll,
+  handleDeleteListItems,
 } = require("./list-items/listItems.controller");
 const validateUUIDParams = require("../../_shared/middleware/validateUUID");
 
 const listsRouter = Router({ mergeParams: true });
 
 listsRouter.use("/:listId", validateUUIDParams);
-listsRouter.use("/:listId/items/:itemId", validateUUIDParams);
 
 /* LIST ROUTES */
 listsRouter.get("/", handleGetAllLists);
@@ -31,9 +31,13 @@ listsRouter.delete("/:listId", handleDeleteList);
 /* LIST ITEM ROUTES */
 // listsRouter.get("/:listId/items", handleGetListItems);
 listsRouter.post("/:listId/items", handleCreateListItem);
+listsRouter.delete("/:listId/items/delete", handleDeleteListItems);
+listsRouter.patch("/:listId/items/toggle-all", handleToggleCompleteAll);
+
+listsRouter.use("/:listId/items/:itemId", validateUUIDParams);
+
 listsRouter.get("/:listId/items/:itemId", handleGetListItemById);
 listsRouter.patch("/:listId/items/:itemId", handleUpdateListItem);
-listsRouter.delete("/:listId/items/:itemId", handleDeleteListItem);
 listsRouter.patch("/:listId/items/:itemId/toggle", handleToggleComplete);
 
 module.exports = listsRouter;

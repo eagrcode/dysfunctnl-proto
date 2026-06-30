@@ -4,10 +4,12 @@ const {
   getListItemById,
   updateListItem,
   toggleComplete,
-  deleteListItem,
+  toggleCompleteAll,
+  deleteListItems,
 } = require("./listItems.model");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../../_shared/utils/errors");
+const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
 
 const validationAssertions = [
   body("content")
@@ -101,13 +103,39 @@ const handleToggleComplete = [
   },
 ];
 
-// DELETE A LIST ITEM
-const handleDeleteListItem = async (req, res) => {
-  const { listId, itemId } = req.params;
+const handleToggleCompleteAll = [
+  body("completed").isBoolean().withMessage("Completed must be a boolean"),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Validation failed", errors.array());
+    }
+
+    const { listId } = req.params;
+    const { completed } = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
+
+    customConsoleLog("CONTROLLER: ", listId, completed);
+
+    const result = await toggleCompleteAll(listId, completed, is_admin, userId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  },
+];
+
+// DELETE LIST ITEMS
+const handleDeleteListItems = async (req, res) => {
+  const { listId } = req.params;
+  const { itemIds } = req.body;
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
 
-  const result = await deleteListItem(listId, itemId, is_admin, userId);
+  const result = await deleteListItems(listId, itemIds, is_admin, userId);
 
   res.status(200).json({
     success: true,
@@ -120,5 +148,6 @@ module.exports = {
   handleGetListItemById,
   handleUpdateListItem,
   handleToggleComplete,
-  handleDeleteListItem,
+  handleToggleCompleteAll,
+  handleDeleteListItems,
 };

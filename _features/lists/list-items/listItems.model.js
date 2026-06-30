@@ -1,3 +1,4 @@
+const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
 const pool = require("../../../_shared/utils/db");
 const {
   NotFoundError,
@@ -84,7 +85,7 @@ const toggleComplete = async (listId, itemId, bool, is_admin, userId) => {
       AND li.list_id = $2
       AND li.id = $3
       AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
-      RETURNING li.id, li.completed
+      RETURNING li.id, li.completed, li.updated_at
     `,
     [bool, listId, itemId, userId, is_admin],
   );
@@ -96,19 +97,43 @@ const toggleComplete = async (listId, itemId, bool, is_admin, userId) => {
   return result.rows[0];
 };
 
-// DELETE A LIST ITEM
-const deleteListItem = async (listId, itemId, is_admin, userId) => {
+// TOGGLE COMPLETE STATUS OF ALL LIST ITEMS
+const toggleCompleteAll = async (listId, bool, is_admin, userId) => {
+  const result = await pool.query(
+    `
+      UPDATE list_items li
+      SET completed = $1
+      FROM lists l
+      WHERE li.list_id = l.id
+      AND li.list_id = $2
+      AND (l.created_by = $3 OR l.assigned_to = $3 OR $4 = true)
+      RETURNING l.id, l.completed, l.updated_at
+    `,
+    [bool, listId, userId, is_admin],
+  );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Failed to toggle completed status");
+  }
+
+  customConsoleLog("MODEL: ", listId, bool);
+
+  return result.rows[0];
+};
+
+// DELETE LIST ITEMS
+const deleteListItems = async (listId, itemIds, is_admin, userId) => {
   const result = await pool.query(
     `
       DELETE FROM list_items li
       USING lists l
       WHERE li.list_id = l.id
       AND li.list_id = $1
-      AND li.id = $2
+      AND li.id = ANY($2)
       AND (l.created_by = $3 OR l.assigned_to = $3 OR $4 = true)
       RETURNING li.id
     `,
-    [listId, itemId, userId, is_admin],
+    [listId, itemIds, userId, is_admin],
   );
 
   if (result.rows.length === 0) {
@@ -124,5 +149,6 @@ module.exports = {
   getListItemById,
   updateListItem,
   toggleComplete,
-  deleteListItem,
+  toggleCompleteAll,
+  deleteListItems,
 };
