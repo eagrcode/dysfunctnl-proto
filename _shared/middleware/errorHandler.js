@@ -1,6 +1,8 @@
+const { logger } = require("../logger/logger");
+
 // middleware/errorHandler.js
 const errorHandler = (err, req, res, next) => {
-  console.error("Error:", {
+  logger.error("Server error:", {
     message: err.message,
     ...(err.conditions && { conditions: err.conditions }),
     statusCode: err.statusCode,
