@@ -1,14 +1,48 @@
 const jwt = require("jsonwebtoken");
-const pool = require("../utils/db");
+const { AUTH_CODES } = require("../utils/errors");
+const { logger } = require("../logger/logger");
 
-const authenticate = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ success: false, message: "Unauthorized", code: "UNAUTHORISED" });
+const reject = (res, message, code) =>
+  res.status(401).json({
+    success: false,
+    message,
+    code,
+  });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(401).json({ success: false, message: "Invalid token", code: "UNAUTHORISED" });
+const authenticate = (req, res, next) => {
+  logger.info(`Authenticating request:`, {
+    method: req.method,
+    url: req.originalUrl,
+    headers: req.headers,
+  });
 
-    // Just store basic user info - no groups needed here
+  const authorization = req.get("authorization");
+
+  logger.info(`Authorization header:`, { authorization });
+
+  if (!authorization) {
+    return reject(res, "Access token required", AUTH_CODES.ACCESS_TOKEN_MISSING);
+  }
+
+  const match = authorization.match(/^Bearer\s+(\S+)$/i);
+
+  if (!match) {
+    return reject(res, "Invalid token", AUTH_CODES.ACCESS_TOKEN_INVALID);
+  }
+
+  const token = match[1];
+
+  jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
+    if (error?.name === "TokenExpiredError") {
+      logger.warn("Token expired:", { token });
+      return reject(res, "Invalid token", AUTH_CODES.ACCESS_TOKEN_EXPIRED);
+    }
+
+    if (error) {
+      logger.warn("Invalid token:", { token, error });
+      return reject(res, "Invalid token", AUTH_CODES.ACCESS_TOKEN_INVALID);
+    }
+
     req.user = user;
     next();
   });

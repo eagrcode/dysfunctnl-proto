@@ -15,9 +15,9 @@ class NotFoundError extends AppError {
 }
 
 class ConflictError extends AppError {
-  constructor(message = "Resource already exists") {
+  constructor(message = "Resource already exists", code = "CONFLICT") {
     super(message, 409);
-    this.code = "CONFLICT";
+    this.code = code;
   }
 }
 
@@ -30,9 +30,9 @@ class ValidationError extends AppError {
 }
 
 class UnauthorisedError extends AppError {
-  constructor(message = "Unauthorised") {
+  constructor(message = "Unauthorised", code = AUTH_CODES.UNAUTHORISED) {
     super(message, 401);
-    this.code = "UNAUTHORISED";
+    this.code = code;
   }
 }
 
@@ -73,6 +73,16 @@ class InvalidFileTypeError extends UploadError {
   }
 }
 
+const AUTH_CODES = Object.freeze({
+  UNAUTHORISED: "UNAUTHORISED",
+  ACCESS_TOKEN_MISSING: "ACCESS_TOKEN_MISSING",
+  ACCESS_TOKEN_EXPIRED: "ACCESS_TOKEN_EXPIRED",
+  ACCESS_TOKEN_INVALID: "ACCESS_TOKEN_INVALID",
+  REFRESH_TOKEN_REQUIRED: "REFRESH_TOKEN_REQUIRED",
+  REFRESH_TOKEN_INVALID: "REFRESH_TOKEN_INVALID",
+  EMAIL_ALREADY_EXISTS: "EMAIL_ALREADY_EXISTS",
+});
+
 module.exports = {
   AppError,
   NotFoundError,
@@ -84,4 +94,5 @@ module.exports = {
   FileTooLargeError,
   InvalidFileTypeError,
   FailedActionError,
+  AUTH_CODES,
 };
