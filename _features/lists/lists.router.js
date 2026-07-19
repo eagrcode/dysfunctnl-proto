@@ -3,8 +3,8 @@ const {
   handleGetAllLists,
   handleCreateList,
   handleGetListById,
-  handleUpdateList,
   handleDeleteList,
+  handleRenameList,
 } = require("./lists.controller");
 const {
   handleGetListItems,
@@ -25,7 +25,7 @@ listsRouter.use("/:listId", validateUUIDParams);
 listsRouter.get("/", handleGetAllLists);
 listsRouter.post("/", handleCreateList);
 listsRouter.get("/:listId", handleGetListById);
-listsRouter.patch("/:listId", handleUpdateList);
+listsRouter.patch("/:listId", handleRenameList);
 listsRouter.delete("/:listId", handleDeleteList);
 
 /* LIST ITEM ROUTES */

@@ -25,29 +25,29 @@ const getAllLists = async (groupId, { limit, cursor }) => {
 };
 
 // CREATE NEW LIST
-const createList = async (userId, groupId, listType, title, assignedTo, itemsArr = []) => {
+const createList = async (userId, groupId, listType, title) => {
   return withTransaction(async (client) => {
     const listRes = await client.query(
       `INSERT INTO lists 
-       (created_by, group_id, list_type, title, assigned_to) 
-       VALUES ($1, $2, $3, $4, $5) 
+       (created_by, group_id, list_type, title) 
+       VALUES ($1, $2, $3, $4) 
        RETURNING *`,
-      [userId, groupId, listType, title, assignedTo],
+      [userId, groupId, listType, title],
     );
 
     const listData = listRes.rows[0];
 
-    const listId = listData.id;
+    // const listId = listData.id;
 
-    if (itemsArr.length > 0) {
-      const itemValues = itemsArr.map((item, index) => `($1, $${index + 2})`).join(", ");
-      const itemsRes = await client.query(
-        `INSERT INTO list_items (list_id, content) VALUES ${itemValues} RETURNING *`,
-        [listId, ...itemsArr],
-      );
+    // if (itemsArr.length > 0) {
+    //   const itemValues = itemsArr.map((item, index) => `($1, $${index + 2})`).join(", ");
+    //   const itemsRes = await client.query(
+    //     `INSERT INTO list_items (list_id, content) VALUES ${itemValues} RETURNING *`,
+    //     [listId, ...itemsArr],
+    //   );
 
-      listData.items = itemsRes ? itemsRes.rows : [];
-    }
+    //   listData.items = itemsRes ? itemsRes.rows : [];
+    // }
 
     return listData;
   });
@@ -68,48 +68,69 @@ const getListById = async (groupId, listId) => {
 };
 
 // UPDATE A LIST
-const updateList = async (groupId, listId, updates, is_admin, userId) => {
-  const fields = [];
-  const values = [];
-  let paramIndex = 1;
+// const updateList = async (groupId, listId, updates, is_admin, userId) => {
+//   const fields = [];
+//   const values = [];
+//   let paramIndex = 1;
 
-  // Dynamic query based on provided updates
-  if (updates.listType !== undefined) {
-    fields.push(`list_type = $${paramIndex++}`);
-    values.push(updates.listType);
-  }
-  if (updates.title !== undefined) {
-    fields.push(`title = $${paramIndex++}`);
-    values.push(updates.title);
-  }
-  if (updates.assignedTo !== undefined) {
-    fields.push(`assigned_to = $${paramIndex++}`);
-    values.push(updates.assignedTo);
-  }
-  if (updates.dueDate !== undefined) {
-    fields.push(`due_date = $${paramIndex++}`);
-    values.push(updates.dueDate);
-  }
+//   // Dynamic query based on provided updates
+//   if (updates.listType !== undefined) {
+//     fields.push(`list_type = $${paramIndex++}`);
+//     values.push(updates.listType);
+//   }
+//   if (updates.title !== undefined) {
+//     fields.push(`title = $${paramIndex++}`);
+//     values.push(updates.title);
+//   }
+//   if (updates.assignedTo !== undefined) {
+//     fields.push(`assigned_to = $${paramIndex++}`);
+//     values.push(updates.assignedTo);
+//   }
+//   if (updates.dueDate !== undefined) {
+//     fields.push(`due_date = $${paramIndex++}`);
+//     values.push(updates.dueDate);
+//   }
 
-  // Update the timestamp
-  fields.push(`updated_at = NOW()`);
+//   // Update the timestamp
+//   fields.push(`updated_at = NOW()`);
 
-  // Add groupId and listId as the final parameters
-  values.push(groupId, listId, userId, is_admin);
+//   // Add groupId and listId as the final parameters
+//   values.push(groupId, listId, userId, is_admin);
 
-  const query = `
-      UPDATE lists
-      SET ${fields.join(", ")}
-      WHERE group_id = $${paramIndex++} 
-      AND id = $${paramIndex++}
-      AND (created_by = $${paramIndex} OR assigned_to = $${paramIndex++} OR $${paramIndex} = true)
-      RETURNING *
-    `;
+//   const query = `
+//       UPDATE lists
+//       SET ${fields.join(", ")}
+//       WHERE group_id = $${paramIndex++}
+//       AND id = $${paramIndex++}
+//       AND (created_by = $${paramIndex} OR assigned_to = $${paramIndex++} OR $${paramIndex} = true)
+//       RETURNING *
+//     `;
 
-  const result = await pool.query(query, values);
+//   const result = await pool.query(query, values);
+
+//   if (result.rows.length === 0) {
+//     throw new ForbiddenError("List not found or permission denied");
+//   }
+
+//   return result.rows[0];
+// };
+
+// RENAME LIST
+const renameList = async (groupId, listId, newTitle, is_admin, userId) => {
+  const result = await pool.query(
+    `
+      UPDATE lists 
+      SET title = $1 
+      WHERE group_id = $2 
+      AND id = $3
+      AND (created_by = $4 OR $5 = true) 
+      RETURNING title
+    `,
+    [newTitle, groupId, listId, userId, is_admin],
+  );
 
   if (result.rows.length === 0) {
-    throw new ForbiddenError("List not found or permission denied");
+    throw new NotFoundError("List not found");
   }
 
   return result.rows[0];
@@ -139,6 +160,7 @@ module.exports = {
   getAllLists,
   createList,
   getListById,
-  updateList,
+  // updateList,
   deleteList,
+  renameList,
 };
