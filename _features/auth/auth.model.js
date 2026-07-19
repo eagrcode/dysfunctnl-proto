@@ -1,6 +1,5 @@
 const pool = require("../../_shared/utils/db");
-const { NotFoundError } = require("../../_shared/utils/errors");
-const customConsoleLog = require("../../_shared/utils/customConsoleLog");
+const { logger } = require("../../_shared/logger/logger");
 
 // REGISTRATION
 const registration = async (email, password_hash, first_name, last_name) => {
@@ -19,27 +18,10 @@ const login = async (email) => {
   return result.rows[0];
 };
 
-// CHECK IF CURRENT REFRESH TOKEN
-const getRefreshToken = async (tokenHash) => {
-  const query = `
-    SELECT user_id, token_hash 
-    FROM refresh_tokens
-    WHERE token_hash = $1
-    AND expires_at > NOW()
-  `;
-
-  const result = await pool.query(query, [tokenHash]);
-
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Refresh token not found");
-  }
-
-  return result.rows[0];
-};
-
 // ADD REFRESH TOKEN
 const addRefreshToken = async (userId, tokenHash) => {
-  customConsoleLog("Adding refresh token...", userId);
+  logger.info(`Adding refresh token:`, { userId });
+
   const query = `
     INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
     VALUES (
@@ -52,17 +34,40 @@ const addRefreshToken = async (userId, tokenHash) => {
       token_hash = EXCLUDED.token_hash,
       expires_at = EXCLUDED.expires_at,
       updated_at = now()
-    RETURNING token_hash, expires_at, updated_at
+    RETURNING expires_at, updated_at
   `;
 
   const result = await pool.query(query, [userId, tokenHash]);
 
+  logger.info(`Refresh token added/updated:`, {
+    userId,
+    ...result.rows[0],
+  });
+
   return result.rows[0];
+};
+
+// ROTATE REFRESH TOKEN
+const rotateRefreshToken = async (currentTokenHash, newTokenHash) => {
+  const query = `
+    UPDATE refresh_tokens
+    SET
+      token_hash = $2,
+      expires_at = now() + interval '30 days',
+      updated_at = now()
+    WHERE token_hash = $1
+      AND expires_at > now()
+    RETURNING user_id, expires_at, updated_at
+  `;
+
+  const result = await pool.query(query, [currentTokenHash, newTokenHash]);
+
+  return result.rows[0] ?? null;
 };
 
 module.exports = {
   registration,
   login,
-  getRefreshToken,
+  rotateRefreshToken,
   addRefreshToken,
 };

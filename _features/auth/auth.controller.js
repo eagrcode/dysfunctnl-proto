@@ -3,17 +3,14 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("../../_shared/utils/db");
 const { body, validationResult } = require("express-validator");
+const { logger } = require("../../_shared/logger/logger");
+const { login, addRefreshToken, rotateRefreshToken, registration } = require("./auth.model");
+
 const {
-  login,
-  getRefreshToken,
-  updateRefreshToken,
-  addRefreshToken,
-  registration,
-} = require("./auth.model");
-const {
+  AUTH_CODES,
   ValidationError,
   UnauthorisedError,
-  ForbiddenError,
+  ConflictError,
 } = require("../../_shared/utils/errors");
 
 const DUMMY_HASH = bcrypt.hashSync("dummy", 10);
@@ -79,9 +76,43 @@ const handleUserRegistration = [
 
     const password_hash = await bcrypt.hash(password, 10);
 
-    const result = await registration(email, password_hash, first_name, last_name);
+    try {
+      const result = await registration(email, password_hash, first_name, last_name);
 
-    res.status(201).json({ success: true, data: result });
+      const accessToken = jwt.sign({ id: result.id }, process.env.JWT_SECRET, {
+        expiresIn: "15m",
+      });
+      const refreshToken = crypto.randomBytes(64).toString("hex");
+      const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
+      const tokenRes = await addRefreshToken(result.id, tokenHash);
+
+      if (!tokenRes) {
+        throw new Error("Failed to add refresh token");
+      }
+
+      const authResponse = {
+        user: {
+          id: result.id,
+          email: result.email,
+          first_name: result.first_name,
+          last_name: result.last_name,
+        },
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
+      };
+
+      return res.status(201).json({ success: true, data: authResponse });
+    } catch (err) {
+      const isEmailConflict = err.code === "23505" && err.constraint === "users_email_key";
+
+      if (isEmailConflict) {
+        throw new ConflictError("Email already exists", AUTH_CODES.EMAIL_ALREADY_EXISTS);
+      }
+      throw err;
+    }
   },
 ];
 
@@ -94,8 +125,6 @@ const handleUserLogin = [
     if (!errors.isEmpty()) {
       throw new ValidationError("Validation failed", errors.array());
     }
-
-    let userData;
 
     const { email, password } = req.body;
 
@@ -114,54 +143,59 @@ const handleUserLogin = [
 
     await addRefreshToken(user.id, tokenHash);
 
-    userData = {
-      id: user.id,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      accessToken,
-      refreshToken,
+    const authResponse = {
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      },
+      tokens: {
+        accessToken,
+        refreshToken,
+      },
     };
 
-    res.status(200).json({ success: true, user: userData });
+    res.status(200).json({ success: true, data: authResponse });
   },
 ];
 
 // REFRESH TOKEN
 const handleRefreshAccessToken = async (req, res) => {
-  const { refreshToken } = req.body;
+  const { refreshToken } = req.body ?? {};
 
-  console.log("Received refresh token:", refreshToken ? refreshToken : null);
-
-  if (!refreshToken) throw new UnauthorisedError("Refresh token required");
-
-  const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
-
-  const currentToken = await getRefreshToken(tokenHash);
-
-  console.log("Current token from DB:", currentToken);
-
-  if (!currentToken) {
-    throw new ForbiddenError("Invalid or expired refresh token");
+  if (refreshToken == null || refreshToken === "") {
+    throw new UnauthorisedError("Refresh token required", AUTH_CODES.REFRESH_TOKEN_REQUIRED);
   }
 
-  const userId = currentToken.user_id;
+  if (typeof refreshToken !== "string" || !/^[0-9a-f]{128}$/.test(refreshToken)) {
+    throw new UnauthorisedError(
+      "Invalid or expired refresh token",
+      AUTH_CODES.REFRESH_TOKEN_INVALID,
+    );
+  }
+
+  const currentTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
   const newRefreshToken = crypto.randomBytes(64).toString("hex");
   const newTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
-  const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+  const rotatedToken = await rotateRefreshToken(currentTokenHash, newTokenHash);
+
+  if (!rotatedToken) {
+    throw new UnauthorisedError(
+      "Invalid or expired refresh token",
+      AUTH_CODES.REFRESH_TOKEN_INVALID,
+    );
+  }
+
+  const accessToken = jwt.sign({ id: rotatedToken.user_id }, process.env.JWT_SECRET, {
     expiresIn: "15m",
   });
 
-  console.log(
-    "Token match: updating to new refresh token for user ID:",
-    userId,
+  // Keep this response shape unchanged for the current client.
+  res.status(200).json({
     accessToken,
-    newTokenHash,
-  );
-
-  await addRefreshToken(userId, newTokenHash);
-
-  res.json({ accessToken, refreshToken: newRefreshToken });
+    refreshToken: newRefreshToken,
+  });
 };
 
 module.exports = {
