@@ -2,6 +2,7 @@ const request = require("supertest");
 const app = require("../../app"); // Adjust path as needed
 const dotenv = require("dotenv");
 const customConsoleLog = require("../utils/customConsoleLog");
+const { logger } = require("../../_shared/logger/logger");
 
 dotenv.config();
 
@@ -25,8 +26,17 @@ const registerUser = async () => {
     );
   }
 
-  console.log("REGISTER MEMBER:", JSON.stringify(response.body, null, 2));
-  const { id: userId, email } = response.body;
+  logger.info("REGISTER MEMBER:", {
+    success: response.body.success,
+    user: {
+      id: response.body.data.id,
+      email: response.body.data.email,
+      first_name: response.body.data.first_name,
+      last_name: response.body.data.last_name,
+    },
+  });
+
+  const { id: userId, email } = response.body.data;
 
   return {
     userId,
@@ -53,7 +63,18 @@ const loginUser = async (email) => {
       );
     }
 
-    console.log("LOGIN:", JSON.stringify(response.body, null, 2));
+    logger.info("LOGIN:", {
+      success: response.body.success,
+      user: {
+        id: response.body.user.id,
+        email: response.body.user.email,
+        first_name: response.body.user.first_name,
+        last_name: response.body.user.last_name,
+      },
+      accessToken: response.body.user.accessToken ? true : false,
+      refreshToken: response.body.user.refreshToken ? true : false,
+    });
+
     const { user } = response.body;
 
     return {
@@ -81,8 +102,11 @@ const createGroup = async (data, accessToken) => {
       );
     }
 
-    console.log("CREATE GROUP:", JSON.stringify(response.body, null, 2));
-    groupId = response.body.data;
+    logger.info("CREATE GROUP:", {
+      success: response.body.success,
+      group: response.body.data,
+    });
+    const groupId = response.body.data;
 
     return groupId;
   } catch (error) {
@@ -99,7 +123,10 @@ const addMember = async (groupId, memberId, adminAccessToken) => {
       .set("Content-Type", "application/json")
       .set("Authorization", `Bearer ${adminAccessToken}`);
 
-    console.log("ADD MEMBER:", JSON.stringify(response.body, null, 2));
+    logger.info("ADD MEMBER:", {
+      success: response.body.success,
+      member: response.body.data,
+    });
 
     if (response.status !== 201) {
       throw new Error(
@@ -133,7 +160,10 @@ const createTextChannel = async (groupId, channelData, accessToken) => {
       );
     }
 
-    console.log("CREATE TEXT CHANNEL:", JSON.stringify(response.body, null, 2));
+    logger.info("CREATE TEXT CHANNEL:", {
+      success: response.body.success,
+      channel: response.body.data,
+    });
 
     const channelId = response.body.data.id;
 
@@ -158,7 +188,10 @@ const createAlbum = async (groupId, albumData, accessToken) => {
       );
     }
 
-    console.log("CREATE ALBUM:", JSON.stringify(response.body, null, 2));
+    logger.info("CREATE ALBUM:", {
+      success: response.body.success,
+      album: response.body.data,
+    });
 
     const albumId = response.body.data.id;
 
@@ -182,7 +215,10 @@ const uploadImageToAlbum = async (groupId, albumId, accessToken) => {
       );
     }
 
-    console.log("UPLOAD IMAGE:", JSON.stringify(response.body, null, 2));
+    logger.info("UPLOAD IMAGE:", {
+      success: response.body.success,
+      image: response.body.data,
+    });
 
     const imageId = response.body.data.id;
 

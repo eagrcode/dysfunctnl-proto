@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "test:refresh-storm": "cross-env NODE_ENV=test LOG_LEVEL=error DOTENV_CONFIG_QUIET=true node _features/auth/tests/refreshStorm.demo.js",
     "test:coverage": "jest --coverage",
     "start": "node --watch server.js"
   },

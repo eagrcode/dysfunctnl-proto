@@ -1,10 +1,13 @@
 const request = require("supertest");
+const jwt = require("jsonwebtoken");
 const app = require("../../../app");
 const { loginUser, createGroup, registerUser } = require("../../../_shared/helpers/testSetup");
 
+jest.setTimeout(20000);
+
 describe("Auth API Tests - Token Refresh Flow", () => {
-  let accessToken;
-  let refreshToken;
+  let email;
+  let userId;
   let groupId;
 
   const groupData = {
@@ -12,55 +15,132 @@ describe("Auth API Tests - Token Refresh Flow", () => {
     description: "Test description",
   };
 
-  // Setup: Login to get initial tokens, create group to fetch later
+  const postRefresh = (body) => request(app).post("/auth/refresh").send(body);
+
+  const getGroup = (accessToken) => {
+    const testRequest = request(app).get(`/groups/${groupId}`);
+
+    return accessToken
+      ? testRequest.set("Authorization", `Bearer ${accessToken}`)
+      : testRequest;
+  };
+
+  const createExpiredAccessToken = () =>
+    jwt.sign(
+      {
+        id: userId,
+        exp: Math.floor(Date.now() / 1000) - 60,
+      },
+      process.env.JWT_SECRET,
+    );
+
   beforeAll(async () => {
-    const { email } = await registerUser();
+    const registeredUser = await registerUser();
+    email = registeredUser.email;
+    userId = registeredUser.userId;
 
-    const { accessToken: initialAccessToken, refreshToken: initialRefreshToken } =
-      await loginUser(email);
-    accessToken = initialAccessToken;
-    refreshToken = initialRefreshToken;
-
+    const { accessToken } = await loginUser(email);
     groupId = await createGroup(groupData, accessToken);
   });
 
-  test("should attempt access, refresh if invalid, and retry", async () => {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+  test("returns stable codes for missing and invalid access tokens", async () => {
+    const missingTokenResponse = await getGroup();
 
-    console.log("Attempting to access protected resource with expired access token:", accessToken);
+    expect(missingTokenResponse.status).toBe(401);
+    expect(missingTokenResponse.body).toMatchObject({
+      success: false,
+      code: "ACCESS_TOKEN_MISSING",
+    });
 
-    let response = await request(app)
-      .get(`/groups/${groupId}`)
-      .set("Content-Type", "application/json")
-      .set("Authorization", `Bearer ${accessToken}`);
+    const invalidTokenResponse = await getGroup("not-a-valid-jwt");
 
-    console.log("Initial Response:", JSON.stringify(response.body, null, 2));
+    expect(invalidTokenResponse.status).toBe(401);
+    expect(invalidTokenResponse.body).toMatchObject({
+      success: false,
+      code: "ACCESS_TOKEN_INVALID",
+    });
+  });
 
-    if (response.status === 401 && response.body.message === "Invalid token") {
-      console.log("Access token expired, attempting to refresh...");
+  test("refreshes an expired access token, rotates the refresh token, and retries", async () => {
+    const { refreshToken } = await loginUser(email);
+    const expiredAccessToken = createExpiredAccessToken();
 
-      const refreshResponse = await request(app)
-        .post("/auth/refresh")
-        .send({ refreshToken })
-        .set("Content-Type", "application/json");
+    const expiredTokenResponse = await getGroup(expiredAccessToken);
 
-      console.log("NEW TOKENS:", JSON.stringify(refreshResponse.body, null, 2));
+    expect(expiredTokenResponse.status).toBe(401);
+    expect(expiredTokenResponse.body).toMatchObject({
+      success: false,
+      code: "ACCESS_TOKEN_EXPIRED",
+    });
 
-      expect(refreshResponse.status).toBe(200);
-      expect(refreshResponse.body.accessToken).toBeDefined();
-      accessToken = refreshResponse.body.accessToken;
+    const refreshResponse = await postRefresh({ refreshToken });
 
-      console.log("Retrying access with new access token:", accessToken);
+    expect(refreshResponse.status).toBe(200);
+    expect(typeof refreshResponse.body.accessToken).toBe("string");
+    expect(typeof refreshResponse.body.refreshToken).toBe("string");
+    expect(refreshResponse.body.refreshToken).not.toBe(refreshToken);
 
-      response = await request(app)
-        .get(`/groups/${groupId}`)
-        .set("Content-Type", "application/json")
-        .set("Authorization", `Bearer ${accessToken}`);
+    const retriedResponse = await getGroup(refreshResponse.body.accessToken);
 
-      console.log("Refreshed Response:", JSON.stringify(response.body, null, 2));
-    }
+    expect(retriedResponse.status).toBe(200);
+    expect(retriedResponse.body.success).toBe(true);
 
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-  }, 20000);
+    const reusedTokenResponse = await postRefresh({ refreshToken });
+
+    expect(reusedTokenResponse.status).toBe(401);
+    expect(reusedTokenResponse.body).toMatchObject({
+      success: false,
+      code: "REFRESH_TOKEN_INVALID",
+    });
+
+    const nextRotationResponse = await postRefresh({
+      refreshToken: refreshResponse.body.refreshToken,
+    });
+
+    expect(nextRotationResponse.status).toBe(200);
+    expect(typeof nextRotationResponse.body.accessToken).toBe("string");
+    expect(typeof nextRotationResponse.body.refreshToken).toBe("string");
+  });
+
+  test("allows exactly one concurrent refresh with the same token", async () => {
+    const { refreshToken } = await loginUser(email);
+
+    const responses = await Promise.all([
+      postRefresh({ refreshToken }),
+      postRefresh({ refreshToken }),
+    ]);
+
+    expect(responses.map(({ status }) => status).sort()).toEqual([200, 401]);
+
+    const successfulResponse = responses.find(({ status }) => status === 200);
+    const rejectedResponse = responses.find(({ status }) => status === 401);
+
+    expect(successfulResponse).toBeDefined();
+    expect(rejectedResponse).toBeDefined();
+    expect(rejectedResponse.body).toMatchObject({
+      success: false,
+      code: "REFRESH_TOKEN_INVALID",
+    });
+
+    const followUpResponse = await postRefresh({
+      refreshToken: successfulResponse.body.refreshToken,
+    });
+
+    expect(followUpResponse.status).toBe(200);
+  });
+
+  test.each([
+    ["missing", {}, "REFRESH_TOKEN_REQUIRED"],
+    ["empty", { refreshToken: "" }, "REFRESH_TOKEN_REQUIRED"],
+    ["malformed", { refreshToken: "not-a-refresh-token" }, "REFRESH_TOKEN_INVALID"],
+    ["non-string", { refreshToken: 42 }, "REFRESH_TOKEN_INVALID"],
+  ])("rejects a %s refresh token", async (_caseName, body, expectedCode) => {
+    const response = await postRefresh(body);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toMatchObject({
+      success: false,
+      code: expectedCode,
+    });
+  });
 });
