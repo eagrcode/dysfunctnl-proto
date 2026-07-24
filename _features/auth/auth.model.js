@@ -39,11 +39,6 @@ const addRefreshToken = async (userId, tokenHash) => {
 
   const result = await pool.query(query, [userId, tokenHash]);
 
-  logger.info(`Refresh token added/updated:`, {
-    userId,
-    ...result.rows[0],
-  });
-
   return result.rows[0];
 };
 
