@@ -20,7 +20,7 @@ const createGroup = async (name, createdById, description) => {
       [createdById, groupResultId, true],
     );
 
-    return groupResultId;
+    return groupResult.rows[0];
   });
 };
 
