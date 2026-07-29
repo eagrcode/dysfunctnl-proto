@@ -1,59 +1,57 @@
 class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, statusCode = 500, code = "APP_ERROR", errors) {
     super(message);
+    this.name = this.constructor.name;
     this.statusCode = statusCode;
+    this.code = code;
     this.isOperational = true;
+
+    if (errors?.length) {
+      this.errors = errors;
+    }
+
     Error.captureStackTrace?.(this, this.constructor);
   }
 }
 
 class NotFoundError extends AppError {
   constructor(message = "Resource not found") {
-    super(message, 404);
-    this.code = "NOT_FOUND";
+    super(message, 404, "NOT_FOUND");
   }
 }
 
 class ConflictError extends AppError {
   constructor(message = "Resource already exists", code = "CONFLICT") {
-    super(message, 409);
-    this.code = code;
+    super(message, 409, code);
   }
 }
 
 class ValidationError extends AppError {
   constructor(message = "Validation failed", errors = []) {
-    super(message, 400);
-    this.code = "VALIDATION_ERROR";
-    this.errors = errors;
+    const normalisedErrors = errors.map((error) => ({
+      field: error.path ?? error.param ?? error.field ?? "unknown",
+      message: error.msg ?? error.message ?? "Invalid value",
+    }));
+
+    super(message, 400, "VALIDATION_ERROR", normalisedErrors);
   }
 }
 
 class UnauthorisedError extends AppError {
   constructor(message = "Unauthorised", code = AUTH_CODES.UNAUTHORISED) {
-    super(message, 401);
-    this.code = code;
+    super(message, 401, code);
   }
 }
 
 class ForbiddenError extends AppError {
   constructor(message = "Permission denied") {
-    super(message, 403);
-    this.code = "PERMISSION_DENIED";
-  }
-}
-
-class FailedActionError extends AppError {
-  constructor(message = "", conditions = {}) {
-    super(message, 403);
-    this.conditions = conditions;
-    this.code = "ACTION_FAILED";
+    super(message, 403, "PERMISSION_DENIED");
   }
 }
 
 class UploadError extends AppError {
-  constructor(message, statusCode = 400, tempFilePath = null) {
-    super(message, statusCode);
+  constructor(message, statusCode = 400, code = "UPLOAD_ERROR", tempFilePath = null) {
+    super(message, statusCode, code);
     this.name = "UploadError";
     this.tempFilePath = tempFilePath;
   }
@@ -61,15 +59,15 @@ class UploadError extends AppError {
 
 class FileTooLargeError extends UploadError {
   constructor(message = "File size too large", tempFilePath) {
-    super(message, 413, tempFilePath);
+    super(message, 413, "FILE_TOO_LARGE", tempFilePath);
     this.name = "FileTooLargeError";
   }
 }
 
 class InvalidFileTypeError extends UploadError {
   constructor(message = "Invalid file type") {
-    super(message, 415);
-    this.code = "INVALID_FILE_TYPE";
+    super(message, 415, "INVALID_FILE_TYPE");
+    this.name = "InvalidFileTypeError";
   }
 }
 
@@ -93,6 +91,5 @@ module.exports = {
   UploadError,
   FileTooLargeError,
   InvalidFileTypeError,
-  FailedActionError,
   AUTH_CODES,
 };

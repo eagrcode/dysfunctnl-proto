@@ -1,5 +1,5 @@
 const pool = require("../../../../_shared/utils/db");
-const { FailedActionError, NotFoundError } = require("../../../../_shared/utils/errors");
+const { NotFoundError } = require("../../../../_shared/utils/errors");
 
 // ADD COMMENT
 const addComment = async (mediaId, senderId, content) => {

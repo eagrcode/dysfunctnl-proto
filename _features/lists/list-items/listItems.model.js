@@ -1,10 +1,6 @@
 const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
 const pool = require("../../../_shared/utils/db");
-const {
-  NotFoundError,
-  ForbiddenError,
-  FailedActionError,
-} = require("../../../_shared/utils/errors");
+const { NotFoundError, ForbiddenError } = require("../../../_shared/utils/errors");
 
 // GET ALL LIST ITEMS
 const getListItems = async (listId) => {
@@ -17,17 +13,18 @@ const getListItems = async (listId) => {
 };
 
 // CREATE NEW LIST ITEM
-const createListItem = async (listId, content, is_admin, userId) => {
+const createListItem = async (groupId, listId, content, is_admin, userId) => {
   const result = await pool.query(
     `
-       INSERT INTO list_items (list_id, content)
-       SELECT $1, $2
-       FROM lists
-       WHERE id = $1
-       AND (created_by = $3 OR assigned_to = $3 OR $4 = true)
-       RETURNING *
+      INSERT INTO list_items (list_id, content)
+      SELECT l.id, $3
+      FROM lists l
+      WHERE l.group_id = $1
+      AND l.id = $2
+      AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
+      RETURNING *
     `,
-    [listId, content, userId, is_admin],
+    [groupId, listId, content, userId, is_admin],
   );
 
   if (result.rows.length === 0) {
@@ -38,11 +35,17 @@ const createListItem = async (listId, content, is_admin, userId) => {
 };
 
 // GET LIST ITEM BY ID
-const getListItemById = async (listId, itemId) => {
-  const result = await pool.query("SELECT * FROM list_items WHERE list_id = $1 AND id = $2", [
-    listId,
-    itemId,
-  ]);
+const getListItemById = async (groupId, listId, itemId) => {
+  const result = await pool.query(
+    `
+      SELECT li.* FROM list_items li
+      JOIN lists l ON li.list_id = l.id
+      WHERE l.group_id = $1
+      AND li.list_id = $2
+      AND li.id = $3
+    `,
+    [groupId, listId, itemId],
+  );
 
   if (result.rows.length === 0) {
     throw new NotFoundError("List item not found");
@@ -52,19 +55,20 @@ const getListItemById = async (listId, itemId) => {
 };
 
 // UPDATE A LIST ITEM
-const updateListItem = async (listId, itemId, content, is_admin, userId) => {
+const updateListItem = async (groupId, listId, itemId, content, is_admin, userId) => {
   const result = await pool.query(
     `
       UPDATE list_items li
       SET content = $1
       FROM lists l
       WHERE li.list_id = l.id
+      AND l.group_id = $6
       AND li.list_id = $2
       AND li.id = $3
       AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
       RETURNING li.id, li.content
     `,
-    [content, listId, itemId, userId, is_admin],
+    [content, listId, itemId, userId, is_admin, groupId],
   );
 
   if (result.rows.length === 0) {
@@ -75,19 +79,20 @@ const updateListItem = async (listId, itemId, content, is_admin, userId) => {
 };
 
 // TOGGLE COMPLETE STATUS OF A LIST ITEM
-const toggleComplete = async (listId, itemId, bool, is_admin, userId) => {
+const toggleComplete = async (groupId, listId, itemId, bool, is_admin, userId) => {
   const result = await pool.query(
     `
       UPDATE list_items li
       SET completed = $1
       FROM lists l
       WHERE li.list_id = l.id
+      AND l.group_id = $6
       AND li.list_id = $2
       AND li.id = $3
       AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
       RETURNING li.id, li.completed, li.updated_at
     `,
-    [bool, listId, itemId, userId, is_admin],
+    [bool, listId, itemId, userId, is_admin, groupId],
   );
 
   if (result.rows.length === 0) {
@@ -98,49 +103,57 @@ const toggleComplete = async (listId, itemId, bool, is_admin, userId) => {
 };
 
 // TOGGLE COMPLETE STATUS OF ALL LIST ITEMS
-const toggleCompleteAll = async (listId, bool, is_admin, userId) => {
+const toggleCompleteAll = async (groupId, listId, bool, is_admin, userId) => {
   const result = await pool.query(
     `
       UPDATE list_items li
       SET completed = $1
       FROM lists l
       WHERE li.list_id = l.id
+      AND l.group_id = $5
       AND li.list_id = $2
       AND (l.created_by = $3 OR l.assigned_to = $3 OR $4 = true)
-      RETURNING l.id, l.completed, l.updated_at
+      RETURNING li.id
     `,
-    [bool, listId, userId, is_admin],
+    [bool, listId, userId, is_admin, groupId],
   );
 
-  if (result.rows.length === 0) {
+  if (result.rowCount === 0) {
     throw new NotFoundError("Failed to toggle completed status");
   }
 
-  customConsoleLog("MODEL: ", listId, bool);
-
-  return result.rows[0];
+  return {
+    listId,
+    completed: bool,
+    updatedItemCount: result.rowCount,
+  };
 };
 
 // DELETE LIST ITEMS
-const deleteListItems = async (listId, itemIds, is_admin, userId) => {
+const deleteListItems = async (groupId, listId, itemIds, is_admin, userId) => {
   const result = await pool.query(
     `
       DELETE FROM list_items li
       USING lists l
       WHERE li.list_id = l.id
+      AND l.group_id = $5
       AND li.list_id = $1
       AND li.id = ANY($2)
       AND (l.created_by = $3 OR l.assigned_to = $3 OR $4 = true)
       RETURNING li.id
     `,
-    [listId, itemIds, userId, is_admin],
+    [listId, itemIds, userId, is_admin, groupId],
   );
 
-  if (result.rows.length === 0) {
+  if (result.rowCount === 0) {
     throw new NotFoundError("Failed to delete list item");
   }
 
-  return result.rows[0];
+  return {
+    listId,
+    deletedItemIds: result.rows.map((row) => row.id),
+    deletedCount: result.rowCount,
+  };
 };
 
 module.exports = {

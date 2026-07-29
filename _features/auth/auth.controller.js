@@ -191,7 +191,6 @@ const handleRefreshAccessToken = async (req, res) => {
     expiresIn: "15m",
   });
 
-  // Keep this response shape unchanged for the current client.
   res.status(200).json({
     accessToken,
     refreshToken: newRefreshToken,

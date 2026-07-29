@@ -1,5 +1,5 @@
 const pool = require("../../../_shared/utils/db");
-const { NotFoundError, FailedActionError } = require("../../../_shared/utils/errors");
+const { NotFoundError } = require("../../../_shared/utils/errors");
 
 const path = require("path");
 

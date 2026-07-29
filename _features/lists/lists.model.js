@@ -160,7 +160,6 @@ module.exports = {
   getAllLists,
   createList,
   getListById,
-  // updateList,
   deleteList,
   renameList,
 };

@@ -24,16 +24,14 @@ const reqValidation = {
       .notEmpty()
       .withMessage("List title is required")
       .trim()
-      .escape()
-      .isLength({ min: 1, max: 200 })
-      .withMessage("List title must be between 1 and 200 characters"),
+      .isLength({ min: 1, max: 100 })
+      .withMessage("List title must be between 1 and 100 characters"),
   ],
   handleUpdateList: [
     body("title")
       .trim()
-      .escape()
-      .isLength({ min: 1, max: 200 })
-      .withMessage("List title must be between 1 and 200 characters"),
+      .isLength({ min: 1, max: 100 })
+      .withMessage("List title must be between 1 and 100 characters"),
     body("listType")
       .optional()
       .isIn(["todo", "shopping", "other"])
@@ -45,9 +43,8 @@ const reqValidation = {
       .notEmpty()
       .withMessage("New title is required")
       .trim()
-      .escape()
-      .isLength({ min: 1, max: 50 })
-      .withMessage("New title must be between 1 and 50 characters"),
+      .isLength({ min: 1, max: 100 })
+      .withMessage("New title must be between 1 and 100 characters"),
   ],
 };
 
@@ -82,20 +79,20 @@ const handleCreateList = [
 
     const result = await createList(userId, groupId, listType, title);
 
-    const payload = {
-      id: result.id,
-      groupId: groupId,
-      listType: listType,
-      title: title,
-      createdAt: result.created_at,
-    };
+    // const payload = {
+    //   id: result.id,
+    //   groupId: groupId,
+    //   listType: listType,
+    //   title: title,
+    //   createdAt: result.created_at,
+    // };
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "list.created", payload);
+    broadcastGroupEvent(groupId, "list.created", result);
 
     res.status(201).json({
       success: true,
-      data: payload,
+      data: result,
     });
   },
 ];
@@ -181,7 +178,6 @@ module.exports = {
   handleGetAllLists,
   handleCreateList,
   handleGetListById,
-  // handleUpdateList,
   handleDeleteList,
   handleRenameList,
 };

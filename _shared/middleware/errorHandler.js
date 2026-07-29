@@ -1,44 +1,20 @@
 const { logger } = require("../logger/logger");
 
-// middleware/errorHandler.js
-const errorHandler = (err, req, res, next) => {
-  logger.error("Server error:", {
-    message: err.message,
-    ...(err.conditions && { conditions: err.conditions }),
-    statusCode: err.statusCode,
-    errorCode: err.code,
-    ...(err.errors && { validationError: err.errors }),
-    stack: err.stack,
-  });
-
-  if (err.isOperational) {
-    const response = {
-      success: false,
-      message: err.message,
-      code: err.code,
-    };
-
-    if (err.errors) {
-      response.errors = err.errors;
-    }
-
-    return res.status(err.statusCode || 400).json(response);
-  }
-
+const normaliseError = (err) => {
   if (err.code === "LIMIT_FILE_SIZE") {
-    return res.status(400).json({
-      success: false,
+    return {
+      statusCode: 413,
       message: "File too large",
       code: "FILE_TOO_LARGE",
-    });
+    };
   }
 
   if (err.code === "LIMIT_UNEXPECTED_FILE") {
-    return res.status(400).json({
-      success: false,
+    return {
+      statusCode: 400,
       message: "Unexpected file field name",
       code: "INVALID_FIELD",
-    });
+    };
   }
 
   if (
@@ -46,19 +22,59 @@ const errorHandler = (err, req, res, next) => {
     err.message?.includes("VipsJpeg") ||
     err.message?.includes("unsupported image format")
   ) {
-    return res.status(400).json({
-      success: false,
+    return {
+      statusCode: 400,
       message: "Invalid or corrupted image file",
       code: "INVALID_IMAGE",
-    });
+    };
   }
 
-  // Generic error
-  res.status(500).json({
-    success: false,
-    message: process.env.NODE_ENV === "production" ? "An unexpected error occurred" : err.message,
+  if (err.isOperational) {
+    return {
+      statusCode: err.statusCode,
+      code: err.code,
+      message: err.message,
+      ...(err.errors?.length && { errors: err.errors }),
+    };
+  }
+
+  return {
+    statusCode: 500,
+    message: "An unexpected error occurred",
     code: "INTERNAL_ERROR",
-  });
+  };
+};
+
+const errorHandler = (err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const publicError = normaliseError(err);
+  const logData = {
+    method: req.method,
+    path: req.originalUrl,
+    statusCode: publicError.statusCode,
+    code: publicError.code,
+    message: err.message,
+    ...(publicError.errors && { errors: publicError.errors }),
+    ...(publicError.statusCode >= 500 && { stack: err.stack }),
+  };
+
+  if (publicError.statusCode >= 500) {
+    logger.error("Request failed", logData);
+  } else {
+    logger.warn("Request rejected", logData);
+  }
+
+  const response = {
+    success: false,
+    code: publicError.code,
+    message: publicError.message,
+    ...(publicError.errors && { errors: publicError.errors }),
+  };
+
+  return res.status(publicError.statusCode).json(response);
 };
 
 module.exports = { errorHandler };
