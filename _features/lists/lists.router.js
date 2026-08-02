@@ -7,7 +7,6 @@ const {
   handleRenameList,
 } = require("./lists.controller");
 const {
-  handleGetListItems,
   handleCreateListItem,
   handleGetListItemById,
   handleUpdateListItem,
@@ -29,7 +28,6 @@ listsRouter.patch("/:listId", handleRenameList);
 listsRouter.delete("/:listId", handleDeleteList);
 
 /* LIST ITEM ROUTES */
-// listsRouter.get("/:listId/items", handleGetListItems);
 listsRouter.post("/:listId/items", handleCreateListItem);
 listsRouter.delete("/:listId/items/delete", handleDeleteListItems);
 listsRouter.patch("/:listId/items/toggle-all", handleToggleCompleteAll);

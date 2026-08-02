@@ -1,11 +1,4 @@
-const {
-  getAllLists,
-  createList,
-  getListById,
-  updateList,
-  deleteList,
-  renameList,
-} = require("./lists.model");
+const { getAllLists, createList, getListById, deleteList, renameList } = require("./lists.model");
 const { getListItems } = require("./list-items/listItems.model");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../_shared/utils/errors");
@@ -19,24 +12,12 @@ const reqValidation = {
   handleCreateList: [
     body("listType").isIn(["todo", "shopping", "other"]).withMessage("Invalid list type"),
     body("assignedTo").optional().isUUID().withMessage("Invalid assignedTo user ID format"),
-    body("itemsArr").optional().isArray(),
     body("title")
       .notEmpty()
       .withMessage("List title is required")
       .trim()
       .isLength({ min: 1, max: 100 })
       .withMessage("List title must be between 1 and 100 characters"),
-  ],
-  handleUpdateList: [
-    body("title")
-      .trim()
-      .isLength({ min: 1, max: 100 })
-      .withMessage("List title must be between 1 and 100 characters"),
-    body("listType")
-      .optional()
-      .isIn(["todo", "shopping", "other"])
-      .withMessage("Invalid list type"),
-    body("assignedTo").optional().isUUID().withMessage("Invalid assignedTo user ID format"),
   ],
   handleRenameList: [
     body("newTitle")
@@ -79,14 +60,6 @@ const handleCreateList = [
 
     const result = await createList(userId, groupId, listType, title);
 
-    // const payload = {
-    //   id: result.id,
-    //   groupId: groupId,
-    //   listType: listType,
-    //   title: title,
-    //   createdAt: result.created_at,
-    // };
-
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "list.created", result);
 
@@ -112,30 +85,6 @@ const handleGetListById = async (req, res) => {
   });
 };
 
-// UPDATE LIST
-// const handleUpdateList = [
-//   ...reqValidation.handleUpdateList,
-
-//   async (req, res) => {
-//     const { groupId, listId } = req.params;
-//     const { title, listType, assignedTo } = req.body;
-//     const { is_admin } = req.groupMembership;
-//     const userId = req.user.id;
-
-//     const data = {};
-//     if (title !== undefined) data.title = title;
-//     if (listType !== undefined) data.listType = listType;
-//     if (assignedTo !== undefined) data.assignedTo = assignedTo;
-
-//     const result = await updateList(groupId, listId, data, is_admin, userId);
-
-//     res.status(200).json({
-//       success: true,
-//       data: result,
-//     });
-//   },
-// ];
-
 // RENAME LIST
 const handleRenameList = [
   ...reqValidation.handleRenameList,
@@ -153,6 +102,9 @@ const handleRenameList = [
 
     const result = await renameList(groupId, listId, newTitle.trim(), is_admin, userId);
 
+    // WebSocket broadcast
+    broadcastGroupEvent(groupId, "list.renamed", result);
+
     res.status(200).json({
       success: true,
       data: result,
@@ -167,6 +119,9 @@ const handleDeleteList = async (req, res) => {
   const userId = req.user.id;
 
   const result = await deleteList(groupId, listId, is_admin, userId);
+
+  // WebSocket broadcast
+  broadcastGroupEvent(groupId, "list.deleted", result);
 
   res.status(200).json({
     success: true,

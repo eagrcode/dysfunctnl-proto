@@ -1,6 +1,5 @@
-const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
 const pool = require("../../../_shared/utils/db");
-const { NotFoundError, ForbiddenError } = require("../../../_shared/utils/errors");
+const { NotFoundError } = require("../../../_shared/utils/errors");
 
 // GET ALL LIST ITEMS
 const getListItems = async (listId) => {
@@ -66,7 +65,7 @@ const updateListItem = async (groupId, listId, itemId, content, is_admin, userId
       AND li.list_id = $2
       AND li.id = $3
       AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
-      RETURNING li.id, li.content
+      RETURNING li.list_id, li.id, li.content
     `,
     [content, listId, itemId, userId, is_admin, groupId],
   );
@@ -90,7 +89,7 @@ const toggleComplete = async (groupId, listId, itemId, bool, is_admin, userId) =
       AND li.list_id = $2
       AND li.id = $3
       AND (l.created_by = $4 OR l.assigned_to = $4 OR $5 = true)
-      RETURNING li.id, li.completed, li.updated_at
+      RETURNING li.list_id, li.id, li.completed, li.updated_at
     `,
     [bool, listId, itemId, userId, is_admin, groupId],
   );
@@ -113,7 +112,7 @@ const toggleCompleteAll = async (groupId, listId, bool, is_admin, userId) => {
       AND l.group_id = $5
       AND li.list_id = $2
       AND (l.created_by = $3 OR l.assigned_to = $3 OR $4 = true)
-      RETURNING li.id
+      RETURNING li.list_id, li.id
     `,
     [bool, listId, userId, is_admin, groupId],
   );
@@ -123,7 +122,7 @@ const toggleCompleteAll = async (groupId, listId, bool, is_admin, userId) => {
   }
 
   return {
-    listId,
+    list_id: listId,
     completed: bool,
     updatedItemCount: result.rowCount,
   };
@@ -140,7 +139,7 @@ const deleteListItems = async (groupId, listId, itemIds, is_admin, userId) => {
       AND li.list_id = $1
       AND li.id = ANY($2)
       AND (l.created_by = $3 OR l.assigned_to = $3 OR $4 = true)
-      RETURNING li.id
+      RETURNING li.list_id, li.id
     `,
     [listId, itemIds, userId, is_admin, groupId],
   );
@@ -150,7 +149,7 @@ const deleteListItems = async (groupId, listId, itemIds, is_admin, userId) => {
   }
 
   return {
-    listId,
+    list_id: listId,
     deletedItemIds: result.rows.map((row) => row.id),
     deletedCount: result.rowCount,
   };

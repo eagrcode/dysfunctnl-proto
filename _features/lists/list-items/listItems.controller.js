@@ -1,5 +1,4 @@
 const {
-  getListItems,
   createListItem,
   getListItemById,
   updateListItem,
@@ -10,14 +9,15 @@ const {
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../../_shared/utils/errors");
 const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
+const { broadcastGroupEvent } = require("../../../_shared/utils/socketService");
 
 const validateContent = [
   body("content")
     .notEmpty()
     .withMessage("Item content is required")
     .trim()
-    .isLength({ min: 1, max: 1000 })
-    .withMessage("Item content must be between 1 and 1000 characters"),
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Item content must be between 1 and 100 characters"),
 ];
 
 const reqValidation = {
@@ -27,7 +27,6 @@ const reqValidation = {
   handleToggleCompleteAll: [
     body("completed").isBoolean().withMessage("Completed must be a boolean"),
   ],
-
   handleDeleteListItems: [
     body("itemIds").isArray({ min: 1 }).withMessage("At least one item ID is required"),
     body("itemIds.*").isUUID().withMessage("Every item ID must be a valid UUID"),
@@ -49,6 +48,9 @@ const handleCreateListItem = [
     const userId = req.user.id;
 
     const result = await createListItem(groupId, listId, content, is_admin, userId);
+
+    // WebSocket broadcast
+    broadcastGroupEvent(groupId, "listItem.created", result);
 
     res.status(201).json({
       success: true,
@@ -86,6 +88,9 @@ const handleUpdateListItem = [
 
     const result = await updateListItem(groupId, listId, itemId, content, is_admin, userId);
 
+    // WebSocket broadcast
+    broadcastGroupEvent(groupId, "listItem.updated", result);
+
     res.status(200).json({
       success: true,
       data: result,
@@ -109,6 +114,9 @@ const handleToggleComplete = [
     const userId = req.user.id;
 
     const result = await toggleComplete(groupId, listId, itemId, completed, is_admin, userId);
+
+    // WebSocket broadcast
+    broadcastGroupEvent(groupId, "listItem.toggled", result);
 
     res.status(200).json({
       success: true,
@@ -135,6 +143,9 @@ const handleToggleCompleteAll = [
 
     const result = await toggleCompleteAll(groupId, listId, completed, is_admin, userId);
 
+    // WebSocket broadcast
+    broadcastGroupEvent(groupId, "listItem.toggledAll", result);
+
     res.status(200).json({
       success: true,
       data: result,
@@ -157,6 +168,9 @@ const handleDeleteListItems = [
     const userId = req.user.id;
 
     const result = await deleteListItems(groupId, listId, itemIds, is_admin, userId);
+
+    // WebSocket broadcast
+    broadcastGroupEvent(groupId, "listItem.deleted", result);
 
     res.status(200).json({
       success: true,
