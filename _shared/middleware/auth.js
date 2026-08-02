@@ -10,15 +10,12 @@ const reject = (res, message, code) =>
   });
 
 const authenticate = (req, res, next) => {
-  logger.info(`Authenticating request:`, {
+  logger.info("Authenticating request", {
     method: req.method,
     url: req.originalUrl,
-    headers: req.headers,
   });
 
   const authorization = req.get("authorization");
-
-  logger.info(`Authorization header:`, { authorization });
 
   if (!authorization) {
     return reject(res, "Access token required", AUTH_CODES.ACCESS_TOKEN_MISSING);
@@ -34,12 +31,19 @@ const authenticate = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
     if (error?.name === "TokenExpiredError") {
-      logger.warn("Token expired:", { token });
+      logger.warn("Access token expired", {
+        method: req.method,
+        url: req.originalUrl,
+      });
       return reject(res, "Invalid token", AUTH_CODES.ACCESS_TOKEN_EXPIRED);
     }
 
     if (error) {
-      logger.warn("Invalid token:", { token, error });
+      logger.warn("Access token invalid", {
+        method: req.method,
+        url: req.originalUrl,
+        reason: error.message,
+      });
       return reject(res, "Invalid token", AUTH_CODES.ACCESS_TOKEN_INVALID);
     }
 

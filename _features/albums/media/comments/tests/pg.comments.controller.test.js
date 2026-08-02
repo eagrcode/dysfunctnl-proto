@@ -3,7 +3,7 @@ const app = require("../../../../../app");
 const io = require("socket.io-client");
 const { createServer } = require("http");
 const { initSocketServer } = require("../../../../../_shared/utils/socketService");
-const customConsoleLog = require("../../../../../_shared/utils/customConsoleLog");
+const { logger } = require("../../../../../_shared/logger/logger");
 const {
   createGroup,
   loginUser,
@@ -71,10 +71,10 @@ describe("Comments API Tests - Authorised Actions", () => {
     initSocketServer(httpServer);
 
     await new Promise((resolve) => {
-      customConsoleLog("Starting test server...");
+      logger.info("Starting test server...");
       httpServer.listen(0, () => {
         serverPort = httpServer.address().port;
-        customConsoleLog(`Test server listening on port ${serverPort}`);
+        logger.info(`Test server listening on port ${serverPort}`);
         resolve();
       });
     });
@@ -93,7 +93,7 @@ describe("Comments API Tests - Authorised Actions", () => {
   // Cleanup: Delete the created group
   afterAll(async () => {
     if (groupId) {
-      customConsoleLog("CLEANUP: Deleting test group with ID:", { groupId });
+      logger.info("CLEANUP: Deleting test group with ID:", { groupId });
 
       await request(app)
         .delete(`/groups/${groupId}`)
@@ -103,12 +103,12 @@ describe("Comments API Tests - Authorised Actions", () => {
 
     // Close sockets and server
     if (httpServer.listening) {
-      customConsoleLog("Disconnecting user sockets and closing test server...");
+      logger.info("Disconnecting user sockets and closing test server...");
       await new Promise((resolve) => {
         if (adminSocket.connected) adminSocket.disconnect();
         if (memberSocket.connected) memberSocket.disconnect();
         httpServer.close(resolve);
-        customConsoleLog("Test server closed");
+        logger.info("Test server closed");
       });
     }
   });
@@ -129,7 +129,7 @@ describe("Comments API Tests - Authorised Actions", () => {
       currentSocket.connect();
 
       currentSocket.on("connect", () => {
-        customConsoleLog(`${role} connected to server:`, { socketId: currentSocket.id });
+        logger.info(`${role} connected to server:`, { socketId: currentSocket.id });
         expect(currentSocket.connected).toBe(true);
         done();
       });
@@ -151,7 +151,7 @@ describe("Comments API Tests - Authorised Actions", () => {
     ])("$role joins channel", ({ role, socket, imageId }, done) => {
       const currentSocket = socket();
 
-      customConsoleLog(`${role} attempting to join channel:`, {
+      logger.info(`${role} attempting to join channel:`, {
         type: "image",
         ids: {
           mediaId: imageId(),
@@ -165,7 +165,7 @@ describe("Comments API Tests - Authorised Actions", () => {
       });
 
       currentSocket.on("joined_channel", (data) => {
-        customConsoleLog(`${role} joined channel:`, data);
+        logger.info(`${role} joined channel:`, data);
 
         expect(data.type).toBe("image");
         expect(data.ids.mediaId).toBe(imageId());
@@ -208,10 +208,10 @@ describe("Comments API Tests - Authorised Actions", () => {
         };
 
         socket().once("new_comment", (data) => {
-          customConsoleLog(` ${role} - Received new_comment event`);
+          logger.info(` ${role} - Received new_comment event`);
           socketEventFired = true;
-          customConsoleLog(` ${role} - Socket event fired = ${socketEventFired}`);
-          customConsoleLog(`${role} - Socket event received with data:`, data);
+          logger.info(` ${role} - Socket event fired = ${socketEventFired}`);
+          logger.info(`${role} - Socket event received with data:`, data);
           expect(data).toMatchObject(responseAssertion);
         });
 
@@ -221,7 +221,7 @@ describe("Comments API Tests - Authorised Actions", () => {
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
 
-        customConsoleLog(
+        logger.info(
           `ADD COMMENT RESPONSE FOR ${role}:`,
           JSON.stringify(response.body, null, 2)
         );
@@ -270,10 +270,10 @@ describe("Comments API Tests - Authorised Actions", () => {
         };
 
         socket().once("comment_updated", (data) => {
-          customConsoleLog(` ${role} - Received comment_updated event`);
+          logger.info(` ${role} - Received comment_updated event`);
           socketEventFired = true;
-          customConsoleLog(` ${role} - Socket event fired = ${socketEventFired}`);
-          customConsoleLog(`${role} - Socket event received with data:`, data);
+          logger.info(` ${role} - Socket event fired = ${socketEventFired}`);
+          logger.info(`${role} - Socket event received with data:`, data);
           expect(data).toMatchObject(responseAssertion);
         });
 
@@ -283,7 +283,7 @@ describe("Comments API Tests - Authorised Actions", () => {
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
 
-        customConsoleLog(
+        logger.info(
           `UPDATE COMMENT RESPONSE FOR ${role}:`,
           JSON.stringify(response.body, null, 2)
         );
@@ -324,10 +324,10 @@ describe("Comments API Tests - Authorised Actions", () => {
         };
 
         socket().once("comment_deleted", (data) => {
-          customConsoleLog(` ${role} - Received comment_deleted event`);
+          logger.info(` ${role} - Received comment_deleted event`);
           socketEventFired = true;
-          customConsoleLog(` ${role} - Socket event fired = ${socketEventFired}`);
-          customConsoleLog(`${role} - Socket event received with data:`, data);
+          logger.info(` ${role} - Socket event fired = ${socketEventFired}`);
+          logger.info(`${role} - Socket event received with data:`, data);
           expect(data).toMatchObject(responseAssertion);
         });
 
@@ -336,7 +336,7 @@ describe("Comments API Tests - Authorised Actions", () => {
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${accessToken()}`);
 
-        customConsoleLog(
+        logger.info(
           `DELETE COMMENT RESPONSE FOR ${role}:`,
           JSON.stringify(response.body, null, 2)
         );

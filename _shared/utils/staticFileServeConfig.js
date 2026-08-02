@@ -1,5 +1,6 @@
 const express = require("express");
 const uploadConfig = require("../utils/uploadConfig");
+const { logger } = require("../logger/logger");
 
 const staticFileServeConfig = express.static(uploadConfig.basePath, {
   maxAge: "30d",
@@ -8,7 +9,7 @@ const staticFileServeConfig = express.static(uploadConfig.basePath, {
     res.set("X-Content-Type-Options", "nosniff");
 
     if (process.env.NODE_ENV === "development") {
-      console.log(`Serving: ${filePath}`);
+      logger.debug("Serving media file", { filePath });
     }
   },
 });

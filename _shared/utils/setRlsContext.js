@@ -1,11 +1,12 @@
 const pool = require("./db");
+const { logger } = require("../logger/logger");
 
 const escapeLiteral = (str) => {
   return "'" + (str ? str.toString().replace(/'/g, "''") : "") + "'";
 };
 
 const setRlsContext = async (userId, queryFn) => {
-  console.log("Setting RLS context for user ID:", userId);
+  logger.debug("Setting RLS context", { userId });
 
   const client = await pool.connect();
   try {
@@ -13,7 +14,6 @@ const setRlsContext = async (userId, queryFn) => {
 
     // Safely interpolate the escaped userId
     const escapedUserId = escapeLiteral(userId);
-    console.log("Escaped userId for SET:", escapedUserId);
 
     await client.query(`SET LOCAL app.current_user_id = ${escapedUserId}`);
 
@@ -28,7 +28,7 @@ const setRlsContext = async (userId, queryFn) => {
         `Failed to set RLS context: expected ${userId}, got ${currentSetting}`
       );
     }
-    console.log("RLS context set successfully:", currentSetting);
+    logger.debug("RLS context set", { userId: currentSetting });
 
     // Run the query function and pass client
     const result = await queryFn(client);

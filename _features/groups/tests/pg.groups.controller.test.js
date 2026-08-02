@@ -1,7 +1,7 @@
 const request = require("supertest");
 const app = require("../../../app");
 const dotenv = require("dotenv");
-const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
+const { logger } = require("../../../_shared/logger/logger");
 const { loginUser, registerUser, addMember } = require("../../../_shared/helpers/testSetup");
 
 dotenv.config();
@@ -43,7 +43,7 @@ describe("Groups API Tests - Authorised Actions", () => {
 
       groupId = response.body.data;
 
-      customConsoleLog("CREATE GROUP response:", response.body);
+      logger.info("CREATE GROUP response:", response.body);
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
@@ -58,7 +58,7 @@ describe("Groups API Tests - Authorised Actions", () => {
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      customConsoleLog("CREATE GROUP with missing data response:", response.body);
+      logger.info("CREATE GROUP with missing data response:", response.body);
 
       expect(response.status).toBe(400);
       expect(response.body.errors).toBeDefined();
@@ -72,7 +72,7 @@ describe("Groups API Tests - Authorised Actions", () => {
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      customConsoleLog("CREATE GROUP with invalid URL:", response.body);
+      logger.info("CREATE GROUP with invalid URL:", response.body);
 
       expect(response.status).toBe(404);
     });
@@ -86,7 +86,7 @@ describe("Groups API Tests - Authorised Actions", () => {
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      customConsoleLog("GET USER GROUPS response:", response.body);
+      logger.info("GET USER GROUPS response:", response.body);
     });
   });
 
@@ -98,7 +98,7 @@ describe("Groups API Tests - Authorised Actions", () => {
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      customConsoleLog("READ GROUP response:", response.body);
+      logger.info("READ GROUP response:", response.body);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -121,7 +121,7 @@ describe("Groups API Tests - Authorised Actions", () => {
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      customConsoleLog("UPDATE GROUP response:", response.body);
+      logger.info("UPDATE GROUP response:", response.body);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -140,7 +140,7 @@ describe("Groups API Tests - Authorised Actions", () => {
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${adminAccessToken}`);
 
-      customConsoleLog("UPDATE GROUP with missing data response:", response.body);
+      logger.info("UPDATE GROUP with missing data response:", response.body);
 
       expect(response.status).toBe(400);
       expect(response.body.errors).toBeDefined();
@@ -167,7 +167,7 @@ describe("Groups API Tests - Authorised Actions", () => {
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${memberAccessToken}`);
 
-      customConsoleLog("NON-ADMIN MEMBER READ GROUP response:", response.body);
+      logger.info("NON-ADMIN MEMBER READ GROUP response:", response.body);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);

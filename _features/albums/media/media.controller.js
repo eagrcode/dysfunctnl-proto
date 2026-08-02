@@ -1,6 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 const uploadConfig = require("../../../_shared/utils/uploadConfig");
+const { logger } = require("../../../_shared/logger/logger");
 const {
   getMediaById,
   getMediaByIdWithComments,
@@ -48,13 +49,19 @@ const handleDeleteMediaById = async (req, res) => {
   ];
 
   const deleteFiles = filePaths.map((filePath) =>
-    fs.unlink(filePath).catch((error) => {
-      if (error.code !== "ENOENT") {
-        console.error(`Error deleting file at ${filePath}:`, error);
-      }
+    fs
+      .unlink(filePath)
+      .then(() => {
+        logger.info("Deleted media file", { filePath });
+      })
+      .catch((error) => {
+        if (error.code === "ENOENT") {
+          logger.info("Media file was already absent", { filePath });
+          return;
+        }
 
-      console.log(`Successfully deleted file at ${filePath}, or file did not exist.`);
-    }),
+        logger.error("Failed to delete media file", { filePath, error });
+      }),
   );
 
   await Promise.all(deleteFiles);

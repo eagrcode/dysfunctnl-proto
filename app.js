@@ -11,10 +11,13 @@ const { NotFoundError } = require("./_shared/utils/errors");
 const userRouter = require("./_features/user/user.router");
 const authenticate = require("./_shared/middleware/auth");
 const { getCorsOptions } = require("./_shared/utils/corsConfig");
+const { logger } = require("./_shared/logger/logger");
 
 process.env.TZ = "UTC";
-console.log("Server timezone:", process.env.TZ);
-console.log("Node timezone:", Intl.DateTimeFormat().resolvedOptions().timeZone);
+logger.info("Server timezone configured", {
+  timezone: process.env.TZ,
+  resolvedTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+});
 
 const app = express();
 

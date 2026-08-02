@@ -1,4 +1,4 @@
-const customConsoleLog = require("../utils/customConsoleLog");
+const { logger } = require("../logger/logger");
 const pool = require("../utils/db");
 const { ForbiddenError, NotFoundError } = require("../utils/errors");
 
@@ -28,10 +28,10 @@ const permissionRequired = (level) => {
     const { groupId } = req.params;
     const userId = req.user.id;
 
-    customConsoleLog(`Checking user is ${level === "member" ? "a member" : `an ${level}`}...`);
+    logger.debug("Checking group permission", { groupId, userId, requiredLevel: level });
 
     if (!req.groupMembership) {
-      customConsoleLog(`Loading membership from DB...`);
+      logger.debug("Loading group membership from database", { groupId, userId });
 
       const result = await pool.query(
         `SELECT 
@@ -54,18 +54,25 @@ const permissionRequired = (level) => {
 
       req.groupMembership = result.rows[0];
 
-      customConsoleLog(
-        `Membership loaded (admin: ${req.groupMembership.is_admin}, creator: ${req.groupMembership.is_creator})`
-      );
+      logger.debug("Group membership loaded", {
+        groupId,
+        userId,
+        isAdmin: req.groupMembership.is_admin,
+        isCreator: req.groupMembership.is_creator,
+      });
     }
 
-    customConsoleLog(
-      `Using cached membership (admin: ${req.groupMembership.is_admin}, creator: ${req.groupMembership.is_creator})`
-    );
+    logger.debug("Using group membership", {
+      groupId,
+      userId,
+      isAdmin: req.groupMembership.is_admin,
+      isCreator: req.groupMembership.is_creator,
+    });
 
     const hasPermission = checkPermissionLevel(req.groupMembership, level);
 
     if (!hasPermission) {
+      logger.warn("Group permission denied", { groupId, userId, requiredLevel: level });
       throw new ForbiddenError(`Requires ${level} permission`);
     }
 

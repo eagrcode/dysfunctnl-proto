@@ -1,6 +1,5 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
-const customConsoleLog = require("./customConsoleLog");
 const { handleCheckGroupMembership } = require("./socketCheckGroupMembership");
 const { handleCheckUserGroups } = require("./checkUserGroups");
 const { NotFoundError } = require("./errors");
@@ -29,13 +28,13 @@ const initSocketServer = (httpServer) => {
     const token = socket.handshake.auth?.token;
 
     if (!token) {
-      logger.error("Socket authentication failed: missing token");
+      logger.warn("Socket authentication failed: missing token");
       return next(new Error("Authentication failed"));
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
-        logger.error("Socket authentication failed:", {
+        logger.warn("Socket authentication failed", {
           reason: err.message,
         });
 
@@ -60,7 +59,7 @@ const initSocketServer = (httpServer) => {
       const groupIds = await handleCheckUserGroups(userId);
 
       if (groupIds.length === 0) {
-        logger.error("Protected socket connected without groups", {
+        logger.warn("Protected socket connected without groups", {
           socketId: socket.id,
           userId,
         });
@@ -116,7 +115,7 @@ const initSocketServer = (httpServer) => {
 
     //   const isMember = await handleCheckGroupMembership(userId, groupId);
     //   if (!isMember) {
-    //     customConsoleLog("Unauthorised channel join attempt:", {
+    //     logger.warn("Unauthorised channel join attempt:", {
     //       userId,
     //       groupId,
     //     });
@@ -124,7 +123,7 @@ const initSocketServer = (httpServer) => {
     //   }
 
     //   socket.join(groupId);
-    //   customConsoleLog("User joined group channel:", {
+    //   logger.info("User joined group channel:", {
     //     userId: socket.user.id,
     //     groupId,
     //   });
@@ -139,7 +138,7 @@ const initSocketServer = (httpServer) => {
 
     //   const isMember = await handleCheckGroupMembership(userId, groupId);
     //   if (!isMember) {
-    //     customConsoleLog("Unauthorised channel join attempt:", {
+    //     logger.warn("Unauthorised channel join attempt:", {
     //       userId,
     //       groupId,
     //     });
@@ -148,7 +147,7 @@ const initSocketServer = (httpServer) => {
 
     //   const roomName = getRoom(type, ids);
     //   socket.join(roomName);
-    //   customConsoleLog("User joined room:", {
+    //   logger.info("User joined room:", {
     //     userId: socket.user.id,
     //     roomName,
     //   });
@@ -159,7 +158,7 @@ const initSocketServer = (httpServer) => {
     // socket.on("leave_channel", (type, ids) => {
     //   const roomName = getRoom(type, ids);
     //   socket.leave(roomName);
-    //   customConsoleLog("User left room:", {
+    //   logger.info("User left room:", {
     //     userId: socket.user.id,
     //     roomName,
     //   });
@@ -171,7 +170,7 @@ const initSocketServer = (httpServer) => {
     });
   });
 
-  customConsoleLog("Socket.io server initialised");
+  logger.info("Socket.IO server initialised");
   return io;
 };
 
@@ -189,12 +188,12 @@ const broadcastGroupEvent = (groupId, type, payload) => {
   logger.info("Broadcasted group event", {
     groupId,
     type,
-    payload,
+    payloadId: payload?.id,
   });
 };
 
 // const getRoom = (type, ids) => {
-//   customConsoleLog("Structuring room name from details:", { type, ids });
+//   logger.debug("Structuring room name from details:", { type, ids });
 //   if (type === "text_channel") {
 //     return `group_${ids.groupId}_channel_${ids.textChannelId}`;
 //   }
@@ -209,7 +208,7 @@ const broadcastGroupEvent = (groupId, type, payload) => {
 //     throw new Error("SocketService not initialised");
 //   }
 //   const roomName = getRoom(channelType, ids);
-//   customConsoleLog(`Broadcasting...`, {
+//   logger.info(`Broadcasting...`, {
 //     eventType,
 //     roomName,
 //     payload,

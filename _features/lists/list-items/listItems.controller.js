@@ -8,7 +8,7 @@ const {
 } = require("./listItems.model");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../../_shared/utils/errors");
-const customConsoleLog = require("../../../_shared/utils/customConsoleLog");
+const { logger } = require("../../../_shared/logger/logger");
 const { broadcastGroupEvent } = require("../../../_shared/utils/socketService");
 
 const validateContent = [
@@ -139,7 +139,7 @@ const handleToggleCompleteAll = [
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
 
-    customConsoleLog("CONTROLLER: ", listId, completed);
+    logger.info("Toggling all list items", { listId, completed });
 
     const result = await toggleCompleteAll(groupId, listId, completed, is_admin, userId);
 

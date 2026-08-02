@@ -1,7 +1,6 @@
 const request = require("supertest");
 const app = require("../../app"); // Adjust path as needed
 const dotenv = require("dotenv");
-const customConsoleLog = require("../utils/customConsoleLog");
 const { logger } = require("../../_shared/logger/logger");
 
 dotenv.config();

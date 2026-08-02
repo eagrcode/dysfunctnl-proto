@@ -1,4 +1,5 @@
 const fs = require("fs").promises;
+const { logger } = require("../logger/logger");
 
 const uploadCleanup = async (err, req, res, next) => {
   if (!err || !req.file?.path) {
@@ -7,9 +8,12 @@ const uploadCleanup = async (err, req, res, next) => {
 
   try {
     await fs.unlink(req.file.path);
-    console.log(`Cleaned up temp file: ${req.file.path}`);
+    logger.info("Cleaned up temporary upload", { filePath: req.file.path });
   } catch (cleanupError) {
-    console.error("Failed to clean up temp file:", cleanupError.message);
+    logger.error("Failed to clean up temporary upload", {
+      filePath: req.file.path,
+      error: cleanupError,
+    });
   }
 
   next(err);

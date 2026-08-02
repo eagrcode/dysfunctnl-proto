@@ -1,4 +1,4 @@
-const customConsoleLog = require("../../../../_shared/utils/customConsoleLog");
+const { logger } = require("../../../../_shared/logger/logger");
 const {
   broadcastNewComment,
   broadcastCommentUpdated,
@@ -32,10 +32,9 @@ const handleAddComment = [
     const { mediaId, albumId } = req.params;
     const { content } = req.body;
 
-    customConsoleLog("Attempting to add comment with the following data:", {
+    logger.info("Adding media comment", {
       mediaId,
       senderId,
-      content,
     });
 
     const comment = await addComment(mediaId, senderId, content);
@@ -108,7 +107,7 @@ const handleDeleteComment = async (req, res) => {
   const is_admin = req.groupMembership.is_admin;
   const { mediaId, commentId, albumId } = req.params;
 
-  customConsoleLog(`Attempting to delete comment with the following data:`, {
+  logger.info("Deleting media comment", {
     commentId,
     mediaId,
   });

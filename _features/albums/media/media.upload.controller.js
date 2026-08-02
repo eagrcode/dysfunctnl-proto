@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const crypto = require("crypto");
 const uploadConfig = require("../../../_shared/utils/uploadConfig");
+const { logger } = require("../../../_shared/logger/logger");
 const { addMedia } = require("./media.model");
 const {
   UploadError,
@@ -19,18 +20,17 @@ const checkOrCreateDirs = async () => {
       Object.values(uploadConfig.subdirs).map(async (subDir) => {
         const dirPath = path.join(uploadConfig.basePath, subDir);
         await fs.mkdir(dirPath, { recursive: true });
-        console.log(`Upload directory ready: ${dirPath}`);
+        logger.info("Upload directory ready", { dirPath });
       })
     );
 
     await fs.mkdir(uploadConfig.tempPath, { recursive: true });
-    console.log(`Temp directory ready: ${uploadConfig.tempPath}`);
+    logger.info("Temporary upload directory ready", { tempPath: uploadConfig.tempPath });
 
     dirsReady = true;
-    console.log("All directories ready =", dirsReady);
+    logger.info("Upload storage initialised");
   } catch (error) {
-    console.error("Failed to create upload directories:", error);
-    console.error("Upload functionality will be disabled");
+    logger.error("Failed to initialise upload storage; uploads are disabled", { error });
   }
 };
 
@@ -83,10 +83,8 @@ const handlePhotoUpload = async (req, res) => {
   const tempFilePath = tempFile.path;
   const filename = `${Date.now()}-${crypto.randomUUID()}`;
 
-  console.log("Processing upload...", {
-    originalName: tempFile.originalname,
+  logger.info("Processing upload", {
     fileSize: `${(tempFile.size / 1024 / 1024).toFixed(2)}MB`,
-    storageDestinationPath: uploadConfig.basePath,
     processedFilename: filename,
   });
 
