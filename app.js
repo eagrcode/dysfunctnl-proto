@@ -18,6 +18,10 @@ console.log("Node timezone:", Intl.DateTimeFormat().resolvedOptions().timeZone);
 
 const app = express();
 
+if (process.env.TRUST_PROXY) {
+  app.set("trust proxy", process.env.TRUST_PROXY);
+}
+
 app.use(helmet());
 app.use(cors(getCorsOptions()));
 app.use(express.json({ limit: "10kb" }));
