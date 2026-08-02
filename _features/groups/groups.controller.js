@@ -14,7 +14,6 @@ const reqValidation = {
       .notEmpty()
       .withMessage("Group name is required")
       .trim()
-      .escape()
       .isLength({ min: 2, max: 50 })
       .withMessage("Group name must be between 2 and 50 characters"),
 
@@ -22,7 +21,6 @@ const reqValidation = {
       .notEmpty()
       .withMessage("Group description is required")
       .trim()
-      .escape()
       .isLength({ min: 2, max: 500 })
       .withMessage("Description must be between 2 and 500 characters"),
   ],
@@ -30,14 +28,12 @@ const reqValidation = {
     body("name")
       .optional()
       .trim()
-      .escape()
       .isLength({ min: 2, max: 50 })
       .withMessage("Group name must be between 2 and 50 characters"),
 
     body("description")
       .optional()
       .trim()
-      .escape()
       .isLength({ min: 2, max: 500 })
       .withMessage("Description must be between 2 and 500 characters"),
   ],
