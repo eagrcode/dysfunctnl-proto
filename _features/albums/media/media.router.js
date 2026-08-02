@@ -6,12 +6,20 @@ const {
   handleDeleteMediaById,
   handleUpdateMediaById,
 } = require("./media.controller");
-const { upload, handlePhotoUpload } = require("./media.upload.controller");
 const validateUUIDParams = require("../../../_shared/middleware/validateUUID");
+const { FeatureDisabledError } = require("../../../_shared/utils/errors");
+const { featureFlags } = require("../../../_shared/utils/featureFlags");
 
 const mediaRouter = Router({ mergeParams: true });
 
-mediaRouter.post("/upload", upload, handlePhotoUpload);
+if (featureFlags.mediaUploads) {
+  const { upload, handlePhotoUpload } = require("./media.upload.controller");
+  mediaRouter.post("/upload", upload, handlePhotoUpload);
+} else {
+  mediaRouter.post("/upload", () => {
+    throw new FeatureDisabledError("Media uploads are currently disabled");
+  });
+}
 
 mediaRouter.use("/:mediaId", validateUUIDParams);
 

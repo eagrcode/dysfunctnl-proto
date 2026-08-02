@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const { createServer } = require("http");
 const { logger } = require("./_shared/logger/logger");
+const { featureFlags } = require("./_shared/utils/featureFlags");
 const { initSocketServer } = require("./_shared/utils/socketService");
 const pool = require("./_shared/utils/db");
 
@@ -10,6 +11,7 @@ const useNeon = process.env.NODE_ENV === "production" || process.env.USE_NEON ==
 const requiredEnvVars = [
   "JWT_SECRET",
   ...(useNeon ? ["DATABASE_URL"] : ["DB_HOST", "APP_USER", "DB_NAME", "APP_USER_PASSWORD"]),
+  ...(featureFlags.mediaUploads ? ["UPLOAD_PATH"] : []),
 ];
 
 const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
@@ -36,6 +38,7 @@ server.listen(port, "0.0.0.0", () => {
     port,
     environment: process.env.NODE_ENV || "development",
     database: useNeon ? "Neon" : "local PostgreSQL",
+    features: featureFlags,
   });
 
   pool

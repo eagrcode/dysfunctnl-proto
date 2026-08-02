@@ -49,6 +49,12 @@ class ForbiddenError extends AppError {
   }
 }
 
+class FeatureDisabledError extends AppError {
+  constructor(message = "Feature is currently disabled") {
+    super(message, 503, "FEATURE_DISABLED");
+  }
+}
+
 class UploadError extends AppError {
   constructor(message, statusCode = 400, code = "UPLOAD_ERROR", tempFilePath = null) {
     super(message, statusCode, code);
@@ -88,6 +94,7 @@ module.exports = {
   ValidationError,
   UnauthorisedError,
   ForbiddenError,
+  FeatureDisabledError,
   UploadError,
   FileTooLargeError,
   InvalidFileTypeError,
