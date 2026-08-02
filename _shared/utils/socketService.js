@@ -5,6 +5,7 @@ const { handleCheckGroupMembership } = require("./socketCheckGroupMembership");
 const { handleCheckUserGroups } = require("./checkUserGroups");
 const { NotFoundError } = require("./errors");
 const { logger } = require("../../_shared/logger/logger");
+const { getCorsOptions } = require("./corsConfig");
 
 let io = null;
 
@@ -20,10 +21,7 @@ const initSocketServer = (httpServer) => {
   }
 
   io = new Server(httpServer, {
-    cors: {
-      origin: "*",
-      credentials: true,
-    },
+    cors: getCorsOptions(),
   });
 
   // Middleware for JWT authentication

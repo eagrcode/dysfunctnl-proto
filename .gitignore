@@ -1,8 +1,9 @@
 .env
+.env.*
+!.env.example
 node_modules
 .DS_Store
 npm-debug.log
-package-lock.json
 dist
 coverage
 *.log
