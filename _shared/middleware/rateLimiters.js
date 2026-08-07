@@ -1,5 +1,7 @@
 const rateLimit = require("express-rate-limit");
 
+const AUTH_LIMITER_WINDOW = 1 * 60 * 1000;
+
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
@@ -11,7 +13,7 @@ const generalLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: AUTH_LIMITER_WINDOW,
   max: 50,
   skipSuccessfulRequests: true,
   message: {
