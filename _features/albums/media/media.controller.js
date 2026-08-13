@@ -16,10 +16,7 @@ const handleGetMediaById = async (req, res) => {
 
   const media = await getMediaById(groupId, albumId, mediaId);
 
-  res.status(200).json({
-    success: true,
-    data: media,
-  });
+  res.status(200).json(media);
 };
 
 // GET MEDIA BY ID
@@ -28,10 +25,7 @@ const handleGetMediaByIdWithComments = async (req, res) => {
 
   const media = await getMediaByIdWithComments(groupId, albumId, mediaId);
 
-  res.status(200).json({
-    success: true,
-    data: media,
-  });
+  res.status(200).json(media);
 };
 
 // DELETE MEDIA BY ID
@@ -68,10 +62,7 @@ const handleDeleteMediaById = async (req, res) => {
 
   const result = await deleteMediaById(groupId, albumId, mediaId, isAdmin, userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // UPDATE MEDIA BY ID
@@ -83,10 +74,7 @@ const handleUpdateMediaById = async (req, res) => {
 
   const result = await updateMediaById(groupId, albumId, mediaId, data, isAdmin, userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 module.exports = {

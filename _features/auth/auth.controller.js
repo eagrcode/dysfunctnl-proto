@@ -104,7 +104,7 @@ const handleUserRegistration = [
         },
       };
 
-      return res.status(201).json({ success: true, data: authResponse });
+      return res.status(201).json(authResponse);
     } catch (err) {
       const isEmailConflict = err.code === "23505" && err.constraint === "users_email_key";
 
@@ -156,7 +156,7 @@ const handleUserLogin = [
       },
     };
 
-    res.status(200).json({ success: true, data: authResponse });
+    res.status(200).json(authResponse);
   },
 ];
 

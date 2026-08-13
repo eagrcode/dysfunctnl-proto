@@ -54,10 +54,7 @@ const handleCreateGroup = [
 
     const result = await createGroup(name, userId, description);
 
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    res.status(201).json(result);
   },
 ];
 
@@ -67,10 +64,7 @@ const handleGetUserGroups = async (req, res) => {
 
   const result = await getUserGroups(userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // GET GROUP BY ID
@@ -79,10 +73,7 @@ const handleGetGroupById = async (req, res) => {
 
   const result = await getGroupById(groupId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // UPDATE GROUP
@@ -107,10 +98,7 @@ const handleUpdateGroup = [
 
     const result = await updateGroup(updates, groupId);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -120,10 +108,7 @@ const handleDeleteGroup = async (req, res) => {
 
   const result = await deleteGroup(groupId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 module.exports = {

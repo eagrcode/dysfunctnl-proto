@@ -68,7 +68,6 @@ const errorHandler = (err, req, res, next) => {
   }
 
   const response = {
-    success: false,
     code: publicError.code,
     message: publicError.message,
     ...(publicError.errors && { errors: publicError.errors }),

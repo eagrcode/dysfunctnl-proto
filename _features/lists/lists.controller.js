@@ -35,13 +35,9 @@ const handleGetAllLists = async (req, res) => {
   const { limit, cursor } = parsePaginationParams(req.query);
 
   const rows = await getAllLists(groupId, { limit, cursor });
-  const { data, pagination } = buildPaginationResponse(rows, limit, "created_at");
+  const { data } = buildPaginationResponse(rows, limit, "created_at");
 
-  res.status(200).json({
-    success: true,
-    data,
-    pagination,
-  });
+  res.status(200).json(data);
 };
 
 // CREATE NEW LIST
@@ -63,10 +59,7 @@ const handleCreateList = [
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "list.created", result);
 
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    res.status(201).json(result);
   },
 ];
 
@@ -79,10 +72,7 @@ const handleGetListById = async (req, res) => {
 
   result.items = items;
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // RENAME LIST
@@ -105,10 +95,7 @@ const handleRenameList = [
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "list.renamed", result);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -123,10 +110,7 @@ const handleDeleteList = async (req, res) => {
   // WebSocket broadcast
   broadcastGroupEvent(groupId, "list.deleted", result);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 module.exports = {

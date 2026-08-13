@@ -54,10 +54,7 @@ const handleAddComment = [
       payload: payload,
     });
 
-    res.status(201).json({
-      success: true,
-      data: payload,
-    });
+    res.status(201).json(payload);
   },
 ];
 
@@ -94,10 +91,7 @@ const handleUpdateComment = [
       payload: payload,
     });
 
-    res.status(200).json({
-      success: true,
-      data: payload,
-    });
+    res.status(200).json(payload);
   },
 ];
 
@@ -127,10 +121,7 @@ const handleDeleteComment = async (req, res) => {
     payload: payload,
   });
 
-  res.status(200).json({
-    success: true,
-    data: payload,
-  });
+  res.status(200).json(payload);
 };
 
 module.exports = {

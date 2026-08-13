@@ -29,13 +29,9 @@ const handleGetAllMessages = async (req, res) => {
   const { limit, cursor } = parsePaginationParams(req.query);
 
   const rows = await getAllMessages(textChannelId, { limit, cursor });
-  const { data, pagination } = buildPaginationResponse(rows, limit, "created_at");
+  const { data } = buildPaginationResponse(rows, limit, "created_at");
 
-  res.status(200).json({
-    success: true,
-    data,
-    pagination,
-  });
+  res.status(200).json(data);
 };
 
 // CREATE NEW MESSAGE
@@ -68,10 +64,7 @@ const handleCreateMessage = [
       payload: payload,
     });
 
-    res.status(201).json({
-      success: true,
-      data: payload,
-    });
+    res.status(201).json(payload);
   },
 ];
 
@@ -97,10 +90,7 @@ const handleDeleteMessage = async (req, res) => {
     payload: payload,
   });
 
-  res.status(200).json({
-    success: true,
-    data: payload,
-  });
+  res.status(200).json(payload);
 };
 
 // UPDATE MESSAGE
@@ -134,10 +124,7 @@ const handleUpdateMessage = [
       payload: payload,
     });
 
-    res.status(200).json({
-      success: true,
-      data: payload,
-    });
+    res.status(200).json(payload);
   },
 ];
 

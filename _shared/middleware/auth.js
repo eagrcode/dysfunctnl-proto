@@ -4,7 +4,6 @@ const { logger } = require("../logger/logger");
 
 const reject = (res, message, code) =>
   res.status(401).json({
-    success: false,
     message,
     code,
   });

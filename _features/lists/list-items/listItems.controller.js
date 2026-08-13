@@ -52,10 +52,7 @@ const handleCreateListItem = [
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "listItem.created", result);
 
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    res.status(201).json(result);
   },
 ];
 
@@ -65,10 +62,7 @@ const handleGetListItemById = async (req, res) => {
 
   const result = await getListItemById(groupId, listId, itemId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // UPDATE A LIST ITEM
@@ -91,10 +85,7 @@ const handleUpdateListItem = [
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "listItem.updated", result);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -118,10 +109,7 @@ const handleToggleComplete = [
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "listItem.toggled", result);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -146,10 +134,7 @@ const handleToggleCompleteAll = [
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "listItem.toggledAll", result);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -172,10 +157,7 @@ const handleDeleteListItems = [
     // WebSocket broadcast
     broadcastGroupEvent(groupId, "listItem.deleted", result);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 

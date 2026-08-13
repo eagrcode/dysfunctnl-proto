@@ -152,10 +152,7 @@ const handleCreateEvent = [
       location,
     );
 
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    res.status(201).json(result);
   },
 ];
 
@@ -165,10 +162,7 @@ const handleGetEventById = async (req, res) => {
 
   const result = await getEventById(eventId, groupId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // UPDATE EVENT
@@ -188,10 +182,7 @@ const handleUpdateEvent = [
 
     const result = await updateEvent(eventId, groupId, updates, is_admin, userId);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -203,10 +194,7 @@ const handleDeleteEvent = async (req, res) => {
 
   const result = await deleteEvent(eventId, groupId, is_admin, userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // GET EVENTS BY RANGE
@@ -224,13 +212,9 @@ const handleGetEventsByRange = [
     const { limit, cursor } = parsePaginationParams(req.query);
 
     const rows = await getEventsByRange(groupId, start, end, { limit, cursor });
-    const { data, pagination } = buildPaginationResponse(rows, limit, "start_time");
+    const { data } = buildPaginationResponse(rows, limit, "start_time");
 
-    res.status(200).json({
-      success: true,
-      data,
-      pagination,
-    });
+    res.status(200).json(data);
   },
 ];
 

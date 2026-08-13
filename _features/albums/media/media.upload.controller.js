@@ -139,10 +139,7 @@ const handlePhotoUpload = async (req, res) => {
   // Delete temp file
   await fs.unlink(tempFilePath);
 
-  res.status(201).json({
-    success: true,
-    data: media,
-  });
+  res.status(201).json(media);
 };
 
 module.exports = {

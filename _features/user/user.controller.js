@@ -6,10 +6,7 @@ const handleGetUserProfile = async (req, res) => {
 
   const result = await getUserProfile(userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // UPDATE USER PROFILE
@@ -19,10 +16,7 @@ const handleUpdateUserProfile = async (req, res) => {
 
   const result = await updateUserProfile(userId, updates);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // DELETE USER ACCOUNT
@@ -31,10 +25,7 @@ const handleDeleteUserAccount = async (req, res) => {
 
   const result = await deleteUserAccount(userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 module.exports = {

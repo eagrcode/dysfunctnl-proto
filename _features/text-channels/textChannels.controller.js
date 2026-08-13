@@ -31,10 +31,7 @@ const handleGetAllTextChannels = async (req, res) => {
 
   const result = await getAllTextChannels(groupId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // CREATE NEW TEXT CHANNEL
@@ -53,10 +50,7 @@ const handleCreateTextChannel = [
 
     const result = await createTextChannel(groupId, channelName, userId);
 
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    res.status(201).json(result);
   },
 ];
 
@@ -66,10 +60,7 @@ const handleGetTextChannelById = async (req, res) => {
 
   const result = await getTextChannelById(groupId, textChannelId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // UPDATE TEXT CHANNEL
@@ -87,10 +78,7 @@ const handleUpdateTextChannel = [
 
     const result = await updateTextChannel(groupId, textChannelId, channelName);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -100,10 +88,7 @@ const handleDeleteTextChannel = async (req, res) => {
 
   const result = await deleteTextChannel(groupId, textChannelId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 module.exports = {

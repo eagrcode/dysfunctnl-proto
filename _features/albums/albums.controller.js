@@ -58,10 +58,7 @@ const handleAddAlbum = [
 
     const result = await addAlbum(groupId, name, description, userId);
 
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    res.status(201).json(result);
   },
 ];
 
@@ -71,10 +68,7 @@ const handleGetAllAlbumsByGroupId = async (req, res) => {
 
   const albums = await getAllAlbumsByGroupId(groupId);
 
-  res.status(200).json({
-    success: true,
-    data: albums,
-  });
+  res.status(200).json(albums);
 };
 
 // GET ALBUM BY ID
@@ -83,10 +77,7 @@ const handleGetAlbumById = async (req, res) => {
 
   const album = await getAlbumById(groupId, albumId);
 
-  res.status(200).json({
-    success: true,
-    data: album,
-  });
+  res.status(200).json(album);
 };
 
 // GET ALBUM BY ID WITH MEDIA
@@ -95,10 +86,7 @@ const handleGetAlbumByIdWithMedia = async (req, res) => {
 
   const album = await getAlbumByIdWithMedia(groupId, albumId);
 
-  res.status(200).json({
-    success: true,
-    data: album,
-  });
+  res.status(200).json(album);
 };
 
 // DELETE ALBUM BY ID
@@ -109,10 +97,7 @@ const handleDeleteAlbumById = async (req, res) => {
 
   const result = await deleteAlbumById(groupId, albumId, is_admin, userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // UPDATE ALBUM BY ID
@@ -132,10 +117,7 @@ const handleUpdateAlbumById = [
 
     const result = await updateAlbumById(groupId, albumId, name, description, is_admin, userId);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 

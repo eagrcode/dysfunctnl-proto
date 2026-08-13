@@ -23,10 +23,7 @@ const handleGetGroupMembers = async (req, res) => {
 
   const result = await getGroupMembers(groupId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 // GET MEMBER BY ID
 const handleGetGroupMemberById = async (req, res) => {
@@ -35,10 +32,7 @@ const handleGetGroupMemberById = async (req, res) => {
 
   const result = await getGroupMemberById(groupId, userId);
 
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  res.status(200).json(result);
 };
 
 // ADD USER TO GROUP
@@ -55,10 +49,7 @@ const handleAddUserToGroup = [
     const { userIdToAdd } = req.body;
 
     const result = await addUserToGroup(groupId, userIdToAdd);
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    res.status(201).json(result);
   },
 ];
 
@@ -78,10 +69,7 @@ const handleUpdateMemberRole = [
 
     const result = await updateMemberRole(isAdmin, groupId, userId);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
@@ -100,10 +88,7 @@ const handleRemoveMemberFromGroup = [
 
     const result = await removeMemberFromGroup(groupId, userId);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    res.status(200).json(result);
   },
 ];
 
