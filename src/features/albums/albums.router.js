@@ -1,0 +1,29 @@
+const { Router } = require("express");
+const mediaRouter = require("./media/media.router");
+const {
+  handleAddAlbum,
+  handleGetAllAlbumsByGroupId,
+  handleGetAlbumById,
+  handleGetAlbumByIdWithMedia,
+  handleDeleteAlbumById,
+  handleUpdateAlbumById,
+} = require("./albums.controller");
+const validateUUIDParams = require("../../http/middleware/validateUUID");
+
+const albumsRouter = Router({ mergeParams: true });
+
+// ALBUM ROUTES
+albumsRouter.get("/", handleGetAllAlbumsByGroupId);
+albumsRouter.post("/", handleAddAlbum);
+
+albumsRouter.use("/:albumId", validateUUIDParams);
+
+albumsRouter.get("/:albumId", handleGetAlbumById);
+albumsRouter.patch("/:albumId", handleUpdateAlbumById);
+albumsRouter.delete("/:albumId", handleDeleteAlbumById);
+albumsRouter.get("/:albumId/media", handleGetAlbumByIdWithMedia);
+
+// NESTED MEDIA ROUTES
+albumsRouter.use("/:albumId/media", mediaRouter);
+
+module.exports = albumsRouter;

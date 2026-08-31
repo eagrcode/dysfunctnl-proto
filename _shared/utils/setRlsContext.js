@@ -1,5 +1,5 @@
-const pool = require("./db");
-const { logger } = require("../logger/logger");
+const pool = require("../../src/db/pool");
+const { logger } = require("../../src/lib/logger");
 
 const escapeLiteral = (str) => {
   return "'" + (str ? str.toString().replace(/'/g, "''") : "") + "'";

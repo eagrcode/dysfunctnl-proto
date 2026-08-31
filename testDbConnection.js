@@ -1,4 +1,4 @@
-const pool = require("./_shared/utils/db");
+const pool = require("./src/db/pool");
 
 async function testConnection() {
   let client;

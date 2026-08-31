@@ -1,17 +1,17 @@
 const request = require("supertest");
-const app = require("../../app");
+const app = require("../../src/app");
 const dotenv = require("dotenv");
 const io = require("socket.io-client");
 const { createServer } = require("http");
-const { initSocketServer } = require("./socketService");
+const { initSocketServer } = require("../../src/realtime/socket-service");
 const {
   createGroup,
   loginUser,
   registerUser,
   addMember,
   createTextChannel,
-} = require("../helpers/testSetup");
-const { broadcastNewMessage } = require("./socketService");
+} = require("../../tests/helpers/test-setup");
+const { broadcastNewMessage } = require("../../src/realtime/socket-service");
 
 dotenv.config();
 

@@ -1,0 +1,23 @@
+const {
+  handleCreateEvent,
+  handleGetEventById,
+  handleUpdateEvent,
+  handleDeleteEvent,
+  handleGetEventsByRange,
+} = require("./calendar.controller");
+const { Router } = require("express");
+const validateUUIDParams = require("../../http/middleware/validateUUID");
+
+const calendarRouter = Router({ mergeParams: true });
+
+/* CALENDAR ROUTES */
+calendarRouter.post("/", handleCreateEvent);
+calendarRouter.get("/range", handleGetEventsByRange);
+
+calendarRouter.use("/:eventId", validateUUIDParams);
+
+calendarRouter.get("/:eventId", handleGetEventById);
+calendarRouter.patch("/:eventId", handleUpdateEvent);
+calendarRouter.delete("/:eventId", handleDeleteEvent);
+
+module.exports = calendarRouter;

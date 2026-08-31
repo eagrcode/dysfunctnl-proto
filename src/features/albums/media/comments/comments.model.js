@@ -1,0 +1,65 @@
+const pool = require("../../../../db/pool");
+const { NotFoundError } = require("../../../../lib/errors");
+
+// ADD COMMENT
+const addComment = async (mediaId, senderId, content) => {
+  const { rows } = await pool.query(
+    `
+     INSERT INTO media_comments (
+     media_id,
+     sender_id, 
+     content
+     ) 
+     VALUES ($1, $2, $3)
+     RETURNING *;
+    `,
+    [mediaId, senderId, content]
+  );
+
+  return rows[0];
+};
+
+const updateComment = async (mediaId, commentId, senderId, newContent, is_admin) => {
+  const result = await pool.query(
+    `
+     UPDATE media_comments
+     SET content = $1
+     WHERE media_id = $2
+     AND id = $3
+     AND (sender_id = $4 OR $5 = TRUE)
+     RETURNING content, updated_at, sender_id
+    `,
+    [newContent, mediaId, commentId, senderId, is_admin]
+  );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Failed to update comment");
+  }
+
+  return result.rows[0];
+};
+
+const deleteComment = async (mediaId, commentId, senderId, is_admin) => {
+  const result = await pool.query(
+    `
+        DELETE FROM media_comments
+        WHERE media_id = $1
+        AND id = $2
+        AND (sender_id = $3 OR $4 = TRUE)
+        RETURNING id, sender_id
+      `,
+    [mediaId, commentId, senderId, is_admin]
+  );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Failed to delete comment");
+  }
+
+  return result.rows[0];
+};
+
+module.exports = {
+  addComment,
+  updateComment,
+  deleteComment,
+};

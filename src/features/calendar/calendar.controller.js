@@ -1,0 +1,227 @@
+const { body, validationResult, query } = require("express-validator");
+const { ForbiddenError, ValidationError } = require("../../lib/errors");
+const {
+  parsePaginationParams,
+  buildPaginationResponse,
+} = require("../../lib/pagination");
+const {
+  createEvent,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  getEventsByRange,
+} = require("./calendar.model");
+
+const reqValidation = {
+  handleCreateEvent: [
+    body("title")
+      .notEmpty()
+      .withMessage("Event title is required")
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Title must be between 1 and 100 characters"),
+    body("description")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 500 })
+      .withMessage("Description must not exceed 500 characters"),
+    body("startTime")
+      .notEmpty()
+      .withMessage("Start time is required")
+      .isISO8601()
+      .withMessage("Start time must be a valid ISO 8601 date"),
+    body("endTime")
+      .notEmpty()
+      .withMessage("End time is required")
+      .isISO8601()
+      .withMessage("End time must be a valid ISO 8601 date")
+      .custom((endTime, { req }) => {
+        if (new Date(endTime) <= new Date(req.body.startTime)) {
+          throw new Error("End time must be after start time");
+        }
+        return true;
+      }),
+    body("allDay")
+      .optional()
+      .isBoolean()
+      .withMessage("All day must be a boolean value")
+      .toBoolean(),
+    body("participants")
+      .optional()
+      .isArray({ max: 100 })
+      .withMessage("Participants must be an array of up to 100 user IDs"),
+    body("participants.*").isUUID().withMessage("Each participant must be a valid UUID"),
+    body("location")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 200 })
+      .withMessage("Location must not exceed 200 characters"),
+  ],
+  handleUpdateEvent: [
+    body("title")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Title must be between 1 and 100 characters"),
+    body("description")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 500 })
+      .withMessage("Description must not exceed 500 characters"),
+    body("startTime")
+      .optional()
+      .isISO8601()
+      .withMessage("Start time must be a valid ISO 8601 date"),
+    body("endTime")
+      .optional()
+      .isISO8601()
+      .withMessage("End time must be a valid ISO 8601 date")
+      .custom((endTime, { req }) => {
+        if (new Date(endTime) <= new Date(req.body.startTime)) {
+          throw new Error("End time must be after start time");
+        }
+        return true;
+      }),
+    body("allDay")
+      .optional()
+      .isBoolean()
+      .withMessage("All day must be a boolean value")
+      .toBoolean(),
+    body("participants")
+      .optional()
+      .isArray({ max: 100 })
+      .withMessage("Participants must be an array of up to 100 user IDs"),
+    body("participants.*").isUUID().withMessage("Each participant must be a valid UUID"),
+    body("location")
+      .optional()
+      .trim()
+      .escape()
+      .isLength({ max: 200 })
+      .withMessage("Location must not exceed 200 characters"),
+  ],
+  handleGetEventsByRange: [
+    query("start")
+      .notEmpty()
+      .withMessage("startTime query parameter is required")
+      .isISO8601()
+      .withMessage("startTime must be a valid ISO 8601 date"),
+    query("end")
+      .notEmpty()
+      .withMessage("endTime query parameter is required")
+      .isISO8601()
+      .withMessage("endTime must be a valid ISO 8601 date"),
+  ],
+};
+
+// CREATE EVENT
+const handleCreateEvent = [
+  ...reqValidation.handleCreateEvent,
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Validation failed", errors.array());
+    }
+
+    const { groupId } = req.params;
+    const {
+      createdBy,
+      title,
+      description = null,
+      startTime,
+      endTime,
+      allDay = false,
+      participants = [],
+      location,
+    } = req.body;
+
+    const result = await createEvent(
+      groupId,
+      createdBy,
+      title,
+      description,
+      startTime,
+      endTime,
+      allDay,
+      participants,
+      location,
+    );
+
+    res.status(201).json(result);
+  },
+];
+
+// GET EVENT BY ID
+const handleGetEventById = async (req, res) => {
+  const { groupId, eventId } = req.params;
+
+  const result = await getEventById(eventId, groupId);
+
+  res.status(200).json(result);
+};
+
+// UPDATE EVENT
+const handleUpdateEvent = [
+  ...reqValidation.handleUpdateEvent,
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Validation failed", errors.array());
+    }
+
+    const { groupId, eventId } = req.params;
+    const updates = req.body;
+    const { is_admin } = req.groupMembership;
+    const userId = req.user.id;
+
+    const result = await updateEvent(eventId, groupId, updates, is_admin, userId);
+
+    res.status(200).json(result);
+  },
+];
+
+// DELETE EVENT
+const handleDeleteEvent = async (req, res) => {
+  const { groupId, eventId } = req.params;
+  const { is_admin } = req.groupMembership;
+  const userId = req.user.id;
+
+  const result = await deleteEvent(eventId, groupId, is_admin, userId);
+
+  res.status(200).json(result);
+};
+
+// GET EVENTS BY RANGE
+const handleGetEventsByRange = [
+  ...reqValidation.handleGetEventsByRange,
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError("Validation failed", errors.array());
+    }
+
+    const { groupId } = req.params;
+    const { start, end } = req.query;
+    const { limit, cursor } = parsePaginationParams(req.query);
+
+    const rows = await getEventsByRange(groupId, start, end, { limit, cursor });
+    const { data } = buildPaginationResponse(rows, limit, "start_time");
+
+    res.status(200).json(data);
+  },
+];
+
+module.exports = {
+  handleCreateEvent,
+  handleGetEventById,
+  handleUpdateEvent,
+  handleDeleteEvent,
+  handleGetEventsByRange,
+};

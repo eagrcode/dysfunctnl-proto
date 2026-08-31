@@ -1,4 +1,4 @@
-const { getUserGroups } = require("../../_features/groups/groups.model");
+const { getUserGroups } = require("../../src/features/groups/groups.model");
 
 const handleCheckUserGroups = async (userId) => {
   try {

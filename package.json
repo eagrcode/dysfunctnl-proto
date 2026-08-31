@@ -1,13 +1,13 @@
 {
   "name": "dysfunctnl-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "jest",
-    "test:refresh-storm": "cross-env NODE_ENV=test LOG_LEVEL=error DOTENV_CONFIG_QUIET=true node _features/auth/tests/refreshStorm.demo.js",
+    "test:refresh-storm": "cross-env NODE_ENV=test LOG_LEVEL=error DOTENV_CONFIG_QUIET=true node tests/manual/refresh-storm.demo.js",
     "test:coverage": "jest --coverage",
-    "dev": "node --watch server.js",
-    "start": "node server.js"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
   },
   "jest": {
     "verbose": true,
