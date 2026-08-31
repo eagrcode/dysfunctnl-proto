@@ -2,11 +2,8 @@ const { getAllLists, createList, getListById, deleteList, renameList } = require
 const { getListItems } = require("./list-items/listItems.model");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../lib/errors");
-const {
-  parsePaginationParams,
-  buildPaginationResponse,
-} = require("../../lib/pagination");
 const { broadcastGroupEvent } = require("../../realtime/socket-service");
+const { logger } = require("../../lib/logger");
 
 const reqValidation = {
   handleCreateList: [
@@ -32,10 +29,10 @@ const reqValidation = {
 // GET ALL LISTS
 const handleGetAllLists = async (req, res) => {
   const { groupId } = req.params;
-  const { limit, cursor } = parsePaginationParams(req.query);
 
-  const rows = await getAllLists(groupId, { limit, cursor });
-  const { data } = buildPaginationResponse(rows, limit, "created_at");
+  // Pagination is intentionally deferred. Return the complete group list until
+  // the frontend has a pagination design and contract ready to implement.
+  const data = await getAllLists(groupId);
 
   res.status(200).json(data);
 };
@@ -93,7 +90,7 @@ const handleRenameList = [
     const result = await renameList(groupId, listId, newTitle.trim(), is_admin, userId);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "list.renamed", result);
+    broadcastGroupEvent(groupId, "list.renamed", { list_id: listId, ...result });
 
     res.status(200).json(result);
   },
@@ -104,11 +101,12 @@ const handleDeleteList = async (req, res) => {
   const { groupId, listId } = req.params;
   const { is_admin } = req.groupMembership;
   const userId = req.user.id;
+  const callerSocketId = req.get("x-socket-id");
 
   const result = await deleteList(groupId, listId, is_admin, userId);
 
   // WebSocket broadcast
-  broadcastGroupEvent(groupId, "list.deleted", result);
+  broadcastGroupEvent(groupId, "list.deleted", result, callerSocketId);
 
   res.status(200).json(result);
 };
