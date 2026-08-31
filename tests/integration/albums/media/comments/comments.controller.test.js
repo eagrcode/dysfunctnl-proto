@@ -136,47 +136,6 @@ describe("Comments API Tests - Authorised Actions", () => {
     });
   });
 
-  describe("Join SocketServer Channel", () => {
-    test.each([
-      {
-        role: "Admin",
-        socket: () => adminSocket,
-        imageId: () => adminUploadedImageId,
-      },
-      {
-        role: "Member",
-        socket: () => memberSocket,
-        imageId: () => adminUploadedImageId,
-      },
-    ])("$role joins channel", ({ role, socket, imageId }, done) => {
-      const currentSocket = socket();
-
-      logger.info(`${role} attempting to join channel:`, {
-        type: "image",
-        ids: {
-          mediaId: imageId(),
-          groupId: groupId,
-        },
-      });
-
-      currentSocket.emit("join_channel", "image", {
-        groupId: groupId,
-        mediaId: imageId(),
-      });
-
-      currentSocket.on("joined_channel", (data) => {
-        logger.info(`${role} joined channel:`, data);
-
-        expect(data.type).toBe("image");
-        expect(data.ids.mediaId).toBe(imageId());
-        expect(data.ids.groupId).toBe(groupId);
-        expect(data.roomName).toBeDefined();
-
-        done();
-      });
-    });
-  });
-
   // ADD COMMENT
   describe("ADD COMMENT", () => {
     test.each([

@@ -87,6 +87,12 @@ const AUTH_CODES = Object.freeze({
   EMAIL_ALREADY_EXISTS: "EMAIL_ALREADY_EXISTS",
 });
 
+const SOCKET_AUTH_CODES = Object.freeze({
+  TOKEN_MISSING: "TOKEN_MISSING",
+  TOKEN_EXPIRED: "TOKEN_EXPIRED",
+  TOKEN_INVALID: "TOKEN_INVALID",
+});
+
 module.exports = {
   AppError,
   NotFoundError,
@@ -99,4 +105,5 @@ module.exports = {
   FileTooLargeError,
   InvalidFileTypeError,
   AUTH_CODES,
+  SOCKET_AUTH_CODES,
 };

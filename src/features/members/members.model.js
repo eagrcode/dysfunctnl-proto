@@ -113,28 +113,10 @@ const removeMemberFromGroup = async (groupId, userId) => {
   return result.rows[0];
 };
 
-// CHECK USER GROUP MEMBERSHIP
-const checkGroupMembership = async (groupId, userID) => {
-  const result = await pool.query(
-    `SELECT 1 FROM group_members 
-     WHERE group_id = $1 
-     AND user_id = $2
-     LIMIT 1`,
-    [groupId, userID],
-  );
-
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Member not found in this group");
-  }
-
-  return result.rows[0];
-};
-
 module.exports = {
   getGroupMembers,
   getGroupMemberById,
   addUserToGroup,
   updateMemberRole,
   removeMemberFromGroup,
-  checkGroupMembership,
 };

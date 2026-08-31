@@ -261,47 +261,6 @@ describe("Text Channels API Tests - Authorised Actions", () => {
     });
   });
 
-  describe("Join SocketServer Channel", () => {
-    test.each([
-      {
-        role: "Admin",
-        socket: () => adminSocket,
-        channelId: () => adminCreatedChannelId,
-      },
-      {
-        role: "Member",
-        socket: () => memberSocket,
-        channelId: () => adminCreatedChannelId,
-      },
-    ])("$role joins channel", ({ role, socket, channelId }, done) => {
-      const currentSocket = socket();
-
-      console.log(`${role} attempting to join channel:`, {
-        type: "text_channel",
-        ids: {
-          textChannelId: channelId(),
-          groupId: groupId,
-        },
-      });
-
-      currentSocket.emit("join_channel", "text_channel", {
-        textChannelId: channelId(),
-        groupId: groupId,
-      });
-
-      currentSocket.on("joined_channel", (data) => {
-        console.log(`${role} joined channel:`, data);
-
-        expect(data.type).toBe("text_channel");
-        expect(data.ids.textChannelId).toBe(channelId());
-        expect(data.ids.groupId).toBe(groupId);
-        expect(data.roomName).toBeDefined();
-
-        done();
-      });
-    });
-  });
-
   describe("Text Channel Messages Controller - Admin and Member Actions", () => {
     // SEND MESSAGE
     describe("SEND Message - POST /groups/:groupId/text-channels/:textChannelId/messages", () => {

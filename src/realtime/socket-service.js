@@ -1,12 +1,13 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
-const { handleCheckGroupMembership } = require("../../_shared/utils/socketCheckGroupMembership");
-const { handleCheckUserGroups } = require("../../_shared/utils/checkUserGroups");
-const { NotFoundError } = require("../lib/errors");
+const { getUserGroups } = require("../features/groups/groups.model");
 const { logger } = require("../lib/logger");
+const { SOCKET_AUTH_CODES } = require("../lib/errors");
 const { getCorsOptions } = require("../config/cors-config");
 
 let io = null;
+
+const MAX_DISCONNECTION_DURATION = 2 * 60 * 1000; // 2 minutes
 
 const rooms = {
   user: (userId) => `user:${userId}`,
@@ -15,48 +16,87 @@ const rooms = {
 
 const initSocketServer = (httpServer) => {
   if (io) {
-    logger.info("Socket.IO already initialised");
+    logger.debug("Socket.IO already initialised");
     return io;
   }
 
   io = new Server(httpServer, {
+    connectionStateRecovery: {
+      maxDisconnectionDuration: MAX_DISCONNECTION_DURATION, // 2 minutes
+      skipMiddlewares: false,
+    },
     cors: getCorsOptions(),
   });
 
-  // Middleware for JWT authentication
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
 
     if (!token) {
-      logger.warn("Socket authentication failed: missing token");
-      return next(new Error("Authentication failed"));
+      logger.warn("Socket connection attempted without token", {
+        socketId: socket.id,
+      });
+
+      const error = new Error("Authentication failed");
+
+      error.data = {
+        code: SOCKET_AUTH_CODES.TOKEN_MISSING,
+      };
+
+      return next(error);
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
-        logger.warn("Socket authentication failed", {
-          reason: err.message,
+        const isExpired = err.name === "TokenExpiredError";
+        const code = isExpired ? SOCKET_AUTH_CODES.TOKEN_EXPIRED : SOCKET_AUTH_CODES.TOKEN_INVALID;
+        const logAuthFailure = isExpired ? logger.warn : logger.error;
+
+        logAuthFailure(isExpired ? "Socket access token expired" : "Socket access token invalid", {
+          socketId: socket.id,
+          name: err.name,
+          message: err.message,
         });
 
-        return next(new Error("Authentication failed"));
+        const error = new Error("Authentication failed");
+
+        error.data = {
+          code,
+        };
+
+        return next(error);
       }
 
       socket.user = user;
-
-      logger.info("Socket authenticated:", {
-        userId: user.id,
-      });
-
       next();
     });
   });
 
-  // Connection handler
   io.on("connection", async (socket) => {
-    const userId = socket.user.id;
+    const userId = socket.user?.id;
+
+    if (socket.recovered) {
+      logger.info("Client reconnected", {
+        socketId: socket.id,
+        userId,
+        rooms: [...socket.rooms],
+      });
+    }
+
+    socket.on("disconnect", (reason) => {
+      logger.info("Client disconnected:", {
+        socketId: socket.id,
+        userId,
+        reason,
+      });
+    });
 
     try {
-      const groupIds = await handleCheckUserGroups(userId);
+      const groups = await getUserGroups(userId);
+      const groupIds = groups.map((group) => group.id);
+
+      if (!socket.connected) {
+        return;
+      }
 
       if (groupIds.length === 0) {
         logger.warn("Protected socket connected without groups", {
@@ -74,6 +114,10 @@ const initSocketServer = (httpServer) => {
 
       await socket.join([rooms.user(userId), ...groupIds.map(rooms.group)]);
 
+      if (!socket.connected) {
+        return;
+      }
+
       logger.info("Client connected", {
         socketId: socket.id,
         userId,
@@ -81,13 +125,8 @@ const initSocketServer = (httpServer) => {
         rooms: [...socket.rooms],
       });
 
-      socket.on("disconnect", (reason) => {
-        logger.info("Client disconnected:", {
-          socketId: socket.id,
-          userId: socket.user.id,
-          reason,
-        });
-      });
+      // The namespace connect event fires before this async room setup completes.
+      socket.emit("socket_ready");
     } catch (error) {
       logger.error("Socket initialisation failed", {
         socketId: socket.id,
@@ -95,152 +134,70 @@ const initSocketServer = (httpServer) => {
         reason: error,
       });
 
-      socket.emit("socket_groups_init_error", {
-        code: "INITIALISATION_FAILED",
-        message: "Unable to initialise groups connection",
-      });
+      if (socket.connected) {
+        socket.emit("socket_groups_init_error", {
+          code: "INITIALISATION_FAILED",
+          message: "Unable to initialise groups connection",
+        });
 
-      socket.disconnect(true);
+        socket.disconnect(true);
+      }
     }
-
-    // io.to(rooms.group("3af9bb7d-a17e-4133-8a74-ea0c5c8c4881")).emit("group_event", {
-    //   groupId: "3af9bb7d-a17e-4133-8a74-ea0c5c8c4881",
-    //   type: "list.created",
-    //   data: "list has been created",
-    // });
-
-    // // Join Group Channel
-    // socket.on("join_group_channel", async (groupId) => {
-    //   const userId = socket.user.id;
-
-    //   const isMember = await handleCheckGroupMembership(userId, groupId);
-    //   if (!isMember) {
-    //     logger.warn("Unauthorised channel join attempt:", {
-    //       userId,
-    //       groupId,
-    //     });
-    //     return socket.emit("error", "You are not a member of this group");
-    //   }
-
-    //   socket.join(groupId);
-    //   logger.info("User joined group channel:", {
-    //     userId: socket.user.id,
-    //     groupId,
-    //   });
-    //   socket.emit("joined_group_channel", { groupId });
-    // });
-
-    // // Join channel
-    // socket.on("join_channel", async (type, ids) => {
-    //   // Validate user is member of the group before allowing them to join the channel
-    //   const groupId = ids.groupId;
-    //   const userId = socket.user.id;
-
-    //   const isMember = await handleCheckGroupMembership(userId, groupId);
-    //   if (!isMember) {
-    //     logger.warn("Unauthorised channel join attempt:", {
-    //       userId,
-    //       groupId,
-    //     });
-    //     return socket.emit("error", "You are not a member of this group");
-    //   }
-
-    //   const roomName = getRoom(type, ids);
-    //   socket.join(roomName);
-    //   logger.info("User joined room:", {
-    //     userId: socket.user.id,
-    //     roomName,
-    //   });
-    //   socket.emit("joined_channel", { type, ids, roomName });
-    // });
-
-    // // Leave channel
-    // socket.on("leave_channel", (type, ids) => {
-    //   const roomName = getRoom(type, ids);
-    //   socket.leave(roomName);
-    //   logger.info("User left room:", {
-    //     userId: socket.user.id,
-    //     roomName,
-    //   });
-    //   socket.emit("left_channel", { type, ids, roomName });
-    // });
 
     socket.on("error", (error) => {
       logger.error("Socket error:", error);
     });
   });
 
-  logger.info("Socket.IO server initialised");
   return io;
 };
 
-const broadcastGroupEvent = (groupId, type, payload) => {
+const emitToGroup = (groupId, eventName, payload) => {
   if (!io) {
     throw new Error("SocketService not initialised");
   }
 
-  io.to(rooms.group(groupId)).emit("group_event", {
-    groupId: groupId,
-    type: type,
-    data: payload,
-  });
+  io.to(rooms.group(groupId)).emit(eventName, payload);
 
-  logger.info("Broadcasted group event", {
+  logger.debug("Broadcasted group event", {
     groupId,
-    type,
-    payloadId: payload?.id,
+    eventName,
+    payloadId: payload.id ?? payload.data?.id,
   });
 };
 
-// const getRoom = (type, ids) => {
-//   logger.debug("Structuring room name from details:", { type, ids });
-//   if (type === "text_channel") {
-//     return `group_${ids.groupId}_channel_${ids.textChannelId}`;
-//   }
-//   if (type === "image") {
-//     return `group_${ids.groupId}_image_${ids.mediaId}`;
-//   }
-//   throw new Error("Invalid room type");
-// };
+const broadcastGroupEvent = (groupId, type, payload, callerSocketId) => {
+  emitToGroup(groupId, "group_event", {
+    groupId: groupId,
+    type: type,
+    data: payload,
+    callerSocketId: callerSocketId,
+  });
+};
 
-// const broadcast = (eventType, channelType, ids, payload) => {
-//   if (!io) {
-//     throw new Error("SocketService not initialised");
-//   }
-//   const roomName = getRoom(channelType, ids);
-//   logger.info(`Broadcasting...`, {
-//     eventType,
-//     roomName,
-//     payload,
-//   });
-//   io.to(roomName).emit(eventType, payload);
-// };
+const broadcastNewMessage = ({ groupId, payload }) => emitToGroup(groupId, "new_message", payload);
 
-// const broadcastNewMessage = ({ groupId, textChannelId, payload }) =>
-//   broadcast("new_message", "text_channel", { groupId, textChannelId }, payload);
+const broadcastMessageUpdated = ({ groupId, payload }) =>
+  emitToGroup(groupId, "message_updated", payload);
 
-// const broadcastMessageUpdated = ({ groupId, textChannelId, payload }) =>
-//   broadcast("message_updated", "text_channel", { groupId, textChannelId }, payload);
+const broadcastMessageDeleted = ({ groupId, payload }) =>
+  emitToGroup(groupId, "message_deleted", payload);
 
-// const broadcastMessageDeleted = ({ groupId, textChannelId, payload }) =>
-//   broadcast("message_deleted", "text_channel", { groupId, textChannelId }, payload);
+const broadcastNewComment = ({ groupId, payload }) => emitToGroup(groupId, "new_comment", payload);
 
-// const broadcastNewComment = ({ groupId, mediaId, payload }) =>
-//   broadcast("new_comment", "image", { groupId, mediaId }, payload);
+const broadcastCommentUpdated = ({ groupId, payload }) =>
+  emitToGroup(groupId, "comment_updated", payload);
 
-// const broadcastCommentUpdated = ({ groupId, mediaId, payload }) =>
-//   broadcast("comment_updated", "image", { groupId, mediaId }, payload);
-
-// const broadcastCommentDeleted = ({ groupId, mediaId, payload }) =>
-//   broadcast("comment_deleted", "image", { groupId, mediaId }, payload);
+const broadcastCommentDeleted = ({ groupId, payload }) =>
+  emitToGroup(groupId, "comment_deleted", payload);
 
 module.exports = {
   initSocketServer,
   broadcastGroupEvent,
-  // broadcastNewMessage,
-  // broadcastMessageUpdated,
-  // broadcastMessageDeleted,
-  // broadcastNewComment,
-  // broadcastCommentUpdated,
-  // broadcastCommentDeleted,
+  broadcastNewMessage,
+  broadcastMessageUpdated,
+  broadcastMessageDeleted,
+  broadcastNewComment,
+  broadcastCommentUpdated,
+  broadcastCommentDeleted,
 };
