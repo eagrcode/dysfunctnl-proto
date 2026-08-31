@@ -5,6 +5,9 @@ const pool = require("../../db/pool");
 const { body, validationResult } = require("express-validator");
 const { logger } = require("../../lib/logger");
 const { login, addRefreshToken, rotateRefreshToken, registration } = require("./auth.model");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const {
   AUTH_CODES,
@@ -80,7 +83,7 @@ const handleUserRegistration = [
       const result = await registration(email, password_hash, first_name, last_name);
 
       const accessToken = jwt.sign({ id: result.id }, process.env.JWT_SECRET, {
-        expiresIn: "15m",
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || "15m",
       });
       const refreshToken = crypto.randomBytes(64).toString("hex");
       const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
@@ -136,7 +139,7 @@ const handleUserLogin = [
     }
 
     const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || "15m",
     });
     const refreshToken = crypto.randomBytes(64).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
@@ -188,7 +191,7 @@ const handleRefreshAccessToken = async (req, res) => {
   }
 
   const accessToken = jwt.sign({ id: rotatedToken.user_id }, process.env.JWT_SECRET, {
-    expiresIn: "15m",
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || "15m",
   });
 
   res.status(200).json({
