@@ -1,5 +1,3 @@
-// src/_shared/logger/logger.js
-
 const path = require("path");
 const util = require("util");
 const winston = require("winston");
@@ -7,6 +5,7 @@ const winston = require("winston");
 const { combine, timestamp, printf, colorize, errors } = winston.format;
 
 const LOGGER_FILE = path.resolve(__filename);
+const isProduction = process.env.NODE_ENV === "production";
 
 function parseStackLine(line) {
   const match = line.match(/^\s*at\s+(?:(.*?)\s+\()?(.+):(\d+):(\d+)\)?$/);
@@ -55,7 +54,7 @@ function formatData(data) {
 
   return util.inspect(data, {
     depth: null,
-    colors: true,
+    colors: !isProduction,
     compact: false,
   });
 }
@@ -70,13 +69,13 @@ const consoleFormat = printf((info) => {
 });
 
 const baseLogger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
+  level: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
 
   format: combine(errors({ stack: true }), timestamp({ format: "YYYY-MM-DD HH:mm:ss" })),
 
   transports: [
     new winston.transports.Console({
-      format: combine(colorize(), consoleFormat),
+      format: isProduction ? consoleFormat : combine(colorize(), consoleFormat),
     }),
   ],
 });
