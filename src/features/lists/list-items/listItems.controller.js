@@ -46,11 +46,12 @@ const handleCreateListItem = [
     const { content } = req.body;
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
+    const callerSocketId = req.get("x-socket-id");
 
     const result = await createListItem(groupId, listId, content, is_admin, userId);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "listItem.created", result);
+    broadcastGroupEvent(groupId, "listItem.created", result, callerSocketId);
 
     res.status(201).json(result);
   },
@@ -79,11 +80,12 @@ const handleUpdateListItem = [
     const { content } = req.body;
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
+    const callerSocketId = req.get("x-socket-id");
 
     const result = await updateListItem(groupId, listId, itemId, content, is_admin, userId);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "listItem.updated", result);
+    broadcastGroupEvent(groupId, "listItem.updated", result, callerSocketId);
 
     res.status(200).json(result);
   },
@@ -103,11 +105,12 @@ const handleToggleComplete = [
     const { completed } = req.body;
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
+    const callerSocketId = req.get("x-socket-id");
 
     const result = await toggleComplete(groupId, listId, itemId, completed, is_admin, userId);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "listItem.toggled", result);
+    broadcastGroupEvent(groupId, "listItem.toggled", result, callerSocketId);
 
     res.status(200).json(result);
   },
@@ -126,13 +129,14 @@ const handleToggleCompleteAll = [
     const { completed } = req.body;
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
+    const callerSocketId = req.get("x-socket-id");
 
     logger.debug("Toggling all list items", { listId, completed });
 
     const result = await toggleCompleteAll(groupId, listId, completed, is_admin, userId);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "listItem.toggledAll", result);
+    broadcastGroupEvent(groupId, "listItem.toggledAll", result, callerSocketId);
 
     res.status(200).json(result);
   },
@@ -151,11 +155,12 @@ const handleDeleteListItems = [
     const { itemIds } = req.body;
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
+    const callerSocketId = req.get("x-socket-id");
 
     const result = await deleteListItems(groupId, listId, itemIds, is_admin, userId);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "listItem.deleted", result);
+    broadcastGroupEvent(groupId, "listItem.deleted", result, callerSocketId);
 
     res.status(200).json(result);
   },

@@ -3,7 +3,6 @@ const { getListItems } = require("./list-items/listItems.model");
 const { body, validationResult } = require("express-validator");
 const { ValidationError } = require("../../lib/errors");
 const { broadcastGroupEvent } = require("../../realtime/socket-service");
-const { logger } = require("../../lib/logger");
 
 const reqValidation = {
   handleCreateList: [
@@ -50,11 +49,12 @@ const handleCreateList = [
     const { groupId } = req.params;
     const { listType, title } = req.body;
     const userId = req.user.id;
+    const callerSocketId = req.get("x-socket-id");
 
     const result = await createList(userId, groupId, listType, title);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "list.created", result);
+    broadcastGroupEvent(groupId, "list.created", result, callerSocketId);
 
     res.status(201).json(result);
   },
@@ -86,11 +86,12 @@ const handleRenameList = [
     const { newTitle } = req.body;
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
+    const callerSocketId = req.get("x-socket-id");
 
     const result = await renameList(groupId, listId, newTitle.trim(), is_admin, userId);
 
     // WebSocket broadcast
-    broadcastGroupEvent(groupId, "list.renamed", { list_id: listId, ...result });
+    broadcastGroupEvent(groupId, "list.renamed", { list_id: listId, ...result }, callerSocketId);
 
     res.status(200).json(result);
   },
