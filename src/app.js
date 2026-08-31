@@ -12,6 +12,7 @@ const authenticate = require("./http/middleware/auth");
 const { getCorsOptions } = require("./config/cors-config");
 const { featureFlags } = require("./config/feature-flags");
 const { logger } = require("./lib/logger");
+const requestLogger = require("./http/middleware/reqLogger");
 
 process.env.TZ = "UTC";
 logger.info("Server timezone configured", {
@@ -25,6 +26,7 @@ if (process.env.TRUST_PROXY) {
   app.set("trust proxy", process.env.TRUST_PROXY);
 }
 
+app.use(requestLogger);
 app.use(helmet());
 app.use(cors(getCorsOptions()));
 app.use(express.json({ limit: "10kb" }));

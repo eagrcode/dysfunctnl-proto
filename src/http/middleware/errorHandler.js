@@ -1,6 +1,20 @@
-const { logger } = require("../../lib/logger");
-
 const normaliseError = (err) => {
+  if (err.type === "entity.parse.failed") {
+    return {
+      statusCode: 400,
+      message: "Invalid JSON request body",
+      code: "INVALID_JSON",
+    };
+  }
+
+  if (err.type === "entity.too.large") {
+    return {
+      statusCode: 413,
+      message: "Request body too large",
+      code: "REQUEST_TOO_LARGE",
+    };
+  }
+
   if (err.code === "LIMIT_FILE_SIZE") {
     return {
       statusCode: 413,
@@ -46,25 +60,21 @@ const normaliseError = (err) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  if (res.headersSent) {
-    return next(err);
-  }
-
   const publicError = normaliseError(err);
-  const logData = {
-    method: req.method,
-    path: req.originalUrl,
+  const isServerError = publicError.statusCode >= 500;
+
+  // reqLogger writes the outcome once, including failures after headers were sent.
+  // Known client errors use the public message so parser input is never copied.
+  res.locals.requestError = {
     statusCode: publicError.statusCode,
     code: publicError.code,
-    message: err.message,
+    message: isServerError ? err.message : publicError.message,
     ...(publicError.errors && { errors: publicError.errors }),
-    ...(publicError.statusCode >= 500 && { stack: err.stack }),
+    ...(isServerError && { name: err.name, errorCode: err.code, stack: err.stack }),
   };
 
-  if (publicError.statusCode >= 500) {
-    logger.error("Request failed", logData);
-  } else {
-    logger.warn("Request rejected", logData);
+  if (res.headersSent) {
+    return next(err);
   }
 
   const response = {
