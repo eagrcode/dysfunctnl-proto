@@ -20,12 +20,12 @@ const checkOrCreateDirs = async () => {
       Object.values(uploadConfig.subdirs).map(async (subDir) => {
         const dirPath = path.join(uploadConfig.basePath, subDir);
         await fs.mkdir(dirPath, { recursive: true });
-        logger.info("Upload directory ready", { dirPath });
+        logger.debug("Upload directory ready", { dirPath });
       })
     );
 
     await fs.mkdir(uploadConfig.tempPath, { recursive: true });
-    logger.info("Temporary upload directory ready", { tempPath: uploadConfig.tempPath });
+    logger.debug("Temporary upload directory ready", { tempPath: uploadConfig.tempPath });
 
     dirsReady = true;
     logger.info("Upload storage initialised");
@@ -83,7 +83,7 @@ const handlePhotoUpload = async (req, res) => {
   const tempFilePath = tempFile.path;
   const filename = `${Date.now()}-${crypto.randomUUID()}`;
 
-  logger.info("Processing upload", {
+  logger.debug("Processing upload", {
     fileSize: `${(tempFile.size / 1024 / 1024).toFixed(2)}MB`,
     processedFilename: filename,
   });

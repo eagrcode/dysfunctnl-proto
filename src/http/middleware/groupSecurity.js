@@ -72,7 +72,7 @@ const permissionRequired = (level) => {
     const hasPermission = checkPermissionLevel(req.groupMembership, level);
 
     if (!hasPermission) {
-      logger.warn("Group permission denied", { groupId, userId, requiredLevel: level });
+      logger.debug("Group permission denied", { groupId, userId, requiredLevel: level });
       throw new ForbiddenError(`Requires ${level} permission`);
     }
 

@@ -32,7 +32,7 @@ const handleAddComment = [
     const { mediaId, albumId } = req.params;
     const { content } = req.body;
 
-    logger.info("Adding media comment", {
+    logger.debug("Adding media comment", {
       mediaId,
       senderId,
     });
@@ -101,7 +101,7 @@ const handleDeleteComment = async (req, res) => {
   const is_admin = req.groupMembership.is_admin;
   const { mediaId, commentId, albumId } = req.params;
 
-  logger.info("Deleting media comment", {
+  logger.debug("Deleting media comment", {
     commentId,
     mediaId,
   });

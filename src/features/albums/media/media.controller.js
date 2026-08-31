@@ -46,11 +46,11 @@ const handleDeleteMediaById = async (req, res) => {
     fs
       .unlink(filePath)
       .then(() => {
-        logger.info("Deleted media file", { filePath });
+        logger.debug("Deleted media file", { filePath });
       })
       .catch((error) => {
         if (error.code === "ENOENT") {
-          logger.info("Media file was already absent", { filePath });
+          logger.debug("Media file was already absent", { filePath });
           return;
         }
 

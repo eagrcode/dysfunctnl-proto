@@ -8,7 +8,7 @@ const uploadCleanup = async (err, req, res, next) => {
 
   try {
     await fs.unlink(req.file.path);
-    logger.info("Cleaned up temporary upload", { filePath: req.file.path });
+    logger.debug("Cleaned up temporary upload", { filePath: req.file.path });
   } catch (cleanupError) {
     logger.error("Failed to clean up temporary upload", {
       filePath: req.file.path,

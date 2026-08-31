@@ -20,7 +20,7 @@ const login = async (email) => {
 
 // ADD REFRESH TOKEN
 const addRefreshToken = async (userId, tokenHash) => {
-  logger.info(`Adding refresh token:`, { userId });
+  logger.debug(`Adding refresh token:`, { userId });
 
   const query = `
     INSERT INTO refresh_tokens (user_id, token_hash, expires_at)

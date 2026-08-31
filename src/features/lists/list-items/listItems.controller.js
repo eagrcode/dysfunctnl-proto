@@ -127,7 +127,7 @@ const handleToggleCompleteAll = [
     const { is_admin } = req.groupMembership;
     const userId = req.user.id;
 
-    logger.info("Toggling all list items", { listId, completed });
+    logger.debug("Toggling all list items", { listId, completed });
 
     const result = await toggleCompleteAll(groupId, listId, completed, is_admin, userId);
 
