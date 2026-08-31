@@ -31,28 +31,36 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 }
 
 const server = createServer(app);
-initSocketServer(server);
+const io = initSocketServer(server);
 
-server.listen(port, "0.0.0.0", () => {
+server.listen(port, "0.0.0.0", async () => {
+  let dbInfoResult;
+  try {
+    dbInfoResult = await pool.query(
+      `
+      SELECT
+        current_database() AS database,
+        current_user AS user
+      `,
+    );
+    const { rows } = dbInfoResult;
+    logger.info("Connected to database", rows[0]);
+  } catch (error) {
+    logger.error("Database connection failed", { error });
+  }
+
   logger.info("Server started", {
     port,
     environment: process.env.NODE_ENV || "development",
-    database: useNeon ? "Neon" : "local PostgreSQL",
+    database: {
+      host: useNeon ? "Neon" : "local PostgreSQL",
+      connected: !!dbInfoResult?.rows?.[0],
+      name: dbInfoResult?.rows?.[0].database,
+      user: dbInfoResult?.rows?.[0].user,
+    },
+    socketServer: io ? "enabled" : "disabled",
+    timezone: process.env.TZ,
+    resolvedTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     features: featureFlags,
   });
-
-  pool
-    .query(
-      `
-    SELECT
-      current_database() AS database,
-      current_user AS user
-  `,
-    )
-    .then(({ rows }) => {
-      logger.info("Connected to database", rows[0]);
-    })
-    .catch((error) => {
-      logger.error("Database connection failed", { error });
-    });
 });

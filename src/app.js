@@ -15,10 +15,6 @@ const { logger } = require("./lib/logger");
 const requestLogger = require("./http/middleware/reqLogger");
 
 process.env.TZ = "UTC";
-logger.info("Server timezone configured", {
-  timezone: process.env.TZ,
-  resolvedTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-});
 
 const app = express();
 
