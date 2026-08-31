@@ -27,6 +27,5 @@ uploads/
 
 .VSCodeCounter/
 
-!
-
+# Local database dumps and restore scripts may contain development data.
 scripts/

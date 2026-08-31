@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../../src/app"); // Adjust path as needed
+const app = require("../../src/app");
 const dotenv = require("dotenv");
 const { logger } = require("../../src/lib/logger");
 
