@@ -1,15 +1,36 @@
 {
   "name": "dysfunctnl-server",
   "version": "1.0.0",
-  "main": "src/server.js",
+  "type": "commonjs",
+  "main": "dist/server.js",
   "scripts": {
     "test": "jest",
-    "test:refresh-storm": "cross-env NODE_ENV=test LOG_LEVEL=error DOTENV_CONFIG_QUIET=true node tests/manual/refresh-storm.demo.js",
+    "test:refresh-storm": "cross-env NODE_ENV=test LOG_LEVEL=error DOTENV_CONFIG_QUIET=true tsx tests/manual/refresh-storm.demo.js",
     "test:coverage": "jest --coverage",
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "dev": "tsx watch src/server.js",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc --project tsconfig.json",
+    "start": "node --enable-source-maps dist/server.js"
   },
   "jest": {
+    "transform": {
+      "^.+\\.tsx?$": [
+        "babel-jest",
+        {
+          "presets": [
+            "@babel/preset-typescript"
+          ],
+          "plugins": [
+            "@babel/plugin-transform-modules-commonjs"
+          ]
+        }
+      ],
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ],
     "verbose": true,
     "detectOpenHandles": true,
     "collectCoverage": true,
@@ -48,8 +69,17 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.2",
+    "@types/pg": "^8.23.1",
+    "babel-jest": "^30.5.1",
     "cross-env": "^10.0.0",
     "jest": "^30.0.5",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
   }
 }

@@ -6,23 +6,22 @@ const {
   handleDeleteGroup,
 } = require("./groups.controller");
 const { Router } = require("express");
-const dashboardRouter = require("../dashboard/dashboard.router");
 const listsRouter = require("../lists/lists.router");
 const albumsRouter = require("../albums/albums.router");
 const membersRouter = require("../members/members.router");
 const calendarRouter = require("../calendar/calendar.router");
-const authenticate = require("../../http/middleware/auth");
-const textChannelsRouter = require("../text-channels/textChannels.router");
-const permissionRequired = require("../../http/middleware/groupSecurity");
+const dashboardRouter = require("../dashboard/dashboard.router");
 const validateUUIDParams = require("../../http/middleware/validateUUID");
+const permissionRequired = require("../../http/middleware/groupSecurity");
+const textChannelsRouter = require("../text-channels/textChannels.router");
 
 const groupsRouter = Router();
 
-groupsRouter.post("/", authenticate, handleCreateGroup);
-groupsRouter.get("/", authenticate, handleGetUserGroups);
+groupsRouter.post("/", handleCreateGroup);
+groupsRouter.get("/", handleGetUserGroups);
 
 // Apply base middleware to ALL group-context routes
-groupsRouter.use("/:groupId", validateUUIDParams, authenticate, permissionRequired("member"));
+groupsRouter.use("/:groupId", validateUUIDParams, permissionRequired("member"));
 
 // Routes with group context
 groupsRouter.get("/:groupId", handleGetGroupById);

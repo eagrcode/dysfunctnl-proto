@@ -4,6 +4,7 @@ const cors = require("cors");
 const { generalLimiter } = require("./http/middleware/rateLimiters");
 const authRouter = require("./features/auth/auth.router");
 const groupsRouter = require("./features/groups/groups.router");
+const { onboardingRouter } = require("./features/onboarding/onboarding.router");
 const imageUploadCleanup = require("./http/middleware/imageUploadCleanup");
 const { errorHandler } = require("./http/middleware/errorHandler");
 const { NotFoundError } = require("./lib/errors");
@@ -35,7 +36,8 @@ if (featureFlags.mediaUploads) {
 
 app.use("/auth", authRouter);
 app.use("/users", authenticate, userRouter);
-app.use("/groups", groupsRouter);
+app.use("/onboarding", authenticate, onboardingRouter);
+app.use("/groups", authenticate, groupsRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Dysfunctnl Server!");

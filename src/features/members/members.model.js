@@ -36,28 +36,32 @@ const getGroupMemberById = async (groupId, userId) => {
 };
 
 // ADD NEW MEMBER
+const addUserToGroupWithClient = async (client, groupId, userIdToAdd) => {
+  const existing = await client.query(
+    "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
+    [groupId, userIdToAdd],
+  );
+
+  if (existing.rows.length > 0) {
+    throw new ConflictError("User is already a member of this group");
+  }
+
+  const result = await client.query(
+    "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
+    [groupId, userIdToAdd],
+  );
+
+  const memberRoleResult = await client.query(
+    "INSERT INTO group_members_roles (user_id, group_id, is_admin) VALUES ($1, $2, $3) RETURNING is_admin",
+    [userIdToAdd, groupId, false],
+  );
+
+  return { member: result.rows[0], role: memberRoleResult.rows[0] };
+};
+
 const addUserToGroup = async (groupId, userIdToAdd) => {
   return withTransaction(async (client) => {
-    const existing = await client.query(
-      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
-      [groupId, userIdToAdd],
-    );
-
-    if (existing.rows.length > 0) {
-      throw new ConflictError("User is already a member of this group");
-    }
-
-    const result = await client.query(
-      "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
-      [groupId, userIdToAdd],
-    );
-
-    const memberRoleResult = await client.query(
-      "INSERT INTO group_members_roles (user_id, group_id, is_admin) VALUES ($1, $2, $3) RETURNING is_admin",
-      [userIdToAdd, groupId, false],
-    );
-
-    return { member: result.rows[0], role: memberRoleResult.rows[0] };
+    return addUserToGroupWithClient(client, groupId, userIdToAdd);
   });
 };
 
@@ -117,6 +121,7 @@ module.exports = {
   getGroupMembers,
   getGroupMemberById,
   addUserToGroup,
+  addUserToGroupWithClient,
   updateMemberRole,
   removeMemberFromGroup,
 };

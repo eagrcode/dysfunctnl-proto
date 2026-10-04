@@ -1,4 +1,4 @@
-const { body, validationResult } = require("express-validator");
+const { body, param, validationResult } = require("express-validator");
 const { ValidationError } = require("../../lib/errors");
 const {
   createGroup,
@@ -36,6 +36,13 @@ const reqValidation = {
       .trim()
       .isLength({ min: 2, max: 500 })
       .withMessage("Description must be between 2 and 500 characters"),
+  ],
+  handleGetGroupById: [
+    param("groupId")
+      .notEmpty()
+      .withMessage("Group ID is required")
+      .isUUID()
+      .withMessage("Group ID must be a valid UUID"),
   ],
 };
 

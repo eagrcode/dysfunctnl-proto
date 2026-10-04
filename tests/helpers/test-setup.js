@@ -1,14 +1,15 @@
 const request = require("supertest");
 const app = require("../../src/app");
 const dotenv = require("dotenv");
+const { randomUUID } = require("node:crypto");
 const { logger } = require("../../src/lib/logger");
 
 dotenv.config();
 
 // REGISTER
-const registerUser = async () => {
+const registerUser = async (email = `test${randomUUID()}@register.com`) => {
   const userData = {
-    email: `test${Date.now()}@register.com`,
+    email: email,
     password: process.env.TEST_USER_PASSWORD,
     first_name: "Test",
     last_name: "User",
@@ -26,16 +27,15 @@ const registerUser = async () => {
   }
 
   logger.info("REGISTER MEMBER:", {
-    success: response.body.success,
     user: {
-      id: response.body.data.id,
-      email: response.body.data.email,
-      first_name: response.body.data.first_name,
-      last_name: response.body.data.last_name,
+      id: response.body.user.id,
+      email: response.body.user.email,
+      first_name: response.body.user.first_name,
+      last_name: response.body.user.last_name,
     },
   });
 
-  const { id: userId, email } = response.body.data;
+  const { id: userId } = response.body.user;
 
   return {
     userId,
@@ -63,23 +63,22 @@ const loginUser = async (email) => {
     }
 
     logger.info("LOGIN:", {
-      success: response.body.success,
       user: {
         id: response.body.user.id,
         email: response.body.user.email,
         first_name: response.body.user.first_name,
         last_name: response.body.user.last_name,
       },
-      accessToken: response.body.user.accessToken ? true : false,
-      refreshToken: response.body.user.refreshToken ? true : false,
+      accessToken: response.body.tokens.accessToken ? true : false,
+      refreshToken: response.body.tokens.refreshToken ? true : false,
     });
 
-    const { user } = response.body;
+    const { user, tokens } = response.body;
 
     return {
       user,
-      accessToken: user.accessToken,
-      refreshToken: user.refreshToken,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   } catch (error) {
     throw new Error(error);
@@ -102,10 +101,9 @@ const createGroup = async (data, accessToken) => {
     }
 
     logger.info("CREATE GROUP:", {
-      success: response.body.success,
-      group: response.body.data,
+      group: response.body,
     });
-    const groupId = response.body.data;
+    const groupId = response.body.id;
 
     return groupId;
   } catch (error) {
@@ -123,8 +121,7 @@ const addMember = async (groupId, memberId, adminAccessToken) => {
       .set("Authorization", `Bearer ${adminAccessToken}`);
 
     logger.info("ADD MEMBER:", {
-      success: response.body.success,
-      member: response.body.data,
+      member: response.body,
     });
 
     if (response.status !== 201) {
@@ -133,8 +130,8 @@ const addMember = async (groupId, memberId, adminAccessToken) => {
       );
     }
 
-    const { success } = response.body;
-    const { role } = response.body.data;
+    const success = response.status === 201;
+    const { role } = response.body;
 
     return { success, role };
   } catch (error) {
