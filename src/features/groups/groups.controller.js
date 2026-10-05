@@ -23,6 +23,13 @@ const reqValidation = {
       .trim()
       .isLength({ min: 2, max: 500 })
       .withMessage("Description must be between 2 and 500 characters"),
+
+    body("type")
+      .notEmpty()
+      .withMessage("Group type is required")
+      .trim()
+      .isIn(["personal", "shared"])
+      .withMessage("Group type must be either 'personal' or 'shared'"),
   ],
   handleUpdateGroup: [
     body("name")
@@ -56,10 +63,10 @@ const handleCreateGroup = [
       throw new ValidationError("Invalid group data", errors.array());
     }
 
-    const { name, description } = req.body;
+    const { name, description, type } = req.body;
     const { id: userId } = req.user;
 
-    const result = await createGroup(name, userId, description);
+    const result = await createGroup(name, userId, description, type);
 
     res.status(201).json(result);
   },

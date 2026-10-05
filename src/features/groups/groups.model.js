@@ -2,11 +2,12 @@ const pool = require("../../db/pool");
 const withTransaction = require("../../db/transaction");
 
 // CREATE GROUP
-const createGroup = async (name, createdById, description) => {
+const createGroup = async (name, createdById, description, type) => {
+  console.log("Creating group with:", { name, createdById, description, type });
   return withTransaction(async (client) => {
     const groupResult = await client.query(
-      "INSERT INTO groups (name, created_by, description) VALUES ($1, $2, $3) RETURNING *",
-      [name, createdById, description],
+      "INSERT INTO groups (name, created_by, description, type) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, createdById, description, type],
     );
     const groupResultId = groupResult.rows[0].id;
 
