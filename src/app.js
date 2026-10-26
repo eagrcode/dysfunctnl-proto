@@ -4,6 +4,7 @@ const cors = require("cors");
 const { generalLimiter } = require("./http/middleware/rateLimiters");
 const authRouter = require("./features/auth/auth.router");
 const groupsRouter = require("./features/groups/groups.router");
+const { overviewRouter } = require("./features/overview/overview.router");
 const { onboardingRouter } = require("./features/onboarding/onboarding.router");
 const imageUploadCleanup = require("./http/middleware/imageUploadCleanup");
 const { errorHandler } = require("./http/middleware/errorHandler");
@@ -37,6 +38,7 @@ if (featureFlags.mediaUploads) {
 app.use("/auth", authRouter);
 app.use("/users", authenticate, userRouter);
 app.use("/onboarding", authenticate, onboardingRouter);
+app.use("/overview", authenticate, overviewRouter);
 app.use("/groups", authenticate, groupsRouter);
 
 app.get("/", (req, res) => {

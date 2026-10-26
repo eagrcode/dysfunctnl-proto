@@ -47,8 +47,9 @@ const handleAddUserToGroup = [
 
     const { groupId } = req.params;
     const { userIdToAdd } = req.body;
+    const { type } = req.groupMembership;
 
-    const result = await addUserToGroup(groupId, userIdToAdd);
+    const result = await addUserToGroup(groupId, userIdToAdd, type);
     res.status(201).json(result);
   },
 ];

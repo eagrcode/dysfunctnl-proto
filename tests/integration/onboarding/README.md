@@ -9,14 +9,16 @@ LOG_LEVEL=error DOTENV_CONFIG_QUIET=true npm test -- --runInBand tests/integrati
 These integration tests call `POST /onboarding/join-group` through the real app,
 authentication middleware, controller, models, and PostgreSQL transaction helper.
 They use `registerUser`, `loginUser`, `createGroup`, and `addMember` from the shared
-test helpers. Invite fixtures are inserted directly because invite creation does
-not have an endpoint yet.
+test helpers. Invite fixtures are inserted directly to keep these redemption tests
+independent of invite creation. Creation and its compatibility with redemption are
+covered in `tests/integration/groups/group-invites.test.js`.
 
 Use the same development/test database configuration as the existing integration
 tests, including `JWT_SECRET` and `TEST_USER_PASSWORD`. The database must contain
 the invitation tables defined in the project's `sql.sql`, and the configured role
 needs SELECT, INSERT, UPDATE, and DELETE access to those tables for fixture setup,
-redemption, and cleanup.
+redemption, and cleanup. Successful redemption also marks the user as onboarded
+in the same transaction and returns `onboarded: true` with the joined group ID.
 
 The local `dys` database grants applied for `app_user` are:
 
@@ -42,11 +44,13 @@ Covered cases:
 - The controller's defensive guard when called without an authenticated user.
 - Missing, empty, incorrectly sized, and non-string invite codes.
 - Unknown, lowercase, whitespace, and SQL-like code input.
-- Successful redemption using the authenticated user ID and a non-admin role.
+- Successful redemption using the authenticated user ID, a non-admin role and
+  completed onboarding.
 - Expired, used, and deleted invites; existing members and group creators.
 - Reuse by the same user and another user.
 - Concurrent redemption by the same user and different users.
-- Failure at each database operation and before commit, with rollback and retry.
+- Failure at each database operation and before commit, including onboarding
+  completion, with rollback and retry.
 - Missing inserted member, zero-row invite update, and connection failure.
 
 Rate limiters are bypassed only in this suite so repeated fixture registration can

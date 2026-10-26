@@ -1,7 +1,7 @@
 import { body, validationResult } from "express-validator";
 import { logger } from "../../lib/logger";
 import { UnauthorisedError, ValidationError } from "../../lib/errors";
-import { redeemCode } from "./onboarding.model";
+import { redeemCode, completeOnboarding } from "./onboarding.model";
 import type { Request, Response } from "express";
 
 type ReqWithUser = Request & {
@@ -13,6 +13,20 @@ type ReqWithUser = Request & {
 const validateJoinGroup = [
   body("code").isString().notEmpty(),
   body("code").isLength({ min: 6, max: 6 }),
+];
+
+const handleCompleteOnboarding = [
+  async (req: ReqWithUser, res: Response) => {
+    if (!req.user) {
+      throw new UnauthorisedError("User not authenticated");
+    }
+
+    const { id: userId } = req.user;
+
+    const completed = await completeOnboarding(userId);
+
+    res.status(200).json({ onboarded: completed });
+  },
 ];
 
 const handleRedeemCode = [
@@ -38,4 +52,4 @@ const handleRedeemCode = [
   },
 ];
 
-export { handleRedeemCode };
+export { handleRedeemCode, handleCompleteOnboarding };

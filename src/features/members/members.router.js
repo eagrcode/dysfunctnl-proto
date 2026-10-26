@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const permissionRequired = require("../../http/middleware/groupSecurity");
+const { requirePermissionLevel } = require("../../http/middleware/groupSecurity");
 const {
   handleGetGroupMembers,
   handleAddUserToGroup,
@@ -11,10 +11,10 @@ const validateUUIDParams = require("../../http/middleware/validateUUID");
 
 const membersRouter = Router({ mergeParams: true });
 
-membersRouter.post("/", permissionRequired("admin"), handleAddUserToGroup);
+membersRouter.post("/", requirePermissionLevel("admin"), handleAddUserToGroup);
 membersRouter.get("/", handleGetGroupMembers);
 membersRouter.get("/:userId", validateUUIDParams, handleGetGroupMemberById);
-membersRouter.patch("/role", permissionRequired("admin"), handleUpdateMemberRole);
-membersRouter.delete("/remove", permissionRequired("admin"), handleRemoveMemberFromGroup);
+membersRouter.patch("/role", requirePermissionLevel("admin"), handleUpdateMemberRole);
+membersRouter.delete("/remove", requirePermissionLevel("admin"), handleRemoveMemberFromGroup);
 
 module.exports = membersRouter;

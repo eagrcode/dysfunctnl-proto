@@ -2,6 +2,24 @@ import { NotFoundError } from "../../lib/errors";
 import withTransaction from "../../db/transaction";
 import { addUserToGroupWithClient } from "../members/members.model";
 import type { PoolClient } from "pg";
+import pool from "../../db/pool";
+
+const completeOnboarding = async (userId: string) => {
+  const result = await pool.query(
+    `
+      update users
+      set onboarded = true
+      where id = $1
+    `,
+    [userId],
+  );
+
+  if (result.rowCount !== 1) {
+    throw new NotFoundError("Failed to complete onboarding");
+  }
+
+  return true;
+};
 
 const redeemCode = async (userId: string, code: string) => {
   return withTransaction(async (client: PoolClient) => {
@@ -27,7 +45,7 @@ const redeemCode = async (userId: string, code: string) => {
     // Verify the group invite is still valid
     const verifyValidGroupInvite = await client.query(
       `
-        select group_id
+        select group_id, group_type
         from group_invites
         where id = $1
         and expires_at > now()
@@ -46,10 +64,10 @@ const redeemCode = async (userId: string, code: string) => {
     }
 
     const groupToJoinId = verifyValidGroupInvite.rows[0].group_id;
+    const groupType = verifyValidGroupInvite.rows[0].group_type;
 
     // Check user is not already a member, if not add them to the group
-    // This ensures that the user is added to the group within the same transaction
-    const addUserResult = await addUserToGroupWithClient(client, groupToJoinId, userId);
+    const addUserResult = await addUserToGroupWithClient(client, groupToJoinId, userId, groupType);
 
     const userNotAdded = !addUserResult.member;
 
@@ -74,8 +92,23 @@ const redeemCode = async (userId: string, code: string) => {
       throw new NotFoundError("Failed to update invite status");
     }
 
-    return { inviteRedeemed: inviteStatus, groupId: groupToJoinId, userId: userId };
+    // Joining a group completes onboarding atomically with consuming the invite.
+    const onboardingResult = await client.query(
+      `UPDATE users SET onboarded = true WHERE id = $1 RETURNING onboarded`,
+      [userId],
+    );
+
+    if (onboardingResult.rowCount !== 1) {
+      throw new NotFoundError("Failed to complete onboarding");
+    }
+
+    return {
+      inviteRedeemed: inviteStatus,
+      groupId: groupToJoinId,
+      userId,
+      onboarded: onboardingResult.rows[0].onboarded as boolean,
+    };
   });
 };
 
-export { redeemCode };
+export { redeemCode, completeOnboarding };

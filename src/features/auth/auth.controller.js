@@ -100,6 +100,7 @@ const handleUserRegistration = [
           email: result.email,
           first_name: result.first_name,
           last_name: result.last_name,
+          onboarded: result.onboarded,
         },
         tokens: {
           accessToken,
@@ -152,6 +153,7 @@ const handleUserLogin = [
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
+        onboarded: user.onboarded,
       },
       tokens: {
         accessToken,

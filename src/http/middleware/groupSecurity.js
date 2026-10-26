@@ -108,4 +108,4 @@ const requireGroupAccess = () => {
   };
 };
 
-module.exports = requireGroupAccess;
+module.exports = { requireGroupAccess, requirePermissionLevel };

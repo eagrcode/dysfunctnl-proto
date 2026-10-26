@@ -1,5 +1,5 @@
 const { Router, text } = require("express");
-const permissionRequired = require("../../http/middleware/groupSecurity");
+const { requirePermissionLevel } = require("../../http/middleware/groupSecurity");
 const {
   handleGetAllTextChannels,
   handleCreateTextChannel,
@@ -22,10 +22,10 @@ textChannelsRouter.use("/:textChannelId/messages/:messageId", validateUUIDParams
 
 // Text Channel Routes
 textChannelsRouter.get("/", handleGetAllTextChannels);
-textChannelsRouter.post("/", permissionRequired("admin"), handleCreateTextChannel);
+textChannelsRouter.post("/", requirePermissionLevel("admin"), handleCreateTextChannel);
 textChannelsRouter.get("/:textChannelId", handleGetTextChannelById);
-textChannelsRouter.delete("/:textChannelId", permissionRequired("admin"), handleDeleteTextChannel);
-textChannelsRouter.patch("/:textChannelId", permissionRequired("admin"), handleUpdateTextChannel);
+textChannelsRouter.delete("/:textChannelId", requirePermissionLevel("admin"), handleDeleteTextChannel);
+textChannelsRouter.patch("/:textChannelId", requirePermissionLevel("admin"), handleUpdateTextChannel);
 
 // Messages Routes
 textChannelsRouter.get("/:textChannelId/messages", handleGetAllMessages);

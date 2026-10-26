@@ -1,38 +1,66 @@
 const pool = require("../../db/pool");
 const withTransaction = require("../../db/transaction");
+const crypto = require("node:crypto");
+const { ConflictError } = require("../../lib/errors");
 
 // CREATE GROUP
 const createGroup = async (name, createdById, description, type) => {
-  console.log("Creating group with:", { name, createdById, description, type });
-  return withTransaction(async (client) => {
-    const groupResult = await client.query(
-      "INSERT INTO groups (name, created_by, description, type) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, createdById, description, type],
-    );
-    const groupResultId = groupResult.rows[0].id;
+  try {
+    return await withTransaction(async (client) => {
+      const groupResult = await client.query(
+        `
+      INSERT INTO groups
+        (name, created_by, description, type)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+      `,
+        [name, createdById, description, type],
+      );
 
-    const memberResult = await client.query(
-      "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2) RETURNING *",
-      [groupResultId, createdById],
-    );
+      const groupId = groupResult.rows[0].id;
 
-    const memberRoleResult = await client.query(
-      "insert into group_members_roles (user_id, group_id, is_admin) values ($1, $2, $3) returning is_admin",
-      [createdById, groupResultId, true],
-    );
+      if (type === "shared") {
+        await client.query(
+          `
+        INSERT INTO group_members (group_id, user_id)
+        VALUES ($1, $2)
+        `,
+          [groupId, createdById],
+        );
 
-    return groupResult.rows[0];
-  });
+        await client.query(
+          `
+        INSERT INTO group_members_roles (user_id, group_id, is_admin)
+        VALUES ($1, $2, true)
+        `,
+          [createdById, groupId],
+        );
+      }
+
+      return groupResult.rows[0];
+    });
+  } catch (error) {
+    if (error.code === "23505" && error.constraint === "groups_one_personal_per_owner") {
+      throw new ConflictError("Personal space already exists");
+    }
+
+    throw error;
+  }
 };
 
 // GET USER GROUPS
 const getUserGroups = async (userId) => {
   const result = await pool.query(
     `
-    SELECT g.*
+    SELECT DISTINCT g.*
     FROM groups g
-    JOIN group_members gm on g.id = gm.group_id
-    WHERE gm.user_id = $1
+    LEFT JOIN group_members gm
+      ON gm.group_id = g.id
+      AND gm.user_id = $1
+    WHERE
+      (g.type = 'personal' AND g.created_by = $1)
+      OR
+      (g.type = 'shared' AND gm.user_id IS NOT NULL)
     `,
     [userId],
   );
@@ -88,10 +116,42 @@ const deleteGroup = async (groupId) => {
   return result.rows[0];
 };
 
+const createGroupInvite = async (groupId, invitedBy) => {
+  return withTransaction(async (client) => {
+    // Keep the database's existing expiry default and single-use invite design.
+    const inviteResult = await client.query(
+      `INSERT INTO group_invites (group_id, invited_by, invite_type)
+       VALUES ($1, $2, 'code')
+       RETURNING id, expires_at`,
+      [groupId, invitedBy],
+    );
+    const invite = inviteResult.rows[0];
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = crypto.randomInt(0, 1000000).toString().padStart(6, "0");
+      const codeResult = await client.query(
+        `INSERT INTO group_invite_codes (group_invite_id, code)
+         VALUES ($1, $2)
+         ON CONFLICT (code) DO NOTHING
+         RETURNING code`,
+        [invite.id, code],
+      );
+
+      if (codeResult.rows.length > 0) {
+        return { ...invite, code: codeResult.rows[0].code };
+      }
+    }
+
+    // Throwing also rolls back the invite if no unique code could be saved.
+    throw new ConflictError("Could not generate a unique invite code. Please try again.");
+  });
+};
+
 module.exports = {
   createGroup,
   getUserGroups,
   getGroupById,
   updateGroup,
   deleteGroup,
+  createGroupInvite,
 };

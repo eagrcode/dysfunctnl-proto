@@ -34,6 +34,7 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
   const groupData = {
     name: "Onboarding Test Group",
     description: "Test group for invite redemption",
+    type: "shared",
   };
 
   // Track the email before registration so cleanup also works if setup fails partway through.
@@ -69,8 +70,12 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
       "SELECT user_id, is_admin FROM group_members_roles WHERE group_id = $1 ORDER BY user_id",
       [groupId],
     );
+    const users = await pool.query(
+      "SELECT id, onboarded FROM users WHERE email = ANY($1::text[]) ORDER BY id",
+      [userEmails],
+    );
 
-    return { invite: invite.rows[0], members: members.rows, roles: roles.rows };
+    return { invite: invite.rows[0], members: members.rows, roles: roles.rows, users: users.rows };
   };
 
   const expectRedeemed = async (redeemingUserId) => {
@@ -82,6 +87,7 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
     expect(state.roles).toHaveLength(2);
     expect(state.roles).toContainEqual({ user_id: redeemingUserId, is_admin: false });
     expect(state.roles).toContainEqual({ user_id: groupCreatorId, is_admin: true });
+    expect(state.users).toContainEqual({ id: redeemingUserId, onboarded: true });
   };
 
   // Initial setup: Register and login two users, create a group, and seed an unused invite.
@@ -101,7 +107,7 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
     groupId = await createGroup(groupData, groupCreatorAccessToken);
     inviteCode = randomBytes(3).toString("hex").toUpperCase();
 
-    // There is no invite-creation endpoint yet, so only invite fixtures are inserted directly.
+    // Seed directly so redemption tests remain independent of invite creation.
     const result = await pool.query(
       `INSERT INTO group_invites (group_id, invited_by, invite_type)
        VALUES ($1, $2, 'code') RETURNING id`,
@@ -239,7 +245,7 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
       const response = await redeemInvite({ code: inviteCode, userId: groupCreatorId });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ inviteRedeemed: true, groupId, userId });
+      expect(response.body).toEqual({ inviteRedeemed: true, groupId, userId, onboarded: true });
       await expectRedeemed(userId);
     });
 
@@ -308,8 +314,8 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
     test.each(["same user", "another user"])("should reject reuse by the %s", async (condition) => {
       const firstResponse = await redeemInvite();
       expect(firstResponse.status).toBe(200);
-      const before = await getInviteState();
       const token = condition === "same user" ? accessToken : (await createTestUser()).accessToken;
+      const before = await getInviteState();
 
       const response = await redeemInvite({ code: inviteCode }, token);
 
@@ -368,11 +374,12 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
 
     test.each([
       { condition: "finding the code", pattern: /from group_invite_codes/i },
-      { condition: "locking the invite", pattern: /select group_id\s+from group_invites/i },
+      { condition: "locking the invite", pattern: /select group_id, group_type\s+from group_invites/i },
       { condition: "checking membership", pattern: /select 1 from group_members/i },
       { condition: "inserting membership", pattern: /insert into group_members\s/i },
       { condition: "inserting the role", pattern: /insert into group_members_roles/i },
       { condition: "marking the invite used", pattern: /update group_invites/i },
+      { condition: "completing onboarding", pattern: /update users set onboarded/i },
       { condition: "committing the transaction", pattern: /^COMMIT$/ },
     ])("should roll back when $condition fails and allow a retry", async ({ pattern }) => {
       const before = await getInviteState();
@@ -405,6 +412,11 @@ describe("Onboarding API Tests - Redeem Invite Code", () => {
         condition: "invite update affects no rows",
         pattern: /update group_invites/i,
         message: "Failed to update invite status",
+      },
+      {
+        condition: "onboarding update affects no rows",
+        pattern: /update users set onboarded/i,
+        message: "Failed to complete onboarding",
       },
     ])("should roll back when the $condition", async ({ pattern, message }) => {
       const before = await getInviteState();

@@ -1,11 +1,12 @@
 const { body, param, validationResult } = require("express-validator");
-const { ValidationError } = require("../../lib/errors");
+const { ValidationError, ForbiddenError } = require("../../lib/errors");
 const {
   createGroup,
   getUserGroups,
   getGroupById,
   updateGroup,
   deleteGroup,
+  createGroupInvite,
 } = require("./groups.model");
 
 const reqValidation = {
@@ -125,10 +126,22 @@ const handleDeleteGroup = async (req, res) => {
   res.status(200).json(result);
 };
 
+const handleCreateGroupInvite = async (req, res) => {
+  if (req.groupMembership.type !== "shared") {
+    throw new ForbiddenError("Invites are only available for shared groups");
+  }
+
+  const result = await createGroupInvite(req.params.groupId, req.user.id);
+
+  res.set("Cache-Control", "no-store");
+  res.status(201).json(result);
+};
+
 module.exports = {
   handleCreateGroup,
   handleGetUserGroups,
   handleGetGroupById,
   handleUpdateGroup,
   handleDeleteGroup,
+  handleCreateGroupInvite,
 };

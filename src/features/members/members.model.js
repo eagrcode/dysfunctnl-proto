@@ -1,6 +1,6 @@
 const pool = require("../../db/pool");
 const withTransaction = require("../../db/transaction");
-const { NotFoundError, ConflictError } = require("../../lib/errors");
+const { NotFoundError, ConflictError, ForbiddenError } = require("../../lib/errors");
 
 // GET GROUP MEMBERS
 const getGroupMembers = async (groupId) => {
@@ -36,7 +36,11 @@ const getGroupMemberById = async (groupId, userId) => {
 };
 
 // ADD NEW MEMBER
-const addUserToGroupWithClient = async (client, groupId, userIdToAdd) => {
+const addUserToGroupWithClient = async (client, groupId, userIdToAdd, type) => {
+  if (type !== "shared") {
+    throw new ForbiddenError("Cannot add user to a non-shared group");
+  }
+
   const existing = await client.query(
     "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
     [groupId, userIdToAdd],
@@ -59,9 +63,9 @@ const addUserToGroupWithClient = async (client, groupId, userIdToAdd) => {
   return { member: result.rows[0], role: memberRoleResult.rows[0] };
 };
 
-const addUserToGroup = async (groupId, userIdToAdd) => {
+const addUserToGroup = async (groupId, userIdToAdd, type) => {
   return withTransaction(async (client) => {
-    return addUserToGroupWithClient(client, groupId, userIdToAdd);
+    return addUserToGroupWithClient(client, groupId, userIdToAdd, type);
   });
 };
 
